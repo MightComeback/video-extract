@@ -1,9 +1,10 @@
-export function mkBrief({ source, content, fetchError, suggestedTitle, title }) {
+export function mkBrief({ source, content, mediaUrl, fetchError, suggestedTitle, title }) {
   const text = (content || '').trim();
   const lines = [];
   lines.push(`# Bug brief`);
   lines.push('');
   if (source) lines.push(`Source: ${source}`);
+  if (mediaUrl) lines.push(`Video: ${mediaUrl}`);
   if (fetchError) lines.push(`Fetch: failed (${fetchError}) — paste transcript/notes via \`fathom2action --stdin\``);
   lines.push('');
   lines.push('## Suggested issue title (optional)');

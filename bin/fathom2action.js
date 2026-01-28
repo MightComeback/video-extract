@@ -43,6 +43,7 @@ async function main() {
           mkBrief({
             source: extracted.source,
             content: extracted.text,
+            mediaUrl: extracted.mediaUrl,
             suggestedTitle: extracted.suggestedTitle,
             title: extracted.title
           })
@@ -67,6 +68,7 @@ async function main() {
         mkBrief({
           source: extracted.source,
           content: extracted.text,
+          mediaUrl: extracted.mediaUrl,
           suggestedTitle: extracted.suggestedTitle,
           title: extracted.title
         })
@@ -94,6 +96,7 @@ async function main() {
     mkBrief({
       source: extracted.source,
       content: extracted.text,
+      mediaUrl: extracted.mediaUrl,
       fetchError: extracted.fetchError,
       suggestedTitle: extracted.suggestedTitle,
       title: extracted.title

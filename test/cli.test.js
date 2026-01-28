@@ -164,6 +164,15 @@ test('extract tool includes a title field when parsing HTML', async () => {
   assert.equal(obj.title, 'Demo & Test');
 });
 
+test('extract tool includes a mediaUrl field when og:video is present', async () => {
+  const html = '<html><head><meta property="og:video" content="https://cdn.example.com/video.mp4"/></head><body><p>Hi</p></body></html>';
+  const url = `data:text/html,${encodeURIComponent(html)}`;
+  const { stdout } = await runExtract([url]);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.ok, true);
+  assert.equal(obj.mediaUrl, 'https://cdn.example.com/video.mp4');
+});
+
 test('transform tool can render markdown from extractor JSON', async () => {
   const extracted = { ok: true, source: 'demo', text: 'hello world', suggestedTitle: 'Demo' };
   const { stdout } = await runTransform(['--json'], { stdin: JSON.stringify(extracted) });

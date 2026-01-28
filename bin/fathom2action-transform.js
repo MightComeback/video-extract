@@ -48,8 +48,9 @@ async function main() {
     const suggestedTitle = parsed.suggestedTitle || '';
     const title = parsed.title || '';
     const fetchError = parsed.fetchError || null;
+    const mediaUrl = parsed.mediaUrl || '';
 
-    console.log(mkBrief({ source, content: text, suggestedTitle, title, fetchError }));
+    console.log(mkBrief({ source, content: text, mediaUrl, suggestedTitle, title, fetchError }));
     return;
   }
 

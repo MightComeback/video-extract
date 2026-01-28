@@ -73,6 +73,31 @@ function extractMetaContent(html, { name, property }) {
   return '';
 }
 
+function extractVideoUrlFromHtml(html) {
+  const s = String(html);
+
+  // Common OpenGraph video fields.
+  const ogVideo =
+    extractMetaContent(s, { property: 'og:video' }) ||
+    extractMetaContent(s, { property: 'og:video:url' }) ||
+    extractMetaContent(s, { property: 'og:video:secure_url' }) ||
+    '';
+  if (ogVideo) return ogVideo;
+
+  // Sometimes a share page points to an embeddable player.
+  const twitterPlayer = extractMetaContent(s, { name: 'twitter:player' }) || '';
+  if (twitterPlayer) return twitterPlayer;
+
+  // Best-effort: <video src="..."> or <source src="...">
+  const m1 = s.match(/<video[^>]*\s+src=("([^"]+)"|'([^']+)')[^>]*>/i);
+  if (m1) return decodeHtmlEntities(m1[2] || m1[3] || '').trim();
+
+  const m2 = s.match(/<source[^>]*\s+src=("([^"]+)"|'([^']+)')[^>]*>/i);
+  if (m2) return decodeHtmlEntities(m2[2] || m2[3] || '').trim();
+
+  return '';
+}
+
 function extractTitleFromHtml(html) {
   const s = String(html);
   const t = s.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
@@ -225,17 +250,19 @@ function tryExtractTranscriptFromEmbeddedJson(html) {
 
 export function normalizeFetchedContent(content) {
   const s = String(content || '').trim();
-  if (!s) return { text: '', suggestedTitle: '' };
+  if (!s) return { text: '', suggestedTitle: '', mediaUrl: '' };
   const looksHtml = /<\s*html[\s>]/i.test(s) || /<\s*title[\s>]/i.test(s);
-  if (!looksHtml) return { text: s, suggestedTitle: '' };
+  if (!looksHtml) return { text: s, suggestedTitle: '', mediaUrl: '' };
+
+  const mediaUrl = extractVideoUrlFromHtml(s);
 
   // If a share page embeds a transcript/notes in JSON, prefer that over tag-stripping.
   const embeddedTranscript = tryExtractTranscriptFromEmbeddedJson(s);
   if (embeddedTranscript) {
-    return { text: embeddedTranscript, suggestedTitle: extractTitleFromHtml(s) };
+    return { text: embeddedTranscript, suggestedTitle: extractTitleFromHtml(s), mediaUrl };
   }
 
-  return { text: stripHtmlToText(s), suggestedTitle: extractTitleFromHtml(s) };
+  return { text: stripHtmlToText(s), suggestedTitle: extractTitleFromHtml(s), mediaUrl };
 }
 
 export async function fetchUrlText(url) {
@@ -273,6 +300,7 @@ export async function extractFromUrl(url) {
       ok: true,
       source: url,
       text: norm.text,
+      mediaUrl: norm.mediaUrl || '',
       title: norm.suggestedTitle || '',
       suggestedTitle: norm.suggestedTitle,
       fetchError: null
@@ -283,6 +311,7 @@ export async function extractFromUrl(url) {
     ok: false,
     source: url,
     text: 'Unable to fetch this link (likely auth/cookies). Paste transcript/notes here, or run: fathom2action --stdin',
+    mediaUrl: '',
     title: '',
     suggestedTitle: '',
     fetchError: fetched.error
@@ -296,5 +325,5 @@ export function extractFromStdin({ content, source }) {
     err.code = 2;
     throw err;
   }
-  return { ok: true, source: source || 'stdin', text, title: '', suggestedTitle: '', fetchError: null };
+  return { ok: true, source: source || 'stdin', text, mediaUrl: '', title: '', suggestedTitle: '', fetchError: null };
 }
