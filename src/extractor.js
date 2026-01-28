@@ -571,24 +571,32 @@ function normalizeCookie(cookie) {
   return c || null;
 }
 
-async function downloadMediaWithFfmpeg({ mediaUrl, outPath, cookie } = {}) {
+async function downloadMediaWithFfmpeg({ mediaUrl, outPath, cookie, referer = null } = {}) {
   if (!mediaUrl) throw new Error('mediaUrl is required');
   if (!outPath) throw new Error('outPath is required');
 
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
   const common = ['-y', '-loglevel', 'error'];
+  const ua = `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom2action)`;
   const c = normalizeCookie(cookie);
+
+  // Prefer dedicated flags where available.
+  const httpArgs = ['-user_agent', ua];
+  if (referer) httpArgs.push('-referer', String(referer));
+
+  // Some servers only honor headers passed via -headers, so keep Cookie here.
   const headerArgs = c ? ['-headers', `Cookie: ${c}\r\n`] : [];
 
   // Fast path: stream-copy.
   try {
-    await run('ffmpeg', [...common, ...headerArgs, '-i', mediaUrl, '-c', 'copy', outPath]);
+    await run('ffmpeg', [...common, ...httpArgs, ...headerArgs, '-i', mediaUrl, '-c', 'copy', outPath]);
     return { ok: true, outPath, method: 'copy' };
   } catch {
     // Fallback: re-encode (more robust across containers/streams).
     await run('ffmpeg', [
       ...common,
+      ...httpArgs,
       ...headerArgs,
       '-i',
       mediaUrl,
@@ -816,7 +824,7 @@ export async function extractFromUrl(
       const segmentsDir = path.join(base.artifactsDir, 'segments');
 
       try {
-        await downloadMediaWithFfmpeg({ mediaUrl: base.mediaUrl, outPath: videoPath, cookie });
+        await downloadMediaWithFfmpeg({ mediaUrl: base.mediaUrl, outPath: videoPath, cookie, referer: url });
         base.mediaPath = videoPath;
 
         if (splitSeconds && Number.isFinite(splitSeconds) && splitSeconds > 0) {
