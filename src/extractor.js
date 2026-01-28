@@ -334,9 +334,10 @@ export function normalizeFetchedContent(content) {
   };
 }
 
-export async function fetchUrlText(url, { cookie = null } = {}) {
+export async function fetchUrlText(url, { cookie = null, timeoutMs = null } = {}) {
   const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), 5_000);
+  const ms = timeoutMs != null ? Number(timeoutMs) : Number(process.env.FATHOM_FETCH_TIMEOUT_MS || 15_000);
+  const t = setTimeout(() => controller.abort(), Number.isFinite(ms) ? ms : 15_000);
   try {
     const headers = {
       'user-agent': `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom2action)`
