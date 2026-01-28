@@ -20,6 +20,7 @@ Notes:
 }
 
 async function main() {
+  const cmd = process.argv[1]?.split('/').pop() || 'fathom2action';
   const args = process.argv.slice(2);
   if (args.includes('-h') || args.includes('--help')) usage(0);
 
