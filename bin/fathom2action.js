@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import process from 'node:process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 function readStdin() {
   return new Promise((resolve) => {
@@ -11,8 +13,20 @@ function readStdin() {
   });
 }
 
+function getVersion() {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const pkgPath = path.resolve(__dirname, '..', 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    return pkg.version || '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+}
+
 function usage(code = 0) {
-  console.log(`fathom2action\n\nUsage:\n  fathom2action <fathom-url>\n  fathom2action --stdin\n  fathom2action -    # read stdin\n\nTip:\n  If you run without args and stdin is piped, it will automatically read stdin.\n\nOutput:\n  Prints a markdown bug brief template filled with extracted context (best effort).\n\nNotes:\n  MVP intentionally works even without API keys: if we can't fetch/parse the link, pipe transcript/notes via --stdin.\n`);
+  console.log(`fathom2action\n\nUsage:\n  fathom2action <fathom-url>\n  fathom2action --stdin\n  fathom2action -          # read stdin\n  fathom2action --version\n\nTip:\n  If you run without args and stdin is piped, it will automatically read stdin.\n\nOutput:\n  Prints a markdown bug brief template filled with extracted context (best effort).\n\nNotes:\n  MVP intentionally works even without API keys: if we can't fetch/parse the link, pipe transcript/notes via --stdin.\n`);
   process.exit(code);
 }
 
@@ -97,6 +111,10 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.includes('-h') || args.includes('--help')) usage(0);
+  if (args.includes('-v') || args.includes('--version')) {
+    console.log(getVersion());
+    return;
+  }
 
   // Convenience: if no args and stdin is piped, treat it like --stdin.
   if (!args.length) {
