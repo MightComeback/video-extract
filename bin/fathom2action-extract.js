@@ -5,6 +5,13 @@ import process from 'node:process';
 
 import { readStdin, extractFromStdin, extractFromUrl } from '../src/extractor.js';
 
+function maybeWarnDeprecatedAlias() {
+  const cmd = process.argv[1]?.split('/').pop() || '';
+  if (/^fathom2action-?extract/i.test(cmd)) {
+    console.error(`WARN: '${cmd}' is deprecated. Prefer 'fathom-extract' (same behavior).`);
+  }
+}
+
 function usage(code = 0) {
   const cmd = process.argv[1]?.split('/').pop() || 'fathom-extract';
   console.log(`${cmd}
@@ -59,6 +66,8 @@ function loadCookie({ cookieFile } = {}) {
 }
 
 async function main() {
+  maybeWarnDeprecatedAlias();
+
   let args = process.argv.slice(2);
   if (args.includes('-h') || args.includes('--help')) usage(0);
 
