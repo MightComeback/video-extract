@@ -192,6 +192,92 @@ test('extract tool resolves media URLs found in JSON (no extension) via content-
   }
 });
 
+test('passes cookie + referer + user-agent when downloading media with ffmpeg', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom-extract-headers-'));
+  const srcVideo = path.join(tmp, 'src.mp4');
+
+  execFileSync('ffmpeg', [
+    '-y',
+    '-loglevel',
+    'error',
+    '-f',
+    'lavfi',
+    '-i',
+    'testsrc=size=64x64:rate=10',
+    '-t',
+    '3',
+    '-c:v',
+    'libx264',
+    '-pix_fmt',
+    'yuv420p',
+    '-g',
+    '10',
+    '-keyint_min',
+    '10',
+    '-sc_threshold',
+    '0',
+    '-an',
+    srcVideo,
+  ]);
+
+  const videoBytes = fs.readFileSync(srcVideo);
+
+  let srv;
+  srv = await withServer((req, res) => {
+    if (req.url === '/page') {
+      res.setHeader('content-type', 'text/html; charset=utf-8');
+      res.end(`<html><head><title>Headers</title><meta property="og:video" content="${srv.url}/video.mp4"/></head><body>Hi</body></html>`);
+      return;
+    }
+
+    if (req.url === '/video.mp4') {
+      const cookie = String(req.headers.cookie || '');
+      const ua = String(req.headers['user-agent'] || '');
+      const ref = String(req.headers.referer || '');
+
+      if (!cookie.includes('auth=1')) {
+        res.statusCode = 403;
+        res.end('missing cookie');
+        return;
+      }
+      if (!/\bfathom-extract\//.test(ua)) {
+        res.statusCode = 403;
+        res.end('missing/incorrect user-agent');
+        return;
+      }
+      if (!ref.endsWith('/page')) {
+        res.statusCode = 403;
+        res.end('missing/incorrect referer');
+        return;
+      }
+
+      res.statusCode = 200;
+      res.setHeader('content-type', 'video/mp4');
+      res.end(videoBytes);
+      return;
+    }
+
+    res.statusCode = 404;
+    res.end('not found');
+  });
+
+  try {
+    const outDir = path.join(tmp, 'out');
+    const { stdout } = await runExtract([`${srv.url}/page`, '--out-dir', outDir, '--split-seconds', '2', '--pretty'], {
+      timeoutMs: 120_000,
+      env: { FATHOM_COOKIE: 'auth=1' },
+    });
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.ok(obj.mediaPath);
+    assert.ok(fs.existsSync(obj.mediaPath));
+    assert.ok(Array.isArray(obj.mediaSegments));
+    assert.ok(obj.mediaSegments.length >= 1);
+  } finally {
+    await srv.close();
+  }
+});
+
 test('extract tool can download + split media into segments (local server)', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom-extract-test-'));
   const srcVideo = path.join(tmp, 'src.mp4');
