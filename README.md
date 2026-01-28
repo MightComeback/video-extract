@@ -30,6 +30,18 @@ node ./bin/fathom2action-extract.js --help
 
 ## Usage (copy/paste)
 
+### 0) Fathom link → actionable bug brief (MVP)
+
+```bash
+fathom2action "https://fathom.video/share/<TOKEN>"
+```
+
+If the link is auth-gated (401/403) or otherwise not fetchable, paste transcript/notes:
+
+```bash
+pbpaste | fathom2action --stdin
+```
+
 ### 1) Auth-gated Fathom link → transcript + video.mp4 + 5-min segments
 
 ```bash
@@ -106,7 +118,6 @@ fathom-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt -
 
 ## What this repo does NOT do
 - No LLM processing
-- No bug-brief generation
 
 ## CLI flags (extractor)
 - `--out-dir <dir>`: write `transcript.txt` + `extracted.json` + media artifacts

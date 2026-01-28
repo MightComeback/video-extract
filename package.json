@@ -13,6 +13,7 @@
   },
   "license": "ISC",
   "bin": {
-    "fathom-extract": "./bin/fathom2action-extract.js"
+    "fathom-extract": "./bin/fathom2action-extract.js",
+    "fathom2action": "./bin/fathom2action-brief.js"
   }
 }
