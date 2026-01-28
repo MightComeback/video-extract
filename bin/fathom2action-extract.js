@@ -161,9 +161,16 @@ async function main() {
 
   const splitFlag = readFlagValue(args, '--split-seconds');
   args = splitFlag.args;
-  const splitSeconds = splitFlag.value != null ? Number(splitFlag.value) : 300;
+
+  const envSplit = process.env.FATHOM_SPLIT_SECONDS != null ? Number(process.env.FATHOM_SPLIT_SECONDS) : null;
+  const splitSeconds = splitFlag.value != null ? Number(splitFlag.value) : (Number.isFinite(envSplit) ? envSplit : 300);
   if (splitFlag.value != null && (!Number.isFinite(splitSeconds) || splitSeconds <= 0)) {
     console.error('ERR: --split-seconds must be a positive number');
+    process.exit(2);
+  }
+
+  if (splitFlag.value == null && envSplit != null && (!Number.isFinite(envSplit) || envSplit <= 0)) {
+    console.error('ERR: FATHOM_SPLIT_SECONDS must be a positive number');
     process.exit(2);
   }
 

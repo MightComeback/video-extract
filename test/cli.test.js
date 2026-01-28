@@ -606,6 +606,16 @@ test('extract tool can download + split media into segments (local server)', asy
   }
 });
 
+test('extract tool supports FATHOM_SPLIT_SECONDS env var as the default when --split-seconds is not provided', async () => {
+  const html = '<html><head><title>Demo</title></head><body><p>Hello transcript</p></body></html>';
+  const url = `data:text/html,${encodeURIComponent(html)}`;
+
+  const { stdout } = await runExtract([url, '--no-download', '--pretty'], { env: { FATHOM_SPLIT_SECONDS: '123' } });
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.ok, true);
+  assert.equal(obj.segmentSeconds, 123);
+});
+
 test('extract tool supports --download-media <path> as an alias for setting the mp4 output path', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-test-'));
   const srcVideo = path.join(tmp, 'src.mp4');
