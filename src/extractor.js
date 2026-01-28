@@ -479,7 +479,7 @@ export function normalizeFetchedContent(content, baseUrl = null) {
   };
 }
 
-export async function fetchUrlText(url, { cookie = null, timeoutMs = null } = {}) {
+export async function fetchUrlText(url, { cookie = null, referer = null, timeoutMs = null } = {}) {
   const controller = new AbortController();
   const ms = timeoutMs != null ? Number(timeoutMs) : Number(process.env.FATHOM_FETCH_TIMEOUT_MS || 15_000);
   const t = setTimeout(() => controller.abort(), Number.isFinite(ms) ? ms : 15_000);
@@ -489,6 +489,7 @@ export async function fetchUrlText(url, { cookie = null, timeoutMs = null } = {}
     };
     const c = normalizeCookie(cookie);
     if (c) headers.cookie = c;
+    if (referer) headers.referer = String(referer);
 
     const res = await fetch(url, {
       method: 'GET',
@@ -687,7 +688,7 @@ async function resolveMediaUrl(mediaUrl, { cookie = null, referer = null, maxDep
 
   // Some share pages point og:video at an embeddable player HTML.
   // Best-effort: fetch that page and look again for a direct video URL.
-  const fetched = await fetchUrlText(start, { cookie });
+  const fetched = await fetchUrlText(start, { cookie, referer });
   if (!fetched.ok) return start;
 
   const nextRaw = extractVideoUrlFromHtml(fetched.text) || '';
