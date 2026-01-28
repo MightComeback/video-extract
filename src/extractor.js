@@ -29,7 +29,7 @@ export function getVersion() {
 function getUserAgent() {
   const env = String(process.env.FATHOM_USER_AGENT || '').trim();
   if (env) return env;
-  return `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom2action)`;
+  return `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom-extract)`;
 }
 
 function decodeHtmlEntities(s) {
@@ -536,6 +536,23 @@ function defaultArtifactsDir({ title } = {}) {
   return path.join(process.cwd(), 'fathom-artifacts', `${ts}-${base}`);
 }
 
+function envInt(name, fallback) {
+  const raw = String(process.env[name] || '').trim();
+  if (!raw) return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function ffmpegDownloadTimeoutMs() {
+  // Default: 2 hours (long calls + HLS downloads can take a while).
+  return envInt('FATHOM_FFMPEG_DOWNLOAD_TIMEOUT_SECONDS', 7200) * 1000;
+}
+
+function ffmpegSplitTimeoutMs() {
+  // Default: 1 hour (re-encode fallback can be slower).
+  return envInt('FATHOM_FFMPEG_SPLIT_TIMEOUT_SECONDS', 3600) * 1000;
+}
+
 function run(cmd, args, { timeoutMs = 5 * 60_000 } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -597,28 +614,32 @@ async function downloadMediaWithFfmpeg({ mediaUrl, outPath, cookie, referer = nu
 
   // Fast path: stream-copy.
   try {
-    await run('ffmpeg', [...common, ...httpArgs, ...headerArgs, '-i', mediaUrl, '-c', 'copy', outPath]);
+    await run('ffmpeg', [...common, ...httpArgs, ...headerArgs, '-i', mediaUrl, '-c', 'copy', outPath], { timeoutMs: ffmpegDownloadTimeoutMs() });
     return { ok: true, outPath, method: 'copy' };
   } catch {
     // Fallback: re-encode (more robust across containers/streams).
-    await run('ffmpeg', [
-      ...common,
-      ...httpArgs,
-      ...headerArgs,
-      '-i',
-      mediaUrl,
-      '-c:v',
-      'libx264',
-      '-preset',
-      'veryfast',
-      '-crf',
-      '28',
-      '-c:a',
-      'aac',
-      '-b:a',
-      '128k',
-      outPath
-    ]);
+    await run(
+      'ffmpeg',
+      [
+        ...common,
+        ...httpArgs,
+        ...headerArgs,
+        '-i',
+        mediaUrl,
+        '-c:v',
+        'libx264',
+        '-preset',
+        'veryfast',
+        '-crf',
+        '28',
+        '-c:a',
+        'aac',
+        '-b:a',
+        '128k',
+        outPath
+      ],
+      { timeoutMs: ffmpegDownloadTimeoutMs() }
+    );
     return { ok: true, outPath, method: 'reencode' };
   }
 }
@@ -718,48 +739,56 @@ async function splitVideoIntoSegments({ inputPath, segmentsDir, segmentSeconds =
 
   // Fast path: stream-copy (segments align to keyframes; good enough for Gemini ingestion).
   try {
-    await run('ffmpeg', [
-      ...common,
-      '-i',
-      inputPath,
-      '-map',
-      '0',
-      '-c',
-      'copy',
-      '-f',
-      'segment',
-      '-segment_time',
-      String(segmentSeconds),
-      '-reset_timestamps',
-      '1',
-      pattern
-    ]);
+    await run(
+      'ffmpeg',
+      [
+        ...common,
+        '-i',
+        inputPath,
+        '-map',
+        '0',
+        '-c',
+        'copy',
+        '-f',
+        'segment',
+        '-segment_time',
+        String(segmentSeconds),
+        '-reset_timestamps',
+        '1',
+        pattern
+      ],
+      { timeoutMs: ffmpegSplitTimeoutMs() }
+    );
   } catch {
     // Fallback: re-encode + force keyframes at segment boundaries.
-    await run('ffmpeg', [
-      ...common,
-      '-i',
-      inputPath,
-      '-c:v',
-      'libx264',
-      '-preset',
-      'veryfast',
-      '-crf',
-      '28',
-      '-force_key_frames',
-      `expr:gte(t,n_forced*${segmentSeconds})`,
-      '-c:a',
-      'aac',
-      '-b:a',
-      '128k',
-      '-f',
-      'segment',
-      '-segment_time',
-      String(segmentSeconds),
-      '-reset_timestamps',
-      '1',
-      pattern
-    ]);
+    await run(
+      'ffmpeg',
+      [
+        ...common,
+        '-i',
+        inputPath,
+        '-c:v',
+        'libx264',
+        '-preset',
+        'veryfast',
+        '-crf',
+        '28',
+        '-force_key_frames',
+        `expr:gte(t,n_forced*${segmentSeconds})`,
+        '-c:a',
+        'aac',
+        '-b:a',
+        '128k',
+        '-f',
+        'segment',
+        '-segment_time',
+        String(segmentSeconds),
+        '-reset_timestamps',
+        '1',
+        pattern
+      ],
+      { timeoutMs: ffmpegSplitTimeoutMs() }
+    );
   }
 
   const files = fs
