@@ -159,6 +159,39 @@ test('sets mediaDownloadError when download is enabled but mediaUrl is missing',
   assert.match(String(obj.mediaDownloadError || ''), /mediaUrl not found/i);
 });
 
+test('extract tool resolves media URLs found in JSON (no extension) via content-type probe', async () => {
+  let srv;
+  srv = await withServer((req, res) => {
+    if (req.url === '/page') {
+      res.setHeader('content-type', 'text/html; charset=utf-8');
+      res.end(
+        `<html><head><title>JSON Media</title></head><body><script>window.__DATA__={"downloadUrl":"${srv.url}\/video"}</script></body></html>`
+      );
+      return;
+    }
+
+    if (req.url === '/video') {
+      res.statusCode = 200;
+      res.setHeader('content-type', 'video/mp4');
+      res.end('not-a-real-mp4');
+      return;
+    }
+
+    res.statusCode = 404;
+    res.end('not found');
+  });
+
+  try {
+    const { stdout } = await runExtract([`${srv.url}/page`, '--no-download', '--no-split', '--pretty']);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.equal(obj.title, 'JSON Media');
+    assert.equal(obj.mediaUrl, `${srv.url}/video`);
+  } finally {
+    await srv.close();
+  }
+});
+
 test('extract tool can download + split media into segments (local server)', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom-extract-test-'));
   const srcVideo = path.join(tmp, 'src.mp4');
