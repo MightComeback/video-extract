@@ -24,22 +24,26 @@ This repo intentionally keeps **extraction** and **actionization** separate.
 
 ### 1) Extract (URL/stdin → JSON artifacts)
 
+Preferred name: `fathom-extract` (aliases kept for backward-compat).
+
 ```bash
 # URL → JSON
-fathom2action-extract "https://..." --pretty
+fathom-extract "https://..." --pretty
 
 # stdin → JSON (useful when the link is private/auth-gated)
-pbpaste | fathom2action-extract --stdin --source "https://..." --pretty
+pbpaste | fathom-extract --stdin --source "https://..." --pretty
 ```
 
 ### 2) Transform (JSON/raw text → markdown bug brief)
 
+Preferred name: `fathom-transform` (aliases kept for backward-compat).
+
 ```bash
 # Pipe extractor JSON → transformer markdown
-fathom2action-extract "https://..." | fathom2action-transform --json > bug.md
+fathom-extract "https://..." | fathom-transform --json > bug.md
 
 # Or transform raw transcript/notes directly
-pbpaste | fathom2action-transform --stdin --source "meeting notes" > bug.md
+pbpaste | fathom-transform --stdin --source "meeting notes" > bug.md
 ```
 
 ## Output

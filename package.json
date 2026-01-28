@@ -20,6 +20,10 @@
   "homepage": "https://github.com/MightComeback/fathom2action#readme",
   "bin": {
     "fathom2action": "./bin/fathom2action.js",
+
+    "fathom-extract": "./bin/fathom2action-extract.js",
+    "fathom-transform": "./bin/fathom2action-transform.js",
+
     "fathom2action-extract": "./bin/fathom2action-extract.js",
     "fathom2action-transform": "./bin/fathom2action-transform.js"
   }

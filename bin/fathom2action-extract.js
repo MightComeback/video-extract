@@ -3,7 +3,8 @@ import process from 'node:process';
 import { readStdin, extractFromStdin, extractFromUrl } from '../src/extractor.js';
 
 function usage(code = 0) {
-  console.log(`fathom2action-extract\n\nUsage:\n  fathom2action-extract <url> [--pretty]\n  fathom2action-extract --stdin [--source <url-or-label>] [--pretty]\n  fathom2action-extract - [--source <url-or-label>] [--pretty]\n\nOutput:\n  Prints JSON { ok, source, text, title, suggestedTitle, fetchError } to stdout.\n`);
+  const cmd = process.argv[1]?.split('/').pop() || 'fathom-extract';
+  console.log(`${cmd}\n\nUsage:\n  ${cmd} <url> [--pretty]\n  ${cmd} --stdin [--source <url-or-label>] [--pretty]\n  ${cmd} - [--source <url-or-label>] [--pretty]\n\nOutput:\n  Prints JSON { ok, source, text, mediaUrl, title, suggestedTitle, fetchError } to stdout.\n`);
   process.exit(code);
 }
 

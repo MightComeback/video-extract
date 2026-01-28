@@ -4,7 +4,8 @@ import { readStdin } from '../src/extractor.js';
 import { mkBrief } from '../src/transformer.js';
 
 function usage(code = 0) {
-  console.log(`fathom2action-transform\n\nUsage:\n  fathom2action-transform --json         # reads extractor JSON from stdin\n  fathom2action-transform --stdin        # reads raw transcript/notes from stdin\n\nOptions:\n  --source <url-or-label>   Only for --stdin mode (raw text).\n\nOutput:\n  Prints a markdown bug brief to stdout.\n`);
+  const cmd = process.argv[1]?.split('/').pop() || 'fathom-transform';
+  console.log(`${cmd}\n\nUsage:\n  ${cmd} --json         # reads extractor JSON from stdin\n  ${cmd} --stdin        # reads raw transcript/notes from stdin\n\nOptions:\n  --source <url-or-label>   Only for --stdin mode (raw text).\n\nOutput:\n  Prints a markdown bug brief to stdout.\n`);
   process.exit(code);
 }
 
