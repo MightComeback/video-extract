@@ -3,6 +3,13 @@ import process from 'node:process';
 import { readStdin } from '../src/extractor.js';
 import { mkBrief } from '../src/transformer.js';
 
+function maybeWarnDeprecatedAlias() {
+  const cmd = process.argv[1]?.split('/').pop() || '';
+  if (/^fathom2action-?transform/i.test(cmd)) {
+    console.error(`WARN: '${cmd}' is deprecated. Prefer 'fathom-transform' (same behavior).`);
+  }
+}
+
 function usage(code = 0) {
   const cmd = process.argv[1]?.split('/').pop() || 'fathom-transform';
   console.log(`${cmd}\n\nUsage:\n  ${cmd} --json         # reads extractor JSON from stdin\n  ${cmd} --stdin        # reads raw transcript/notes from stdin\n\nOptions:\n  --source <url-or-label>   Only for --stdin mode (raw text).\n\nOutput:\n  Prints a markdown bug brief to stdout.\n`);
@@ -22,6 +29,8 @@ function readFlagValue(args, flag) {
 }
 
 async function main() {
+  maybeWarnDeprecatedAlias();
+
   let args = process.argv.slice(2);
   if (args.includes('-h') || args.includes('--help')) usage(0);
 
