@@ -17,7 +17,7 @@ function usage(code = 0) {
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <url> [--pretty] [--out-dir <dir>] [--split-seconds 300] [--no-download] [--no-split] [--cookie-file <path>] [--download-media <path>]
+  ${cmd} <url> [--pretty] [--out-dir <dir>] [--split-seconds 300] [--no-download] [--no-split] [--cookie <header-or-pairs>] [--cookie-file <path>] [--download-media <path>]
   ${cmd} --stdin [--source <url-or-label>] [--pretty]
   ${cmd} - [--source <url-or-label>] [--pretty]
 
@@ -28,7 +28,7 @@ Output:
 Notes:
   - Default (URL mode): if mediaUrl is found, it will download a local mp4 and split into 5-minute segments (300s).
   - If --out-dir is set, the extractor will also write transcript.txt + extracted.json for easy piping to other tools.
-  - For auth-gated links, pass a Cookie header via FATHOM_COOKIE, or a cookie file via FATHOM_COOKIE_FILE/--cookie-file.
+  - For auth-gated links, pass a Cookie header via --cookie/FATHOM_COOKIE, or a cookie file via FATHOM_COOKIE_FILE/--cookie-file.
   - --download-media <path> is a convenience alias that sets the downloaded mp4 output path.
 `);
   process.exit(code);
@@ -110,13 +110,17 @@ function parseCookieFileContents(raw) {
   return s;
 }
 
-function loadCookie({ cookieFile } = {}) {
-  let c = process.env.FATHOM_COOKIE ? String(process.env.FATHOM_COOKIE) : '';
+function loadCookie({ cookie, cookieFile } = {}) {
+  // Precedence:
+  //  1) explicit --cookie
+  //  2) --cookie-file / FATHOM_COOKIE_FILE
+  //  3) FATHOM_COOKIE
+  let c = cookie ? String(cookie) : '';
 
   // Convenience: allow env var to point at a cookie file.
   if (!cookieFile && process.env.FATHOM_COOKIE_FILE) cookieFile = String(process.env.FATHOM_COOKIE_FILE);
 
-  if (cookieFile) {
+  if (!c && cookieFile) {
     try {
       c = fs.readFileSync(cookieFile, 'utf8');
     } catch (e) {
@@ -125,6 +129,8 @@ function loadCookie({ cookieFile } = {}) {
       process.exit(2);
     }
   }
+
+  if (!c && process.env.FATHOM_COOKIE) c = String(process.env.FATHOM_COOKIE);
 
   c = parseCookieFileContents(c);
   c = String(c || '').trim();
@@ -161,9 +167,13 @@ async function main() {
     process.exit(2);
   }
 
+  const cookieFlag = readFlagValue(args, '--cookie');
+  args = cookieFlag.args;
+
   const cookieFileFlag = readFlagValue(args, '--cookie-file');
   args = cookieFileFlag.args;
-  const cookie = loadCookie({ cookieFile: cookieFileFlag.value });
+
+  const cookie = loadCookie({ cookie: cookieFlag.value, cookieFile: cookieFileFlag.value });
 
   const sourceFlag = readFlagValue(args, '--source');
   args = sourceFlag.args;
