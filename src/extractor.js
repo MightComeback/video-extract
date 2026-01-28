@@ -32,11 +32,47 @@ function decodeHtmlEntities(s) {
     .replaceAll('&#39;', "'");
 }
 
+function extractMetaContent(html, { name, property }) {
+  const s = String(html);
+  const metas = s.match(/<meta\s+[^>]*>/gi) || [];
+
+  for (const tag of metas) {
+    const attrs = {};
+
+    // Best-effort attribute parse: key="value" and key='value'
+    for (const m of tag.matchAll(/([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*("([\s\S]*?)"|'([\s\S]*?)')/g)) {
+      const key = (m[1] || '').toLowerCase();
+      const val = m[3] ?? m[4] ?? '';
+      attrs[key] = val;
+    }
+
+    const hasName = name && String(attrs.name || '').toLowerCase() === String(name).toLowerCase();
+    const hasProp = property && String(attrs.property || '').toLowerCase() === String(property).toLowerCase();
+    if (!hasName && !hasProp) continue;
+
+    const content = attrs.content;
+    if (!content) continue;
+
+    return decodeHtmlEntities(content).trim().replace(/\s+/g, ' ').trim();
+  }
+
+  return '';
+}
+
 function extractTitleFromHtml(html) {
-  const m = String(html).match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  if (!m) return '';
-  const raw = decodeHtmlEntities(m[1] || '').trim();
-  return raw.replace(/\s+/g, ' ').trim();
+  const s = String(html);
+  const t = s.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (t) {
+    const raw = decodeHtmlEntities(t[1] || '').trim();
+    return raw.replace(/\s+/g, ' ').trim();
+  }
+
+  // Fallbacks commonly present on share pages.
+  return (
+    extractMetaContent(s, { property: 'og:title' }) ||
+    extractMetaContent(s, { name: 'twitter:title' }) ||
+    ''
+  );
 }
 
 function stripHtmlToText(html) {

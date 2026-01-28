@@ -61,6 +61,13 @@ test('strips HTML when given an HTML page', async () => {
   assert.match(stdout, /Line/);
 });
 
+test('extracts og:title when <title> is missing', async () => {
+  const html = '<html><head><meta property="og:title" content="OG Demo &amp; Title"/></head><body><p>Hi</p></body></html>';
+  const url = `data:text/html,${encodeURIComponent(html)}`;
+  const { stdout } = await run([url]);
+  assert.match(stdout, /- OG Demo & Title/);
+});
+
 test('reads stdin when --stdin is provided', async () => {
   const { stdout } = await run(['--stdin'], { stdin: 'hello world\n' });
   assert.match(stdout, /Source: stdin/);
