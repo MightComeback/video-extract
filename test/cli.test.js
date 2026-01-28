@@ -8,10 +8,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const binPath = path.resolve(__dirname, '..', 'bin', 'fathom2action.js');
+const extractBinPath = path.resolve(__dirname, '..', 'bin', 'fathom2action-extract.js');
+const transformBinPath = path.resolve(__dirname, '..', 'bin', 'fathom2action-transform.js');
 
-function run(args, { stdin } = {}) {
+function runBin(bin, args, { stdin } = {}) {
   return new Promise((resolve, reject) => {
-    const child = execFile(process.execPath, [binPath, ...args], { timeout: 10_000 }, (err, stdout, stderr) => {
+    const child = execFile(process.execPath, [bin, ...args], { timeout: 10_000 }, (err, stdout, stderr) => {
       if (err) {
         err.stdout = stdout;
         err.stderr = stderr;
@@ -25,6 +27,18 @@ function run(args, { stdin } = {}) {
       child.stdin.end();
     }
   });
+}
+
+function run(args, opts) {
+  return runBin(binPath, args, opts);
+}
+
+function runExtract(args, opts) {
+  return runBin(extractBinPath, args, opts);
+}
+
+function runTransform(args, opts) {
+  return runBin(transformBinPath, args, opts);
 }
 
 test('prints version when --version is provided', async () => {
@@ -102,4 +116,27 @@ test('errors when --stdin is empty', async () => {
       return true;
     }
   );
+});
+
+test('extract tool returns JSON', async () => {
+  const { stdout } = await runExtract(['--stdin', '--source', 'demo'], { stdin: 'hello\n' });
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.ok, true);
+  assert.equal(obj.source, 'demo');
+  assert.match(obj.text, /hello/);
+});
+
+test('transform tool can render markdown from extractor JSON', async () => {
+  const extracted = { ok: true, source: 'demo', text: 'hello world', suggestedTitle: 'Demo' };
+  const { stdout } = await runTransform(['--json'], { stdin: JSON.stringify(extracted) });
+  assert.match(stdout, /# Bug brief/);
+  assert.match(stdout, /Source: demo/);
+  assert.match(stdout, /hello world/);
+  assert.match(stdout, /- Demo/);
+});
+
+test('transform tool can render markdown from raw text stdin', async () => {
+  const { stdout } = await runTransform(['--stdin', '--source', 'demo'], { stdin: 'notes here\n' });
+  assert.match(stdout, /Source: demo/);
+  assert.match(stdout, /notes here/);
 });
