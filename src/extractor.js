@@ -29,7 +29,8 @@ function decodeHtmlEntities(s) {
     .replaceAll('&lt;', '<')
     .replaceAll('&gt;', '>')
     .replaceAll('&quot;', '"')
-    .replaceAll('&#39;', "'");
+    .replaceAll('&#39;', "'")
+    .replaceAll('&nbsp;', ' ');
 
   // Best-effort numeric entities.
   // Examples: &#8217; (’) and &#x2019; (’)
@@ -81,11 +82,21 @@ function extractTitleFromHtml(html) {
   }
 
   // Fallbacks commonly present on share pages.
-  return (
+  const metaTitle =
     extractMetaContent(s, { property: 'og:title' }) ||
     extractMetaContent(s, { name: 'twitter:title' }) ||
-    ''
-  );
+    '';
+  if (metaTitle) return metaTitle;
+
+  // Last-resort fallback: first H1.
+  const h1 = s.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  if (h1) {
+    const raw = decodeHtmlEntities(h1[1] || '').trim();
+    const text = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (text) return text;
+  }
+
+  return '';
 }
 
 function stripHtmlToText(html) {

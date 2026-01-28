@@ -82,6 +82,13 @@ test('extracts og:title when <title> is missing', async () => {
   assert.match(stdout, /- OG Demo & Title/);
 });
 
+test('falls back to <h1> when no <title> or meta title is present', async () => {
+  const html = '<html><head></head><body><h1>H1 &amp; Title</h1><p>Hi</p></body></html>';
+  const url = `data:text/html,${encodeURIComponent(html)}`;
+  const { stdout } = await run([url]);
+  assert.match(stdout, /- H1 & Title/);
+});
+
 test('decodes numeric HTML entities in extracted title', async () => {
   const html = '<html><head><title>Ivan&#39;s &#x2019;Demo&#8217;</title></head><body><p>Hi</p></body></html>';
   const url = `data:text/html,${encodeURIComponent(html)}`;
