@@ -156,6 +156,7 @@ export async function extractFromUrl(url) {
       ok: true,
       source: url,
       text: norm.text,
+      title: norm.suggestedTitle || '',
       suggestedTitle: norm.suggestedTitle,
       fetchError: null
     };
@@ -165,6 +166,7 @@ export async function extractFromUrl(url) {
     ok: false,
     source: url,
     text: 'Unable to fetch this link (likely auth/cookies). Paste transcript/notes here, or run: fathom2action --stdin',
+    title: '',
     suggestedTitle: '',
     fetchError: fetched.error
   };
@@ -177,5 +179,5 @@ export function extractFromStdin({ content, source }) {
     err.code = 2;
     throw err;
   }
-  return { ok: true, source: source || 'stdin', text, suggestedTitle: '', fetchError: null };
+  return { ok: true, source: source || 'stdin', text, title: '', suggestedTitle: '', fetchError: null };
 }

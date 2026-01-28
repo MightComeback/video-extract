@@ -46,9 +46,10 @@ async function main() {
     const source = parsed.source || 'stdin';
     const text = parsed.text || '';
     const suggestedTitle = parsed.suggestedTitle || '';
+    const title = parsed.title || '';
     const fetchError = parsed.fetchError || null;
 
-    console.log(mkBrief({ source, content: text, suggestedTitle, fetchError }));
+    console.log(mkBrief({ source, content: text, suggestedTitle, title, fetchError }));
     return;
   }
 

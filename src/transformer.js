@@ -1,4 +1,4 @@
-export function mkBrief({ source, content, fetchError, suggestedTitle }) {
+export function mkBrief({ source, content, fetchError, suggestedTitle, title }) {
   const text = (content || '').trim();
   const lines = [];
   lines.push(`# Bug brief`);
@@ -8,7 +8,8 @@ export function mkBrief({ source, content, fetchError, suggestedTitle }) {
   lines.push('');
   lines.push('## Suggested issue title (optional)');
   lines.push('');
-  lines.push(`- ${suggestedTitle ? suggestedTitle : ''}`);
+  const bestTitle = suggestedTitle || title || '';
+  lines.push(`- ${bestTitle ? bestTitle : ''}`);
   lines.push('');
   lines.push('## Summary (1 sentence)');
   lines.push('');

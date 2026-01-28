@@ -133,6 +133,15 @@ test('extract tool returns JSON', async () => {
   assert.match(obj.text, /hello/);
 });
 
+test('extract tool includes a title field when parsing HTML', async () => {
+  const html = '<html><head><title>Demo &amp; Test</title></head><body><p>Hi</p></body></html>';
+  const url = `data:text/html,${encodeURIComponent(html)}`;
+  const { stdout } = await runExtract([url]);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.ok, true);
+  assert.equal(obj.title, 'Demo & Test');
+});
+
 test('transform tool can render markdown from extractor JSON', async () => {
   const extracted = { ok: true, source: 'demo', text: 'hello world', suggestedTitle: 'Demo' };
   const { stdout } = await runTransform(['--json'], { stdin: JSON.stringify(extracted) });
