@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 export function readStdin() {
@@ -245,7 +246,6 @@ function tryExtractTranscriptFromEmbeddedJson(html) {
 
     const parts = [];
     const seen = new Set();
-
     const visited = new Set();
 
     function walk(x) {
@@ -354,19 +354,208 @@ export async function fetchUrlText(url) {
   }
 }
 
-export async function extractFromUrl(url) {
+function slugify(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
+function defaultArtifactsDir({ title } = {}) {
+  const ts = new Date().toISOString().replace(/[:.]/g, '-');
+  const base = slugify(title) || 'fathom';
+  return path.join(process.cwd(), 'fathom-artifacts', `${ts}-${base}`);
+}
+
+function run(cmd, args, { timeoutMs = 5 * 60_000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    let out = '';
+    let err = '';
+
+    const t = setTimeout(() => {
+      child.kill('SIGKILL');
+      reject(new Error(`${cmd} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    child.stdout.on('data', (c) => (out += String(c)));
+    child.stderr.on('data', (c) => (err += String(c)));
+
+    child.on('error', (e) => {
+      clearTimeout(t);
+      reject(e);
+    });
+
+    child.on('close', (code) => {
+      clearTimeout(t);
+      if (code === 0) return resolve({ out, err });
+      const tail = (err || out || '').split(/\r?\n/).slice(-20).join('\n');
+      reject(new Error(`${cmd} exited ${code}: ${tail}`));
+    });
+  });
+}
+
+function normalizeCookie(cookie) {
+  if (!cookie) return null;
+  let c = String(cookie).trim();
+  if (!c) return null;
+  if (c.toLowerCase().startsWith('cookie:')) c = c.slice('cookie:'.length).trim();
+  return c || null;
+}
+
+async function downloadMediaWithFfmpeg({ mediaUrl, outPath, cookie } = {}) {
+  if (!mediaUrl) throw new Error('mediaUrl is required');
+  if (!outPath) throw new Error('outPath is required');
+
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+
+  const common = ['-y', '-loglevel', 'error'];
+  const c = normalizeCookie(cookie);
+  const headerArgs = c ? ['-headers', `Cookie: ${c}\r\n`] : [];
+
+  // Fast path: stream-copy.
+  try {
+    await run('ffmpeg', [...common, ...headerArgs, '-i', mediaUrl, '-c', 'copy', outPath]);
+    return { ok: true, outPath, method: 'copy' };
+  } catch {
+    // Fallback: re-encode (more robust across containers/streams).
+    await run('ffmpeg', [
+      ...common,
+      ...headerArgs,
+      '-i',
+      mediaUrl,
+      '-c:v',
+      'libx264',
+      '-preset',
+      'veryfast',
+      '-crf',
+      '28',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '128k',
+      outPath
+    ]);
+    return { ok: true, outPath, method: 'reencode' };
+  }
+}
+
+async function splitVideoIntoSegments({ inputPath, segmentsDir, segmentSeconds = 300 } = {}) {
+  if (!inputPath) throw new Error('inputPath is required');
+  if (!segmentsDir) throw new Error('segmentsDir is required');
+  if (!Number.isFinite(segmentSeconds) || segmentSeconds <= 0) throw new Error('segmentSeconds must be > 0');
+
+  fs.mkdirSync(segmentsDir, { recursive: true });
+  const pattern = path.join(segmentsDir, 'segment_%03d.mp4');
+  const common = ['-y', '-loglevel', 'error'];
+
+  // Fast path: stream-copy (segments align to keyframes; good enough for Gemini ingestion).
+  try {
+    await run('ffmpeg', [
+      ...common,
+      '-i',
+      inputPath,
+      '-map',
+      '0',
+      '-c',
+      'copy',
+      '-f',
+      'segment',
+      '-segment_time',
+      String(segmentSeconds),
+      '-reset_timestamps',
+      '1',
+      pattern
+    ]);
+  } catch {
+    // Fallback: re-encode + force keyframes at segment boundaries.
+    await run('ffmpeg', [
+      ...common,
+      '-i',
+      inputPath,
+      '-c:v',
+      'libx264',
+      '-preset',
+      'veryfast',
+      '-crf',
+      '28',
+      '-force_key_frames',
+      `expr:gte(t,n_forced*${segmentSeconds})`,
+      '-c:a',
+      'aac',
+      '-b:a',
+      '128k',
+      '-f',
+      'segment',
+      '-segment_time',
+      String(segmentSeconds),
+      '-reset_timestamps',
+      '1',
+      pattern
+    ]);
+  }
+
+  const files = fs
+    // Keep in deterministic order.
+    .readdirSync(segmentsDir)
+    .filter((f) => f.startsWith('segment_') && f.endsWith('.mp4'))
+    .sort()
+    .map((f) => path.join(segmentsDir, f));
+
+  return files;
+}
+
+export async function extractFromUrl(
+  url,
+  { downloadMedia = false, splitSeconds = 300, outDir = null, cookie = null } = {}
+) {
   const fetched = await fetchUrlText(url);
   if (fetched.ok) {
     const norm = normalizeFetchedContent(fetched.text);
-    return {
+
+    const base = {
       ok: true,
       source: url,
       text: norm.text,
       mediaUrl: norm.mediaUrl || '',
       title: norm.suggestedTitle || '',
       suggestedTitle: norm.suggestedTitle,
-      fetchError: null
+      fetchError: null,
+
+      // Media artifacts (optional)
+      artifactsDir: null,
+      mediaPath: null,
+      mediaSegments: [],
+      segmentSeconds: splitSeconds,
+      mediaDownloadError: null,
     };
+
+    // Optional: if we have a mediaUrl, download as an mp4 and split into N-second chunks.
+    if (downloadMedia && base.mediaUrl) {
+      const artifactsDir = outDir ? path.resolve(outDir) : defaultArtifactsDir({ title: base.title || base.suggestedTitle });
+      const videoPath = path.join(artifactsDir, 'video.mp4');
+      const segmentsDir = path.join(artifactsDir, 'segments');
+
+      base.artifactsDir = artifactsDir;
+
+      try {
+        await downloadMediaWithFfmpeg({ mediaUrl: base.mediaUrl, outPath: videoPath, cookie });
+        base.mediaPath = videoPath;
+
+        if (splitSeconds && Number.isFinite(splitSeconds) && splitSeconds > 0) {
+          base.mediaSegments = await splitVideoIntoSegments({
+            inputPath: videoPath,
+            segmentsDir,
+            segmentSeconds: splitSeconds,
+          });
+        }
+      } catch (e) {
+        base.mediaDownloadError = String(e?.message || e);
+      }
+    }
+
+    return base;
   }
 
   return {
@@ -376,7 +565,12 @@ export async function extractFromUrl(url) {
     mediaUrl: '',
     title: '',
     suggestedTitle: '',
-    fetchError: fetched.error
+    fetchError: fetched.error,
+    artifactsDir: null,
+    mediaPath: null,
+    mediaSegments: [],
+    segmentSeconds: splitSeconds,
+    mediaDownloadError: null,
   };
 }
 
@@ -387,5 +581,18 @@ export function extractFromStdin({ content, source }) {
     err.code = 2;
     throw err;
   }
-  return { ok: true, source: source || 'stdin', text, mediaUrl: '', title: '', suggestedTitle: '', fetchError: null };
+  return {
+    ok: true,
+    source: source || 'stdin',
+    text,
+    mediaUrl: '',
+    title: '',
+    suggestedTitle: '',
+    fetchError: null,
+    artifactsDir: null,
+    mediaPath: null,
+    mediaSegments: [],
+    segmentSeconds: 0,
+    mediaDownloadError: null,
+  };
 }
