@@ -55,3 +55,14 @@ test('brief --stdin treats a leading URL line as the Source', async () => {
   assert.match(stdout, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
   assert.match(stdout, /^- Alice: It crashes/m);
 });
+
+test('brief --stdin treats a single URL line as the Source (empty transcript)', async () => {
+  const url = 'https://fathom.video/share/only-url';
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: [url, ''].join('\n'),
+  });
+
+  assert.match(stdout, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+  // With no transcript, we should still render an empty teaser placeholder.
+  assert.match(stdout, /^## Transcript teaser \(first lines\)/m);
+});

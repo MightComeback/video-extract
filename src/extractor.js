@@ -1074,9 +1074,11 @@ export function extractFromStdin({ content, source }) {
 
   const lines = raw.split(/\r?\n/);
   const first = String(lines[0] || '').trim();
-  if (/^https?:\/\//i.test(first) && lines.length >= 2) {
+  if (/^https?:\/\//i.test(first)) {
+    // If the user pastes just a URL, treat it as the Source and leave transcript empty.
+    // If they paste URL + transcript, split it.
     src = first;
-    text = lines.slice(1).join('\n').trim();
+    text = lines.length >= 2 ? lines.slice(1).join('\n').trim() : '';
   }
 
   return {
