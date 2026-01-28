@@ -580,13 +580,20 @@ async function downloadMediaWithFfmpeg({ mediaUrl, outPath, cookie } = {}) {
 }
 
 function isLikelyMediaFile(url) {
-  const u = String(url || '').toLowerCase();
+  const raw = String(url || '').trim();
+  if (!raw) return false;
+
+  // Many CDNs sign media URLs via query params, so `.endsWith('.mp4')` is too strict.
+  // Example: https://cdn.example.com/video.mp4?token=abc
+  const lower = raw.toLowerCase();
+  const noQuery = lower.split(/[?#]/)[0];
+
   return (
-    u.endsWith('.mp4') ||
-    u.endsWith('.mov') ||
-    u.endsWith('.m4v') ||
-    u.endsWith('.webm') ||
-    u.endsWith('.m3u8')
+    noQuery.endsWith('.mp4') ||
+    noQuery.endsWith('.mov') ||
+    noQuery.endsWith('.m4v') ||
+    noQuery.endsWith('.webm') ||
+    noQuery.endsWith('.m3u8')
   );
 }
 
