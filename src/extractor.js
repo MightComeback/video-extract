@@ -447,6 +447,37 @@ async function downloadMediaWithFfmpeg({ mediaUrl, outPath, cookie } = {}) {
   }
 }
 
+function isLikelyMediaFile(url) {
+  const u = String(url || '').toLowerCase();
+  return (
+    u.endsWith('.mp4') ||
+    u.endsWith('.mov') ||
+    u.endsWith('.m4v') ||
+    u.endsWith('.webm') ||
+    u.endsWith('.m3u8')
+  );
+}
+
+async function resolveMediaUrl(mediaUrl, { cookie = null, maxDepth = 1 } = {}) {
+  const start = String(mediaUrl || '').trim();
+  if (!start) return '';
+  if (isLikelyMediaFile(start)) return start;
+  if (maxDepth <= 0) return start;
+
+  // Some share pages point og:video at an embeddable player HTML.
+  // Best-effort: fetch that page and look again for a direct video URL.
+  const fetched = await fetchUrlText(start, { cookie });
+  if (!fetched.ok) return start;
+
+  const next = extractVideoUrlFromHtml(fetched.text) || '';
+  if (!next) return start;
+  if (next === start) return start;
+  if (isLikelyMediaFile(next)) return next;
+
+  // One more hop (guarded).
+  return resolveMediaUrl(next, { cookie, maxDepth: maxDepth - 1 });
+}
+
 async function splitVideoIntoSegments({ inputPath, segmentsDir, segmentSeconds = 300 } = {}) {
   if (!inputPath) throw new Error('inputPath is required');
   if (!segmentsDir) throw new Error('segmentsDir is required');
@@ -519,12 +550,13 @@ export async function extractFromUrl(
   const fetched = await fetchUrlText(url, { cookie });
   if (fetched.ok) {
     const norm = normalizeFetchedContent(fetched.text);
+    const resolvedMediaUrl = await resolveMediaUrl(norm.mediaUrl || '', { cookie, maxDepth: 1 });
 
     const base = {
       ok: true,
       source: url,
       text: norm.text,
-      mediaUrl: norm.mediaUrl || '',
+      mediaUrl: resolvedMediaUrl || '',
       title: norm.suggestedTitle || '',
       suggestedTitle: norm.suggestedTitle,
       fetchError: null,

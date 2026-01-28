@@ -213,6 +213,32 @@ test('extract tool includes a mediaUrl field when og:video is present (without d
   assert.equal(obj.ok, true);
   assert.equal(obj.mediaUrl, 'https://cdn.example.com/video.mp4');
 });
+test('resolves og:video player page to a direct mp4 when downloading', async () => {
+  const srv = await withServer((req, res) => {
+    if (req.url === '/share') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end('<html><head><meta property="og:video" content="http://127.0.0.1:' + req.socket.localPort + '/player"/></head><body>share</body></html>');
+      return;
+    }
+    if (req.url === '/player') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end('<html><body><video src="https://cdn.example.com/video.mp4"></video></body></html>');
+      return;
+    }
+    res.writeHead(404);
+    res.end('no');
+  });
+
+  try {
+    const { stdout } = await runExtract([srv.url + '/share', '--no-split', '--no-download']);
+    const obj = JSON.parse(stdout);
+    // Even without downloading, we now try to resolve mediaUrl to a direct file when possible.
+    assert.equal(obj.mediaUrl, 'https://cdn.example.com/video.mp4');
+  } finally {
+    await srv.close();
+  }
+});
+
 
 test('extract tool writes transcript.txt + extracted.json when --out-dir is provided (even with --no-download)', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-test-'));
