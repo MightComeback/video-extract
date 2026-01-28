@@ -213,6 +213,25 @@ test('extract tool includes a mediaUrl field when og:video is present (without d
   assert.equal(obj.ok, true);
   assert.equal(obj.mediaUrl, 'https://cdn.example.com/video.mp4');
 });
+
+test('extract tool can find a direct media URL from script content when no og:video is present', async () => {
+  const html = `
+    <html>
+      <head><title>Script Media</title></head>
+      <body>
+        <script>
+          window.__DATA__ = { playback: { url: "https://cdn.example.com/stream.m3u8?token=abc" } };
+        </script>
+        <p>Hi</p>
+      </body>
+    </html>
+  `;
+  const url = `data:text/html,${encodeURIComponent(html)}`;
+  const { stdout } = await runExtract([url, '--no-download']);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.ok, true);
+  assert.equal(obj.mediaUrl, 'https://cdn.example.com/stream.m3u8?token=abc');
+});
 test('resolves og:video player page to a direct mp4 when downloading', async () => {
   const srv = await withServer((req, res) => {
     if (req.url === '/share') {
