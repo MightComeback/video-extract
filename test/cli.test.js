@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import fs from 'node:fs';
+import os from 'node:os';
+import http from 'node:http';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,9 +14,9 @@ const binPath = path.resolve(__dirname, '..', 'bin', 'fathom2action.js');
 const extractBinPath = path.resolve(__dirname, '..', 'bin', 'fathom2action-extract.js');
 const transformBinPath = path.resolve(__dirname, '..', 'bin', 'fathom2action-transform.js');
 
-function runBin(bin, args, { stdin } = {}) {
+function runBin(bin, args, { stdin, timeoutMs = 30_000 } = {}) {
   return new Promise((resolve, reject) => {
-    const child = execFile(process.execPath, [bin, ...args], { timeout: 10_000 }, (err, stdout, stderr) => {
+    const child = execFile(process.execPath, [bin, ...args], { timeout: timeoutMs }, (err, stdout, stderr) => {
       if (err) {
         err.stdout = stdout;
         err.stderr = stderr;
@@ -39,6 +42,19 @@ function runExtract(args, opts) {
 
 function runTransform(args, opts) {
   return runBin(transformBinPath, args, opts);
+}
+
+function withServer(handler) {
+  const server = http.createServer(handler);
+  return new Promise((resolve) => {
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      resolve({
+        url: `http://127.0.0.1:${port}`,
+        close: () => new Promise((r) => server.close(r)),
+      });
+    });
+  });
 }
 
 test('prints version when --version is provided', async () => {
@@ -93,7 +109,7 @@ test('decodes numeric HTML entities in extracted title', async () => {
   const html = '<html><head><title>Ivan&#39;s &#x2019;Demo&#8217;</title></head><body><p>Hi</p></body></html>';
   const url = `data:text/html,${encodeURIComponent(html)}`;
   const { stdout } = await run([url]);
-  assert.match(stdout, /- Ivan's ’Demo’/);
+  assert.match(stdout, /- Ivan\'s ’Demo’/);
 });
 
 test('prefers embedded transcript JSON over tag-stripped HTML when present', async () => {
@@ -189,13 +205,83 @@ test('extract tool includes a title field when parsing HTML', async () => {
   assert.equal(obj.title, 'Demo & Test');
 });
 
-test('extract tool includes a mediaUrl field when og:video is present', async () => {
+test('extract tool includes a mediaUrl field when og:video is present (without downloading)', async () => {
   const html = '<html><head><meta property="og:video" content="https://cdn.example.com/video.mp4"/></head><body><p>Hi</p></body></html>';
   const url = `data:text/html,${encodeURIComponent(html)}`;
-  const { stdout } = await runExtract([url]);
+  const { stdout } = await runExtract([url, '--no-download']);
   const obj = JSON.parse(stdout);
   assert.equal(obj.ok, true);
   assert.equal(obj.mediaUrl, 'https://cdn.example.com/video.mp4');
+});
+
+test('extract tool can download + split media into segments (local server)', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-test-'));
+  const srcVideo = path.join(tmp, 'src.mp4');
+
+  // Small deterministic MP4 with frequent keyframes (for copy-based segmentation).
+  execFileSync('ffmpeg', [
+    '-y',
+    '-loglevel',
+    'error',
+    '-f',
+    'lavfi',
+    '-i',
+    'testsrc=size=64x64:rate=10',
+    '-t',
+    '12',
+    '-c:v',
+    'libx264',
+    '-pix_fmt',
+    'yuv420p',
+    '-g',
+    '10',
+    '-keyint_min',
+    '10',
+    '-sc_threshold',
+    '0',
+    '-an',
+    srcVideo,
+  ]);
+
+  const videoBytes = fs.readFileSync(srcVideo);
+
+  let srv;
+  srv = await withServer((req, res) => {
+    if (req.url === '/page') {
+      res.setHeader('content-type', 'text/html; charset=utf-8');
+      res.end(`<html><head><title>Demo</title><meta property="og:video" content="${srv.url}/video.mp4"/></head><body>Hi</body></html>`);
+      return;
+    }
+
+    if (req.url === '/video.mp4') {
+      res.statusCode = 200;
+      res.setHeader('content-type', 'video/mp4');
+      res.end(videoBytes);
+      return;
+    }
+
+    res.statusCode = 404;
+    res.end('not found');
+  });
+
+  try {
+    const outDir = path.join(tmp, 'out');
+    const { stdout } = await runExtract([`${srv.url}/page`, '--out-dir', outDir, '--split-seconds', '5', '--pretty'], {
+      timeoutMs: 120_000,
+    });
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.equal(obj.title, 'Demo');
+    assert.ok(obj.mediaUrl.includes('/video.mp4'));
+    assert.ok(obj.mediaPath);
+    assert.ok(fs.existsSync(obj.mediaPath));
+    assert.equal(obj.segmentSeconds, 5);
+    assert.ok(Array.isArray(obj.mediaSegments));
+    assert.ok(obj.mediaSegments.length >= 2);
+    for (const p of obj.mediaSegments) assert.ok(fs.existsSync(p));
+  } finally {
+    await srv.close();
+  }
 });
 
 test('transform tool can render markdown from extractor JSON', async () => {

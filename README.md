@@ -27,8 +27,15 @@ This repo intentionally keeps **extraction** and **actionization** separate.
 Preferred name: `fathom-extract` (aliases kept for backward-compat).
 
 ```bash
-# URL → JSON
-fathom-extract "https://..." --pretty
+# URL → JSON artifacts (transcript + mediaUrl)
+# If mediaUrl is present, it will also download a local mp4 and split into 5-min segments by default.
+fathom-extract "https://..." --out-dir ./artifacts --pretty
+
+# Auth-gated links (Fathom cookies required)
+fathom-extract "https://..." --cookie-file ./cookie.txt --out-dir ./artifacts --pretty
+
+# Transcript-only mode (skip media download)
+fathom-extract "https://..." --no-download --pretty
 
 # stdin → JSON (useful when the link is private/auth-gated)
 pbpaste | fathom-extract --stdin --source "https://..." --pretty

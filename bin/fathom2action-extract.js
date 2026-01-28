@@ -1,10 +1,26 @@
 #!/usr/bin/env node
+import fs from 'node:fs';
 import process from 'node:process';
+
 import { readStdin, extractFromStdin, extractFromUrl } from '../src/extractor.js';
 
 function usage(code = 0) {
   const cmd = process.argv[1]?.split('/').pop() || 'fathom-extract';
-  console.log(`${cmd}\n\nUsage:\n  ${cmd} <url> [--pretty]\n  ${cmd} --stdin [--source <url-or-label>] [--pretty]\n  ${cmd} - [--source <url-or-label>] [--pretty]\n\nOutput:\n  Prints JSON { ok, source, text, mediaUrl, title, suggestedTitle, fetchError } to stdout.\n`);
+  console.log(`${cmd}
+
+Usage:
+  ${cmd} <url> [--pretty] [--out-dir <dir>] [--split-seconds 300] [--no-download] [--no-split] [--cookie-file <path>]
+  ${cmd} --stdin [--source <url-or-label>] [--pretty]
+  ${cmd} - [--source <url-or-label>] [--pretty]
+
+Output:
+  Prints JSON with transcript + media artifacts (best-effort):
+    { ok, source, text, title, suggestedTitle, mediaUrl, artifactsDir, mediaPath, mediaSegments, segmentSeconds, fetchError, mediaDownloadError }
+
+Notes:
+  - Default (URL mode): if mediaUrl is found, it will download a local mp4 and split into 5-minute segments (300s).
+  - For auth-gated links, pass a Cookie header via FATHOM_COOKIE or --cookie-file.
+`);
   process.exit(code);
 }
 
@@ -20,12 +36,57 @@ function readFlagValue(args, flag) {
   return { args: next, value: v };
 }
 
+function popFlag(args, flag) {
+  if (!args.includes(flag)) return { args, present: false };
+  return { args: args.filter((a) => a !== flag), present: true };
+}
+
+function loadCookie({ cookieFile } = {}) {
+  let c = process.env.FATHOM_COOKIE ? String(process.env.FATHOM_COOKIE) : '';
+  if (cookieFile) {
+    try {
+      c = fs.readFileSync(cookieFile, 'utf8');
+    } catch (e) {
+      console.error(`ERR: failed to read cookie file: ${cookieFile}`);
+      console.error(String(e?.message || e));
+      process.exit(2);
+    }
+  }
+  c = String(c || '').trim();
+  return c || null;
+}
+
 async function main() {
   let args = process.argv.slice(2);
   if (args.includes('-h') || args.includes('--help')) usage(0);
 
-  const pretty = args.includes('--pretty');
-  args = args.filter((a) => a !== '--pretty');
+  const prettyFlag = popFlag(args, '--pretty');
+  args = prettyFlag.args;
+  const pretty = prettyFlag.present;
+
+  const noDownloadFlag = popFlag(args, '--no-download');
+  args = noDownloadFlag.args;
+  const noDownload = noDownloadFlag.present;
+
+  const noSplitFlag = popFlag(args, '--no-split');
+  args = noSplitFlag.args;
+  const noSplit = noSplitFlag.present;
+
+  const outDirFlag = readFlagValue(args, '--out-dir');
+  args = outDirFlag.args;
+  const outDir = outDirFlag.value;
+
+  const splitFlag = readFlagValue(args, '--split-seconds');
+  args = splitFlag.args;
+  const splitSeconds = splitFlag.value != null ? Number(splitFlag.value) : 300;
+  if (splitFlag.value != null && (!Number.isFinite(splitSeconds) || splitSeconds <= 0)) {
+    console.error('ERR: --split-seconds must be a positive number');
+    process.exit(2);
+  }
+
+  const cookieFileFlag = readFlagValue(args, '--cookie-file');
+  args = cookieFileFlag.args;
+  const cookie = loadCookie({ cookieFile: cookieFileFlag.value });
 
   const sourceFlag = readFlagValue(args, '--source');
   args = sourceFlag.args;
@@ -63,7 +124,14 @@ async function main() {
   }
 
   const url = args[0];
-  const extracted = await extractFromUrl(url);
+
+  const extracted = await extractFromUrl(url, {
+    downloadMedia: !noDownload,
+    splitSeconds: noSplit ? 0 : splitSeconds,
+    outDir,
+    cookie,
+  });
+
   console.log(JSON.stringify(extracted, null, pretty ? 2 : 0));
 }
 
