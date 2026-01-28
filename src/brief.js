@@ -19,10 +19,40 @@ function normalizeBullets(lines, { max = 6 } = {}) {
   return out;
 }
 
+function extractTimestamps(transcript, { max = 6 } = {}) {
+  const out = [];
+  const seen = new Set();
+
+  // Common patterns:
+  //  - 00:12
+  //  - 1:02
+  //  - 00:01:23
+  //  - [00:12] or (00:12)
+  const re = /(?:^|\s|\[|\()(?<ts>(?:\d{1,2}:)?\d{1,2}:\d{2}|\d{1,2}:\d{2})(?:\b|\]|\))/g;
+
+  for (const raw of String(transcript || '').split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+
+    let m;
+    while ((m = re.exec(line))) {
+      const ts = String(m.groups?.ts || '').trim();
+      if (!ts) continue;
+      if (seen.has(ts)) continue;
+      seen.add(ts);
+      out.push(ts);
+      if (out.length >= max) return out;
+    }
+  }
+
+  return out;
+}
+
 export function renderBrief({ source, title, transcript, fetchError } = {}) {
   const src = oneLine(source);
   const t = oneLine(title);
   const teaser = normalizeBullets(transcript, { max: 6 });
+  const timestamps = extractTimestamps(transcript, { max: 6 });
 
   const header = [
     '# Bug report brief',
@@ -56,7 +86,7 @@ export function renderBrief({ source, title, transcript, fetchError } = {}) {
     '- When: ',
     '',
     '## Timestamps',
-    '- ',
+    ...(timestamps.length ? timestamps.map((ts) => `- ${ts} — `) : ['- ']),
     '',
     '## Next actions',
     '- [ ] ',
