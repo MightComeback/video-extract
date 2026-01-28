@@ -14,7 +14,7 @@ Usage:
   ${cmd} -
 
 Notes:
-  - If the URL cannot be fetched (auth-gated), the tool will print a ready-to-paste brief and ask for transcript via --stdin.
+  - If the URL cannot be fetched (auth-gated), the tool will print a ready-to-paste brief and ask for transcript via ${cmd} --stdin.
 `);
   process.exit(code);
 }
@@ -68,7 +68,7 @@ async function main() {
 
   // If we couldn't fetch anything useful, nudge toward --stdin.
   if (!extracted.ok) {
-    process.stderr.write('NOTE: Unable to fetch this link. Paste transcript via `fathom2action --stdin` for best results.\n');
+    process.stderr.write(`NOTE: Unable to fetch this link. Paste transcript via \`${cmd} --stdin\` for best results.\n`);
   }
 
   process.stdout.write(brief);
