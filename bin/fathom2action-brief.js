@@ -69,7 +69,9 @@ async function main() {
 
   // If we couldn't fetch anything useful, nudge toward --stdin.
   if (!extracted.ok) {
-    process.stderr.write(`NOTE: Unable to fetch this link. Paste transcript via \`${cmd} --stdin\` for best results.\n`);
+    process.stderr.write(
+      `NOTE: Unable to fetch this link (often auth-gated). Paste transcript via \`${cmd} --stdin\` for best results. Example: \`pbpaste | ${cmd} --stdin\`.\n`
+    );
   }
 
   process.stdout.write(brief);
