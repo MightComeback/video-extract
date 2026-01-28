@@ -26,6 +26,12 @@ export function getVersion() {
   }
 }
 
+function getUserAgent() {
+  const env = String(process.env.FATHOM_USER_AGENT || '').trim();
+  if (env) return env;
+  return `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom2action)`;
+}
+
 function decodeHtmlEntities(s) {
   let out = String(s)
     .replaceAll('&amp;', '&')
@@ -485,7 +491,7 @@ export async function fetchUrlText(url, { cookie = null, referer = null, timeout
   const t = setTimeout(() => controller.abort(), Number.isFinite(ms) ? ms : 15_000);
   try {
     const headers = {
-      'user-agent': `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom2action)`
+      'user-agent': getUserAgent()
     };
     const c = normalizeCookie(cookie);
     if (c) headers.cookie = c;
@@ -579,7 +585,7 @@ async function downloadMediaWithFfmpeg({ mediaUrl, outPath, cookie, referer = nu
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
   const common = ['-y', '-loglevel', 'error'];
-  const ua = `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom2action)`;
+  const ua = getUserAgent();
   const c = normalizeCookie(cookie);
 
   // Prefer dedicated flags where available.
@@ -640,7 +646,7 @@ async function probeIsMediaUrl(url, { cookie = null, referer = null } = {}) {
   if (!u || !/^https?:\/\//i.test(u)) return false;
 
   const headers = {};
-  const ua = `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom2action)`;
+  const ua = getUserAgent();
   headers['user-agent'] = ua;
   if (referer) headers.referer = String(referer);
   const c = normalizeCookie(cookie);
@@ -785,7 +791,7 @@ async function fetchTranscriptViaCopyEndpoint(copyTranscriptUrl, { cookie = null
   if (!u) return '';
 
   const headers = {
-    'user-agent': `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom-extract)`,
+    'user-agent': getUserAgent(),
   };
   const c0 = String(cookie || '').trim();
   if (c0) headers.cookie = c0.toLowerCase().startsWith('cookie:') ? c0.slice('cookie:'.length).trim() : c0;
