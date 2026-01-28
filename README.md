@@ -1,68 +1,72 @@
-# fathom-extract (repo currently named `fathom2action`)
+# fathom-extract
 
-Single-purpose micro-tool:
+Extract **transcript + video** from a Fathom link.
 
-- Input: a Fathom share/call URL (optionally with auth cookies)
-- Output: **transcript + media URL**, and (when possible) a downloaded **video.mp4** split into ~5-minute segments (Gemini-ready).
+## Requirements
+- Node.js
+- `ffmpeg` (for video download + splitting)
 
-## Important: not published to npm
+## Usage (copy/paste)
 
-This is a private/internal CLI repo. It is **not** published to npm.
-
-You can run it from the repo, or `npm link` locally if you want the `fathom-extract` command on your PATH.
-
-## Usage
-
-### Extract transcript + video + 5-minute segments (recommended)
+### 1) Auth-gated Fathom link → transcript + video.mp4 + 5-min segments
 
 ```bash
-# cookie file → transcript + video.mp4 + 5-min segments
-FATHOM_COOKIE_FILE=./cookie.txt \
-  fathom-extract "https://fathom.video/share/..." \
+fathom-extract "https://fathom.video/share/<TOKEN>" \
+  --cookie-file ./cookie.txt \
   --out-dir ./artifacts \
+  --split-seconds 300 \
   --pretty
 ```
 
-Artifacts written under `--out-dir`:
+Outputs in `./artifacts/`:
 - `transcript.txt`
 - `extracted.json`
-- `video.mp4` (if media is downloadable)
+- `video.mp4`
 - `segments/segment_000.mp4`, `segment_001.mp4`, ...
 
-### Transcript-only (skip video download)
+### 2) Transcript-only (skip video download)
 
 ```bash
-fathom-extract "https://fathom.video/share/..." --no-download --pretty
+fathom-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt --no-download --pretty
 ```
 
-### Segment size control
-
-Default is 300 seconds. You can set it via env var or CLI:
+### 3) Control segment size
 
 ```bash
+# default split size when --split-seconds isn't provided
 export FATHOM_SPLIT_SECONDS=300
 
-# or
-fathom-extract "https://..." --split-seconds 300
+fathom-extract "https://..." --cookie-file ./cookie.txt --out-dir ./artifacts --pretty
 ```
 
-### Cookies (auth-gated pages)
+### 4) Cookie options
 
-Cookie options:
+Any of these work:
 - `--cookie "name=value; other=value"`
-- `--cookie-file ./cookie.txt` (supports Netscape cookies.txt, one-per-line `name=value`, and JSON exports)
-- env vars: `FATHOM_COOKIE` / `FATHOM_COOKIE_FILE`
+- `--cookie-file ./cookie.txt`
+- `FATHOM_COOKIE=...`
+- `FATHOM_COOKIE_FILE=...`
+
+`--cookie-file` supports:
+- Netscape cookies.txt
+- one-per-line `name=value`
+- JSON exports: `[{"name":"...","value":"..."}, ...]`
+
+## What this repo does
+- Extract transcript text (best-effort)
+- Resolve media URLs
+- Download media to `video.mp4`
+- Split into N-second chunks (default 300s)
 
 ## What this repo does NOT do
+- No LLM processing
+- No bug-brief generation
 
-- No LLM processing.
-- No “bug brief” generation.
-
-That step belongs in **Aethlon** (Gemini over the extracted video + transcript).
-
-## Next
-
-Once we confirm extraction works on your real Fathom links end-to-end, we’ll integrate it into Aethlon + Canvas:
-- detect Fathom links
-- run `fathom-extract` to produce artifacts
-- feed `segments/*.mp4` (and `transcript.txt`) to Gemini with your specific prompt
+## CLI flags (extractor)
+- `--out-dir <dir>`: write `transcript.txt` + `extracted.json` + media artifacts
+- `--cookie <cookie>` / `--cookie-file <path>`
+- `--split-seconds <n>` / `FATHOM_SPLIT_SECONDS=<n>`
+- `--no-download` (skip video download)
+- `--no-split` (download video but don’t split)
+- `--download-media <path>` (set mp4 output path)
+- `--pretty` (pretty JSON)

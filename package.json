@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MightComeback/fathom2action.git"
+    "url": "git+https://github.com/MightComeback/fathom-extract.git"
   },
   "license": "ISC",
   "bin": {
