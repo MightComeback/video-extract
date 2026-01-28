@@ -51,6 +51,45 @@ function popFlag(args, flag) {
   return { args: args.filter((a) => a !== flag), present: true };
 }
 
+function parseCookieFileContents(raw) {
+  const s = String(raw || '').trim();
+  if (!s) return '';
+
+  // If a user pasted a full header, accept it.
+  if (/^cookie\s*:/i.test(s)) return s;
+
+  const lines = s
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('#'));
+
+  // Netscape cookies.txt format (7 tab-separated fields).
+  // domain  flag  path  secure  expiration  name  value
+  const netscapePairs = [];
+  for (const line of lines) {
+    const parts = line.split('\t');
+    if (parts.length >= 7) {
+      const name = parts[5];
+      const value = parts.slice(6).join('\t');
+      if (name) netscapePairs.push(`${name}=${value}`);
+    }
+  }
+  if (netscapePairs.length) return netscapePairs.join('; ');
+
+  // One cookie per line: name=value
+  const simplePairs = [];
+  for (const line of lines) {
+    if (!line.includes('=')) continue;
+    // Avoid treating JSON as cookies.
+    if (line.startsWith('{') || line.startsWith('[')) continue;
+    simplePairs.push(line);
+  }
+  if (simplePairs.length) return simplePairs.join('; ');
+
+  // Fall back to raw.
+  return s;
+}
+
 function loadCookie({ cookieFile } = {}) {
   let c = process.env.FATHOM_COOKIE ? String(process.env.FATHOM_COOKIE) : '';
 
@@ -66,6 +105,8 @@ function loadCookie({ cookieFile } = {}) {
       process.exit(2);
     }
   }
+
+  c = parseCookieFileContents(c);
   c = String(c || '').trim();
   return c || null;
 }

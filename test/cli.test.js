@@ -242,6 +242,35 @@ test('supports FATHOM_COOKIE_FILE env var for auth-gated links', async () => {
   }
 });
 
+test('parses Netscape cookies.txt format via --cookie-file', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom-cookie-'));
+  const cookiePath = path.join(tmp, 'cookies.txt');
+
+  // domain\tflag\tpath\tsecure\texpiration\tname\tvalue
+  fs.writeFileSync(cookiePath, 'example.com\tTRUE\t/\tFALSE\t0\tsession\tabc123\n', 'utf8');
+
+  const srv = await withServer((req, res) => {
+    const cookie = String(req.headers.cookie || '');
+    if (!cookie.includes('session=abc123')) {
+      res.writeHead(401, { 'content-type': 'text/plain' });
+      res.end('unauthorized');
+      return;
+    }
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end('<html><head><title>Cookie OK</title></head><body><p>Transcript</p></body></html>');
+  });
+
+  try {
+    const { stdout } = await runExtract([srv.url, '--cookie-file', cookiePath, '--no-download']);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.equal(obj.title, 'Cookie OK');
+  } finally {
+    await srv.close();
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 test('extract tool can find a direct media URL from script content when no og:video is present', async () => {
   const html = `
     <html>
