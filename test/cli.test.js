@@ -281,6 +281,32 @@ test('extract tool includes a mediaUrl field when og:video is present (without d
   assert.equal(obj.mediaUrl, 'https://cdn.example.com/video.mp4');
 });
 
+test('treats og:video URLs with no file extension as media when content-type is video/*', async () => {
+  const srv = await withServer((req, res) => {
+    if (req.url === '/page') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(`<html><head><meta property="og:video" content="${srv.url}/stream"/></head><body>share</body></html>`);
+      return;
+    }
+    if (req.url === '/stream') {
+      res.writeHead(200, { 'content-type': 'video/mp4' });
+      res.end('not-a-real-mp4');
+      return;
+    }
+    res.writeHead(404);
+    res.end('no');
+  });
+
+  try {
+    const { stdout } = await runExtract([srv.url + '/page', '--no-download', '--no-split']);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.equal(obj.mediaUrl, srv.url + '/stream');
+  } finally {
+    await srv.close();
+  }
+});
+
 test('extract tool resolves relative og:video URLs against the fetched page URL', async () => {
   const srv = await withServer((req, res) => {
     if (req.url === '/share') {
