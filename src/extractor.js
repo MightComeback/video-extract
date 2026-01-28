@@ -334,7 +334,7 @@ export async function fetchUrlText(url, { cookie = null } = {}) {
   const t = setTimeout(() => controller.abort(), 5_000);
   try {
     const headers = {
-      'user-agent': 'fathom2action/0.1 (+https://github.com/MightComeback/fathom2action)'
+      'user-agent': `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom2action)`
     };
     const c = normalizeCookie(cookie);
     if (c) headers.cookie = c;
