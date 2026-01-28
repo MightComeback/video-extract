@@ -103,6 +103,14 @@ function extractVideoUrlFromHtml(html) {
   const jsonKeyMatch = s.match(/"(?:contentUrl|embedUrl|url)"\s*:\s*"(https?:\\\/\\\/[^\"<>]+\.(?:m3u8|mp4|mov|m4v|webm)(?:\?[^\"<>]*)?)"/i);
   if (jsonKeyMatch) return decodeHtmlEntities(jsonKeyMatch[1]).trim().replaceAll('\\/', '/');
 
+  // Some providers expose a direct playback/download URL without an extension.
+  // We'll return it here and let resolveMediaUrl() probe content-type to confirm it's video.
+  const scanJson = s.replaceAll('\\/', '/');
+  const jsonNoExtMatch = scanJson.match(
+    /"(?:downloadUrl|videoUrl|mediaUrl|playbackUrl|streamUrl)"\s*:\s*"(https?:\/\/[^\"<>]+)"/i
+  );
+  if (jsonNoExtMatch) return decodeHtmlEntities(jsonNoExtMatch[1]).trim();
+
   // Last-resort: scan for direct media URLs embedded in scripts (common on share/call pages).
   // Use a URL-ish matcher that *excludes backslashes* so we don't accidentally slurp JSON-escaped blobs.
   // Also handle:
