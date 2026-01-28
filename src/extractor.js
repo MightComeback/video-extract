@@ -98,6 +98,11 @@ function extractVideoUrlFromHtml(html) {
   const m2 = s.match(/<source[^>]*\s+src=("([^"]+)"|'([^']+)')[^>]*>/i);
   if (m2) return decodeHtmlEntities(m2[2] || m2[3] || '').trim();
 
+  // Last-resort: scan for a direct media URL embedded in scripts (common on share pages).
+  // We keep this conservative: only absolute http(s) URLs ending in a media-ish extension.
+  const mediaMatch = s.match(/https?:\/\/[^\s"'<>]+\.(?:m3u8|mp4|mov|m4v|webm)(?:\?[^\s"'<>]*)?/i);
+  if (mediaMatch) return decodeHtmlEntities(mediaMatch[0]).trim();
+
   return '';
 }
 
