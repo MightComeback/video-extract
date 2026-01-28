@@ -766,6 +766,50 @@ async function splitVideoIntoSegments({ inputPath, segmentsDir, segmentSeconds =
   return files;
 }
 
+function extractCopyTranscriptUrlFromHtml(html, pageUrl) {
+  const s = decodeHtmlEntities(String(html || '')).replaceAll('\\/', '/');
+
+  // Typical on fathom.video call/share pages.
+  const m = s.match(/copyTranscriptUrl"\s*:\s*"([^"\s]+\/copy_transcript[^"\s]*)"/i);
+  if (m && m[1]) return resolveMaybeRelativeUrl(m[1], pageUrl);
+
+  // Fallback: direct URL match.
+  const m2 = s.match(/https?:\/\/[^\s"'<>]+\/copy_transcript\b[^\s"'<>]*/i);
+  if (m2 && m2[0]) return m2[0];
+
+  return '';
+}
+
+async function fetchTranscriptViaCopyEndpoint(copyTranscriptUrl, { cookie = null, referer = null } = {}) {
+  const u = String(copyTranscriptUrl || '').trim();
+  if (!u) return '';
+
+  const headers = {
+    'user-agent': `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom-extract)`,
+  };
+  const c0 = String(cookie || '').trim();
+  if (c0) headers.cookie = c0.toLowerCase().startsWith('cookie:') ? c0.slice('cookie:'.length).trim() : c0;
+  if (referer) headers.referer = String(referer);
+
+  try {
+    const res = await fetch(u, { method: 'GET', redirect: 'follow', headers });
+    if (!res.ok) return '';
+
+    // Endpoint returns JSON like: { html: "<h1>..." }
+    const txt = await res.text();
+    let json;
+    try { json = JSON.parse(txt); } catch { return ''; }
+
+    const html = String(json?.html || '').trim();
+    if (!html) return '';
+
+    const text = stripHtmlToText(html);
+    return text;
+  } catch {
+    return '';
+  }
+}
+
 export async function extractFromUrl(
   url,
   { downloadMedia = false, splitSeconds = 300, outDir = null, cookie = null, mediaOutPath = null } = {}
@@ -773,12 +817,22 @@ export async function extractFromUrl(
   const fetched = await fetchUrlText(url, { cookie });
   if (fetched.ok) {
     const norm = normalizeFetchedContent(fetched.text, url);
+
+    // If the page doesn't embed a transcript, prefer the real transcript endpoint when available.
+    let transcriptText = norm.text;
+    const copyTranscriptUrl = extractCopyTranscriptUrlFromHtml(fetched.text, url);
+    const hasTimestamps = /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(String(transcriptText || ''));
+    if ((!transcriptText || transcriptText.length < 300 || !hasTimestamps) && copyTranscriptUrl) {
+      const viaCopy = await fetchTranscriptViaCopyEndpoint(copyTranscriptUrl, { cookie, referer: url });
+      if (viaCopy) transcriptText = viaCopy;
+    }
+
     const resolvedMediaUrl = await resolveMediaUrl(norm.mediaUrl || '', { cookie, referer: url, maxDepth: 3 });
 
     const base = {
       ok: true,
       source: url,
-      text: norm.text,
+      text: transcriptText,
       mediaUrl: resolvedMediaUrl || '',
       title: norm.suggestedTitle || '',
       suggestedTitle: norm.suggestedTitle,
