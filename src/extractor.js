@@ -113,11 +113,128 @@ function stripHtmlToText(html) {
   return s.trim();
 }
 
+function tryExtractTranscriptFromEmbeddedJson(html) {
+  const s = String(html);
+
+  // Common patterns on modern share pages (Next.js, etc.)
+  const scriptJson = [];
+
+  // <script type="application/json" id="__NEXT_DATA__">{...}</script>
+  // Be permissive about attribute ordering.
+  for (const m of s.matchAll(/<script[^>]*__NEXT_DATA__[^>]*>([\s\S]*?)<\/script>/gi)) {
+    scriptJson.push(m[1] || '');
+  }
+
+  // <script type="application/ld+json">{...}</script>
+  for (const m of s.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    scriptJson.push(m[1] || '');
+  }
+
+  // Generic JSON-ish script blocks that mention transcript.
+  if (/transcript/i.test(s)) {
+    for (const m of s.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)) {
+      const body = m[1] || '';
+      if (/transcript/i.test(body)) scriptJson.push(body);
+    }
+  }
+
+  for (const raw of scriptJson) {
+    const trimmed = String(raw || '').trim();
+    if (!trimmed) continue;
+
+    // Try JSON.parse first.
+    let parsed = null;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      // Best-effort: extract a JSON object/array substring.
+      const obj = trimmed.match(/({[\s\S]*})/);
+      const arr = trimmed.match(/(\[[\s\S]*\])/);
+      const candidate = (obj && obj[1]) || (arr && arr[1]) || '';
+      if (candidate) {
+        try {
+          parsed = JSON.parse(candidate);
+        } catch {
+          parsed = null;
+        }
+      }
+    }
+
+    if (!parsed) continue;
+
+    const parts = [];
+    const seen = new Set();
+
+    const visited = new Set();
+
+    function walk(x) {
+      if (x == null) return;
+      if (typeof x === 'string') {
+        // Keep only likely transcript-y strings (avoid huge minified blobs).
+        const t = decodeHtmlEntities(x).trim();
+        if (t.length >= 3 && t.length <= 5000 && /\s/.test(t)) {
+          if (!seen.has(t)) {
+            seen.add(t);
+            parts.push(t);
+          }
+        }
+        return;
+      }
+      if (typeof x !== 'object') return;
+      if (visited.has(x)) return;
+      visited.add(x);
+
+      if (Array.isArray(x)) {
+        for (const v of x) walk(v);
+        return;
+      }
+
+      const keys = Object.keys(x);
+
+      // Prefer explicit transcript fields if present.
+      for (const k of keys) {
+        const lk = k.toLowerCase();
+        const v = x[k];
+        if (lk.includes('transcript') || lk === 'utterances' || lk === 'sentences' || lk === 'segments') {
+          walk(v);
+        }
+      }
+
+      // Scan a few common text keys.
+      for (const k of keys) {
+        const lk = k.toLowerCase();
+        if (lk === 'text' || lk === 'content' || lk === 'caption') {
+          walk(x[k]);
+        }
+      }
+
+      // Finally, recurse through the rest (best-effort), so nested transcript fields are reachable.
+      for (const k of keys) {
+        walk(x[k]);
+      }
+    }
+
+    walk(parsed);
+
+    const joined = parts.join('\n').replace(/\n\s*\n\s*\n+/g, '\n\n').trim();
+    if (joined.length >= 20) return joined;
+  }
+
+  return '';
+}
+
 export function normalizeFetchedContent(content) {
   const s = String(content || '').trim();
   if (!s) return { text: '', suggestedTitle: '' };
   const looksHtml = /<\s*html[\s>]/i.test(s) || /<\s*title[\s>]/i.test(s);
   if (!looksHtml) return { text: s, suggestedTitle: '' };
+
+  // If a share page embeds a transcript/notes in JSON, prefer that over tag-stripping.
+  const embeddedTranscript = tryExtractTranscriptFromEmbeddedJson(s);
+  if (embeddedTranscript) {
+    return { text: embeddedTranscript, suggestedTitle: extractTitleFromHtml(s) };
+  }
+
   return { text: stripHtmlToText(s), suggestedTitle: extractTitleFromHtml(s) };
 }
 
