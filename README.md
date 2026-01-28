@@ -11,11 +11,35 @@ npm i -g fathom2action
 ## Usage
 
 ```bash
-# If you have a Fathom link (MVP prints a bug-brief scaffold)
+# One-step: URL → (best-effort fetch) → markdown bug brief
 fathom2action "https://..."
 
 # Best current workflow: paste transcript/notes
 pbpaste | fathom2action --stdin > bug.md
+```
+
+## Micro-tools (separation of concerns)
+
+This repo intentionally keeps **extraction** and **actionization** separate.
+
+### 1) Extract (URL/stdin → JSON artifacts)
+
+```bash
+# URL → JSON
+fathom2action-extract "https://..." --pretty
+
+# stdin → JSON (useful when the link is private/auth-gated)
+pbpaste | fathom2action-extract --stdin --source "https://..." --pretty
+```
+
+### 2) Transform (JSON/raw text → markdown bug brief)
+
+```bash
+# Pipe extractor JSON → transformer markdown
+fathom2action-extract "https://..." | fathom2action-transform --json > bug.md
+
+# Or transform raw transcript/notes directly
+pbpaste | fathom2action-transform --stdin --source "meeting notes" > bug.md
 ```
 
 ## Output
