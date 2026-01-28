@@ -36,6 +36,9 @@ test('brief supports --stdin and prints deterministic sections', async () => {
   assert.match(stdout, /^## 1-sentence summary/m);
   assert.match(stdout, /^## Repro steps/m);
   assert.match(stdout, /^## Expected vs actual/m);
+  assert.match(stdout, /^## Timestamps/m);
+  assert.match(stdout, /^- 00:01 — /m);
+  assert.match(stdout, /^- 00:05 — /m);
   assert.match(stdout, /^## Next actions/m);
   assert.match(stdout, /^## Transcript teaser \(first lines\)/m);
   assert.match(stdout, /^- 00:01 Alice: It crashes/m);
