@@ -106,6 +106,21 @@ function extractVideoUrlFromHtml(html) {
   return '';
 }
 
+function resolveMaybeRelativeUrl(url, baseUrl) {
+  const u = String(url || '').trim();
+  if (!u) return '';
+  if (!baseUrl) return u;
+
+  // Only attempt to resolve clearly relative URLs.
+  if (/^https?:\/\//i.test(u) || /^data:/i.test(u)) return u;
+
+  try {
+    return new URL(u, String(baseUrl)).toString();
+  } catch {
+    return u;
+  }
+}
+
 function extractTitleFromHtml(html) {
   const s = String(html);
   const t = s.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
@@ -311,13 +326,14 @@ function tryExtractTranscriptFromEmbeddedJson(html) {
   return '';
 }
 
-export function normalizeFetchedContent(content) {
+export function normalizeFetchedContent(content, baseUrl = null) {
   const s = String(content || '').trim();
   if (!s) return { text: '', suggestedTitle: '', mediaUrl: '' };
   const looksHtml = /<\s*html[\s>]/i.test(s) || /<\s*title[\s>]/i.test(s);
   if (!looksHtml) return { text: s, suggestedTitle: '', mediaUrl: '' };
 
-  const mediaUrl = extractVideoUrlFromHtml(s);
+  let mediaUrl = extractVideoUrlFromHtml(s);
+  mediaUrl = resolveMaybeRelativeUrl(mediaUrl, baseUrl);
 
   // If a share page embeds a transcript/notes in JSON, prefer that over tag-stripping.
   const embeddedTranscript = tryExtractTranscriptFromEmbeddedJson(s);
@@ -485,7 +501,8 @@ async function resolveMediaUrl(mediaUrl, { cookie = null, maxDepth = 1 } = {}) {
   const fetched = await fetchUrlText(start, { cookie });
   if (!fetched.ok) return start;
 
-  const next = extractVideoUrlFromHtml(fetched.text) || '';
+  const nextRaw = extractVideoUrlFromHtml(fetched.text) || '';
+  const next = resolveMaybeRelativeUrl(nextRaw, start);
   if (!next) return start;
   if (next === start) return start;
   if (isLikelyMediaFile(next)) return next;
@@ -565,7 +582,7 @@ export async function extractFromUrl(
 ) {
   const fetched = await fetchUrlText(url, { cookie });
   if (fetched.ok) {
-    const norm = normalizeFetchedContent(fetched.text);
+    const norm = normalizeFetchedContent(fetched.text, url);
     const resolvedMediaUrl = await resolveMediaUrl(norm.mediaUrl || '', { cookie, maxDepth: 1 });
 
     const base = {

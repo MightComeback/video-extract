@@ -214,6 +214,27 @@ test('extract tool includes a mediaUrl field when og:video is present (without d
   assert.equal(obj.mediaUrl, 'https://cdn.example.com/video.mp4');
 });
 
+test('extract tool resolves relative og:video URLs against the fetched page URL', async () => {
+  const srv = await withServer((req, res) => {
+    if (req.url === '/share') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end('<html><head><meta property="og:video" content="/video.mp4"/></head><body>share</body></html>');
+      return;
+    }
+    res.writeHead(404);
+    res.end('no');
+  });
+
+  try {
+    const { stdout } = await runExtract([srv.url + '/share', '--no-download']);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.equal(obj.mediaUrl, srv.url + '/video.mp4');
+  } finally {
+    await srv.close();
+  }
+});
+
 
 test('supports FATHOM_COOKIE_FILE env var for auth-gated links', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom-cookie-'));
