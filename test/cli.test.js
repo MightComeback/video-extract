@@ -218,6 +218,35 @@ test('extract tool returns JSON', async () => {
   assert.match(obj.text, /hello/);
 });
 
+test('cookie file supports JSON exports (name/value pairs)', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-'));
+  const cookiePath = path.join(tmp, 'cookies.json');
+  fs.writeFileSync(cookiePath, JSON.stringify([
+    { name: 'a', value: 'b' },
+    { name: 'c', value: 'd' },
+  ]), 'utf8');
+
+  const srv = await withServer((req, res) => {
+    const cookie = String(req.headers.cookie || '');
+    if (!cookie.includes('a=b') || !cookie.includes('c=d')) {
+      res.writeHead(403, { 'content-type': 'text/plain' });
+      res.end('forbidden');
+      return;
+    }
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end('<html><head><title>OK</title></head><body><h2>Transcript</h2><p>00:01 Hello</p></body></html>');
+  });
+
+  try {
+    const { stdout } = await runExtract([`${srv.url}/share`, '--cookie-file', cookiePath, '--no-download', '--no-split']);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.match(obj.text, /Hello/);
+  } finally {
+    await srv.close();
+  }
+});
+
 test('extract tool includes a title field when parsing HTML', async () => {
   const html = '<html><head><title>Demo &amp; Test</title></head><body><p>Hi</p></body></html>';
   const url = `data:text/html,${encodeURIComponent(html)}`;

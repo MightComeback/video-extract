@@ -86,6 +86,26 @@ function parseCookieFileContents(raw) {
   }
   if (simplePairs.length) return simplePairs.join('; ');
 
+  // JSON cookies (common exports from browser extensions/devtools).
+  // Accept either:
+  //  - [{"name":"foo","value":"bar"}, ...]
+  //  - {"cookies":[{"name":"foo","value":"bar"}, ...]}
+  try {
+    const parsed = JSON.parse(s);
+    const arr = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.cookies) ? parsed.cookies : null;
+    if (Array.isArray(arr)) {
+      const pairs = [];
+      for (const c of arr) {
+        const name = String(c?.name || '').trim();
+        const value = String(c?.value || '').trim();
+        if (name) pairs.push(`${name}=${value}`);
+      }
+      if (pairs.length) return pairs.join('; ');
+    }
+  } catch {
+    // ignore
+  }
+
   // Fall back to raw.
   return s;
 }
