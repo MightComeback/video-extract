@@ -67,6 +67,12 @@ test('reads stdin when --stdin is provided', async () => {
   assert.match(stdout, /hello world/);
 });
 
+test('allows overriding stdin source with --source', async () => {
+  const { stdout } = await run(['--stdin', '--source', 'https://fathom.video/share/xyz'], { stdin: 'notes\n' });
+  assert.match(stdout, /Source: https:\/\/fathom\.video\/share\/xyz/);
+  assert.match(stdout, /notes/);
+});
+
 test('reads stdin when no args are provided but stdin is piped', async () => {
   const { stdout } = await run([], { stdin: 'piped input\n' });
   assert.match(stdout, /Source: stdin/);
