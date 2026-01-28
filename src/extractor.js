@@ -1058,15 +1058,30 @@ export async function extractFromUrl(
 }
 
 export function extractFromStdin({ content, source }) {
-  const text = String(content || '').trim();
-  if (!text) {
+  const raw = String(content || '').trim();
+  if (!raw) {
     const err = new Error('stdin is empty');
     err.code = 2;
     throw err;
   }
+
+  // Convenience: allow pasting a URL as the first line, followed by transcript.
+  // Example:
+  //   https://fathom.video/share/...
+  //   00:01 Alice: ...
+  let src = source || 'stdin';
+  let text = raw;
+
+  const lines = raw.split(/\r?\n/);
+  const first = String(lines[0] || '').trim();
+  if (/^https?:\/\//i.test(first) && lines.length >= 2) {
+    src = first;
+    text = lines.slice(1).join('\n').trim();
+  }
+
   return {
     ok: true,
-    source: source || 'stdin',
+    source: src,
     text,
     mediaUrl: '',
     title: '',
