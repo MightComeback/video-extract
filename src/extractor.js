@@ -400,6 +400,12 @@ function run(cmd, args, { timeoutMs = 5 * 60_000 } = {}) {
 
     child.on('error', (e) => {
       clearTimeout(t);
+      // Provide a clearer hint for missing system dependencies (common in CI/dev boxes).
+      if (e && (e.code === 'ENOENT' || String(e.message || '').includes('ENOENT'))) {
+        const err = new Error(`${cmd} not found (is it installed and on PATH?)`);
+        err.code = e.code;
+        return reject(err);
+      }
       reject(e);
     });
 
