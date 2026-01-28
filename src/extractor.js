@@ -138,6 +138,62 @@ function stripHtmlToText(html) {
   return s.trim();
 }
 
+function sliceLikelyTranscript(text) {
+  const s = String(text || '').replace(/\r/g, '');
+  if (!s) return '';
+
+  // Heuristic for common share pages that include a bunch of sections.
+  // We try to isolate the “Transcript” section if present.
+  const lower = s.toLowerCase();
+  const startKeywords = ['\ntranscript\n', '\ntranscript:', '\ntranscript \n', ' transcript\n'];
+  let start = -1;
+  for (const k of startKeywords) {
+    const i = lower.indexOf(k);
+    if (i !== -1) {
+      start = i;
+      break;
+    }
+  }
+  if (start === -1) return '';
+
+  // Skip the keyword line itself.
+  const after = s.slice(start).split('\n');
+  while (after.length && after[0].trim().toLowerCase().startsWith('transcript')) after.shift();
+
+  const lines = after.join('\n').split('\n');
+
+  const stopLine = (line) => {
+    const t = String(line || '').trim().toLowerCase();
+    if (!t) return false;
+    return (
+      t === 'notes' ||
+      t.startsWith('notes:') ||
+      t === 'chapters' ||
+      t.startsWith('chapters:') ||
+      t === 'summary' ||
+      t.startsWith('summary:') ||
+      t === 'actions' ||
+      t.startsWith('actions:')
+    );
+  };
+
+  const kept = [];
+  for (const line of lines) {
+    if (stopLine(line)) break;
+    kept.push(line);
+  }
+
+  const candidate = kept.join('\n').trim();
+  if (!candidate) return '';
+
+  // Only accept if it looks transcript-y (timestamps or lots of sentences).
+  const hasTimestamps = /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(candidate);
+  const lineCount = candidate.split('\n').filter((l) => l.trim()).length;
+  if (hasTimestamps || lineCount >= 3) return candidate;
+
+  return '';
+}
+
 function tryExtractTranscriptFromEmbeddedJson(html) {
   const s = String(html);
 
@@ -262,7 +318,13 @@ export function normalizeFetchedContent(content) {
     return { text: embeddedTranscript, suggestedTitle: extractTitleFromHtml(s), mediaUrl };
   }
 
-  return { text: stripHtmlToText(s), suggestedTitle: extractTitleFromHtml(s), mediaUrl };
+  const stripped = stripHtmlToText(s);
+  const slicedTranscript = sliceLikelyTranscript(stripped);
+  return {
+    text: slicedTranscript || stripped,
+    suggestedTitle: extractTitleFromHtml(s),
+    mediaUrl
+  };
 }
 
 export async function fetchUrlText(url) {

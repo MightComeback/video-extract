@@ -118,6 +118,31 @@ test('prefers embedded transcript JSON over tag-stripped HTML when present', asy
   assert.equal(obj.title, 'Embedded Transcript');
 });
 
+test('slices transcript section from tag-stripped HTML when a Transcript header is present', async () => {
+  const html = `
+    <html>
+      <head><title>Share Page</title></head>
+      <body>
+        <h2>Chapters</h2>
+        <p>00:00 Intro</p>
+        <h2>Transcript</h2>
+        <p>00:01 Ivan: Hello there</p>
+        <p>00:02 Might: Hi</p>
+        <h2>Notes</h2>
+        <p>Some notes</p>
+      </body>
+    </html>
+  `;
+  const url = `data:text/html,${encodeURIComponent(html)}`;
+  const { stdout } = await runExtract([url]);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.ok, true);
+  assert.match(obj.text, /00:01/);
+  assert.match(obj.text, /Hello there/);
+  assert.ok(!/Chapters/i.test(obj.text));
+  assert.ok(!/Some notes/i.test(obj.text));
+});
+
 test('reads stdin when --stdin is provided', async () => {
   const { stdout } = await run(['--stdin'], { stdin: 'hello world\n' });
   assert.match(stdout, /Source: stdin/);
