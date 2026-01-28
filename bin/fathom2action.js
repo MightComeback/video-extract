@@ -24,6 +24,10 @@ function mkBrief({ source, content, fetchError }) {
   if (source) lines.push(`Source: ${source}`);
   if (fetchError) lines.push(`Fetch: failed (${fetchError}) — paste transcript/notes via \`fathom2action --stdin\``);
   lines.push('');
+  lines.push('## Suggested issue title (optional)');
+  lines.push('');
+  lines.push('- ');
+  lines.push('');
   lines.push('## Summary (1 sentence)');
   lines.push('');
   lines.push('- ');

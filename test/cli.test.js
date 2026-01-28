@@ -32,6 +32,7 @@ test('prints brief when given a URL', async () => {
   const { stdout } = await run([url]);
   assert.match(stdout, /# Bug brief/);
   assert.ok(stdout.includes(`Source: ${url}`));
+  assert.match(stdout, /Suggested issue title/);
 });
 
 test('prints a helpful message when URL fetch fails', async () => {
