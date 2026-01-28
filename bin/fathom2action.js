@@ -16,12 +16,13 @@ function usage(code = 0) {
   process.exit(code);
 }
 
-function mkBrief({ source, content }) {
+function mkBrief({ source, content, fetchError }) {
   const text = (content || '').trim();
   const lines = [];
   lines.push(`# Bug brief`);
   lines.push('');
   if (source) lines.push(`Source: ${source}`);
+  if (fetchError) lines.push(`Fetch: failed (${fetchError}) — paste transcript/notes via \`fathom2action --stdin\``);
   lines.push('');
   lines.push('## Summary (1 sentence)');
   lines.push('');
@@ -61,6 +62,33 @@ function mkBrief({ source, content }) {
   return lines.join('\n');
 }
 
+async function fetchUrlText(url) {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 5_000);
+  try {
+    const res = await fetch(url, {
+      method: 'GET',
+      redirect: 'follow',
+      signal: controller.signal,
+      headers: {
+        'user-agent': 'fathom2action/0.1 (+https://github.com/MightComeback/fathom2action)'
+      }
+    });
+
+    if (!res.ok) {
+      return { ok: false, error: `HTTP ${res.status}` };
+    }
+
+    const text = await res.text();
+    return { ok: true, text };
+  } catch (e) {
+    const msg = String(e?.name === 'AbortError' ? 'timeout' : (e?.message || e));
+    return { ok: false, error: msg };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
   if (!args.length || args.includes('-h') || args.includes('--help')) usage(0);
@@ -76,8 +104,21 @@ async function main() {
   }
 
   const url = args[0];
-  // MVP: we don't fetch the URL yet (auth/cookies vary). We just print a template.
-  console.log(mkBrief({ source: url, content: 'TODO: paste transcript/notes here (or run fathom2action --stdin and pipe content).' }));
+
+  // Best-effort fetch: public links may work; private/authenticated ones won't.
+  const fetched = await fetchUrlText(url);
+  if (fetched.ok) {
+    console.log(mkBrief({ source: url, content: fetched.text }));
+    return;
+  }
+
+  console.log(
+    mkBrief({
+      source: url,
+      fetchError: fetched.error,
+      content: 'Unable to fetch this link (likely auth/cookies). Paste transcript/notes here, or run: fathom2action --stdin'
+    })
+  );
 }
 
 main().catch((e) => {

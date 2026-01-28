@@ -34,6 +34,13 @@ test('prints brief when given a URL', async () => {
   assert.ok(stdout.includes(`Source: ${url}`));
 });
 
+test('prints a helpful message when URL fetch fails', async () => {
+  const url = 'http://localhost:1/fathom/share/abc';
+  const { stdout } = await run([url]);
+  assert.match(stdout, /Fetch: failed/);
+  assert.match(stdout, /--stdin/);
+});
+
 test('reads stdin when --stdin is provided', async () => {
   const { stdout } = await run(['--stdin'], { stdin: 'hello world\n' });
   assert.match(stdout, /Source: stdin/);
