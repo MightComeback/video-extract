@@ -337,6 +337,38 @@ test('resolves og:video player page to a direct mp4 when downloading', async () 
 });
 
 
+test('resolves multi-hop og:video player pages to a direct mp4 (depth>1)', async () => {
+  const srv = await withServer((req, res) => {
+    const port = req.socket.localPort;
+    if (req.url === '/share') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end('<html><head><meta property="og:video" content="http://127.0.0.1:' + port + '/player1"/></head><body>share</body></html>');
+      return;
+    }
+    if (req.url === '/player1') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end('<html><head><meta property="og:video" content="http://127.0.0.1:' + port + '/player2"/></head><body>p1</body></html>');
+      return;
+    }
+    if (req.url === '/player2') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end('<html><body><video src="https://cdn.example.com/video.mp4"></video></body></html>');
+      return;
+    }
+    res.writeHead(404);
+    res.end('no');
+  });
+
+  try {
+    const { stdout } = await runExtract([srv.url + '/share', '--no-split', '--no-download']);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.mediaUrl, 'https://cdn.example.com/video.mp4');
+  } finally {
+    await srv.close();
+  }
+});
+
+
 test('extract tool writes transcript.txt + extracted.json when --out-dir is provided (even with --no-download)', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-test-'));
   const outDir = path.join(tmp, 'out');

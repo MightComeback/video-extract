@@ -490,7 +490,7 @@ function isLikelyMediaFile(url) {
   );
 }
 
-async function resolveMediaUrl(mediaUrl, { cookie = null, maxDepth = 1 } = {}) {
+async function resolveMediaUrl(mediaUrl, { cookie = null, maxDepth = 3 } = {}) {
   const start = String(mediaUrl || '').trim();
   if (!start) return '';
   if (isLikelyMediaFile(start)) return start;
@@ -583,7 +583,7 @@ export async function extractFromUrl(
   const fetched = await fetchUrlText(url, { cookie });
   if (fetched.ok) {
     const norm = normalizeFetchedContent(fetched.text, url);
-    const resolvedMediaUrl = await resolveMediaUrl(norm.mediaUrl || '', { cookie, maxDepth: 1 });
+    const resolvedMediaUrl = await resolveMediaUrl(norm.mediaUrl || '', { cookie, maxDepth: 3 });
 
     const base = {
       ok: true,
