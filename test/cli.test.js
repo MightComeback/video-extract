@@ -192,6 +192,41 @@ test('extract tool resolves media URLs found in JSON (no extension) via content-
   }
 });
 
+test('prefers copy_transcript endpoint when present (better transcript extraction)', async () => {
+  let srv;
+  srv = await withServer((req, res) => {
+    if (req.url === '/page') {
+      res.setHeader('content-type', 'text/html; charset=utf-8');
+      // Deliberately do NOT include timestamps in the page body; we want the extractor to fetch copy_transcript.
+      res.end(
+        `<html><head><title>Copy Transcript</title></head><body><script>window.__DATA__={"copyTranscriptUrl":"${srv.url}\/copy_transcript"}</script><p>hello</p></body></html>`
+      );
+      return;
+    }
+
+    if (req.url === '/copy_transcript') {
+      res.statusCode = 200;
+      res.setHeader('content-type', 'application/json; charset=utf-8');
+      res.end(JSON.stringify({ html: '<div><p>00:01 Alice: Hello there</p><p>00:05 Bob: Hi</p></div>' }));
+      return;
+    }
+
+    res.statusCode = 404;
+    res.end('not found');
+  });
+
+  try {
+    const { stdout } = await runExtract([`${srv.url}/page`, '--no-download', '--no-split', '--pretty']);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.equal(obj.title, 'Copy Transcript');
+    assert.match(String(obj.text || ''), /00:01/);
+    assert.match(String(obj.text || ''), /Alice/);
+  } finally {
+    await srv.close();
+  }
+});
+
 test('passes cookie + referer + user-agent when downloading media with ffmpeg', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom-extract-headers-'));
   const srcVideo = path.join(tmp, 'src.mp4');
