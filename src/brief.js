@@ -84,8 +84,17 @@ export function renderBrief({ source, title, transcript, fetchError } = {}) {
     header.push(`Fetch error: ${oneLine(fetchError)}`);
   }
 
+  const links = ['## Links'];
+  if (src) {
+    links.push(`- Fathom: ${src}`);
+  } else {
+    links.push('- ');
+  }
+
   return [
     ...header,
+    '',
+    ...links,
     '',
     '## 1-sentence summary',
     '- ',
