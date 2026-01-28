@@ -96,6 +96,28 @@ test('decodes numeric HTML entities in extracted title', async () => {
   assert.match(stdout, /- Ivan's ’Demo’/);
 });
 
+test('prefers embedded transcript JSON over tag-stripped HTML when present', async () => {
+  const html = `
+    <html>
+      <head><title>Embedded Transcript</title></head>
+      <body>
+        <h1>Ignore me</h1>
+        <script id="__NEXT_DATA__" type="application/json">
+          {"props":{"pageProps":{"transcript":[{"text":"First line"},{"text":"Second line"}]}}}
+        </script>
+      </body>
+    </html>
+  `;
+  const url = `data:text/html,${encodeURIComponent(html)}`;
+  const { stdout } = await runExtract([url]);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.ok, true);
+  assert.match(obj.text, /First line/);
+  assert.match(obj.text, /Second line/);
+  // We should still extract a title.
+  assert.equal(obj.title, 'Embedded Transcript');
+});
+
 test('reads stdin when --stdin is provided', async () => {
   const { stdout } = await run(['--stdin'], { stdin: 'hello world\n' });
   assert.match(stdout, /Source: stdin/);
