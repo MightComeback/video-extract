@@ -371,6 +371,40 @@ test('extract tool supports --download-media <path> as an alias for setting the 
   }
 });
 
+test('extract tool can pass cookies when fetching an auth-gated HTML page', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-test-'));
+  const cookieFile = path.join(tmp, 'cookie.txt');
+  fs.writeFileSync(cookieFile, 'session=abc123', 'utf8');
+
+  let srv;
+  srv = await withServer((req, res) => {
+    if (req.url === '/page') {
+      const c = req.headers.cookie || '';
+      if (!String(c).includes('session=abc123')) {
+        res.statusCode = 401;
+        res.end('unauthorized');
+        return;
+      }
+      res.setHeader('content-type', 'text/html; charset=utf-8');
+      res.end('<html><head><title>Cookie OK</title></head><body><p>Transcript here</p></body></html>');
+      return;
+    }
+
+    res.statusCode = 404;
+    res.end('not found');
+  });
+
+  try {
+    const { stdout } = await runExtract([`${srv.url}/page`, '--cookie-file', cookieFile, '--no-download', '--pretty']);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.equal(obj.title, 'Cookie OK');
+    assert.match(obj.text, /Transcript here/);
+  } finally {
+    await srv.close();
+  }
+});
+
 test('transform tool can render markdown from extractor JSON', async () => {
   const extracted = { ok: true, source: 'demo', text: 'hello world', suggestedTitle: 'Demo' };
   const { stdout } = await runTransform(['--json'], { stdin: JSON.stringify(extracted) });

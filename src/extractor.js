@@ -329,17 +329,21 @@ export function normalizeFetchedContent(content) {
   };
 }
 
-export async function fetchUrlText(url) {
+export async function fetchUrlText(url, { cookie = null } = {}) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), 5_000);
   try {
+    const headers = {
+      'user-agent': 'fathom2action/0.1 (+https://github.com/MightComeback/fathom2action)'
+    };
+    const c = normalizeCookie(cookie);
+    if (c) headers.cookie = c;
+
     const res = await fetch(url, {
       method: 'GET',
       redirect: 'follow',
       signal: controller.signal,
-      headers: {
-        'user-agent': 'fathom2action/0.1 (+https://github.com/MightComeback/fathom2action)'
-      }
+      headers
     });
 
     if (!res.ok) {
@@ -512,7 +516,7 @@ export async function extractFromUrl(
   url,
   { downloadMedia = false, splitSeconds = 300, outDir = null, cookie = null, mediaOutPath = null } = {}
 ) {
-  const fetched = await fetchUrlText(url);
+  const fetched = await fetchUrlText(url, { cookie });
   if (fetched.ok) {
     const norm = normalizeFetchedContent(fetched.text);
 
