@@ -10,11 +10,23 @@ npm i -g fathom2action
 
 ## Usage
 
+Preferred workflow (micro-tools):
+
 ```bash
-# One-step: URL → (best-effort fetch) → markdown bug brief
+# URL → JSON artifacts → markdown bug brief
+fathom-extract "https://..." --pretty | fathom-transform --json > bug.md
+
+# Or: paste transcript/notes → markdown bug brief
+pbpaste | fathom-transform --stdin --source "notes" > bug.md
+```
+
+Shortcut/legacy wrapper:
+
+```bash
+# One-step wrapper (kept for backward compatibility)
 fathom2action "https://..."
 
-# Best current workflow: paste transcript/notes
+# Wrapper from stdin
 pbpaste | fathom2action --stdin > bug.md
 ```
 
@@ -65,7 +77,11 @@ Produces markdown with:
 ## Example
 
 ```bash
-pbpaste | fathom2action --stdin > bug.md
+# Notes/transcript → bug brief
+pbpaste | fathom-transform --stdin --source "meeting notes" > bug.md
+
+# Or: URL → artifacts → bug brief
+fathom-extract "https://..." | fathom-transform --json > bug.md
 ```
 
 Example output (truncated):
