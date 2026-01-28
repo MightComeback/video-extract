@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
 
 import { readStdin, extractFromStdin, extractFromUrl } from '../src/extractor.js';
@@ -9,7 +10,7 @@ function usage(code = 0) {
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <url> [--pretty] [--out-dir <dir>] [--split-seconds 300] [--no-download] [--no-split] [--cookie-file <path>]
+  ${cmd} <url> [--pretty] [--out-dir <dir>] [--split-seconds 300] [--no-download] [--no-split] [--cookie-file <path>] [--download-media <path>]
   ${cmd} --stdin [--source <url-or-label>] [--pretty]
   ${cmd} - [--source <url-or-label>] [--pretty]
 
@@ -20,6 +21,7 @@ Output:
 Notes:
   - Default (URL mode): if mediaUrl is found, it will download a local mp4 and split into 5-minute segments (300s).
   - For auth-gated links, pass a Cookie header via FATHOM_COOKIE or --cookie-file.
+  - --download-media <path> is a convenience alias that sets the downloaded mp4 output path.
 `);
   process.exit(code);
 }
@@ -92,9 +94,17 @@ async function main() {
   args = sourceFlag.args;
   const stdinSourceOverride = sourceFlag.value;
 
+  const downloadFlag = readFlagValue(args, '--download-media');
+  args = downloadFlag.args;
+  const downloadMediaPath = downloadFlag.value ? path.resolve(downloadFlag.value) : null;
+
   // Convenience: if no args and stdin is piped, treat it like --stdin.
   if (!args.length) {
     if (!process.stdin.isTTY) {
+      if (downloadMediaPath) {
+        console.error('ERR: --download-media can only be used with a URL input');
+        process.exit(2);
+      }
       const content = await readStdin();
       const extracted = extractFromStdin({ content, source: stdinSourceOverride || 'stdin' });
       console.log(JSON.stringify(extracted, null, pretty ? 2 : 0));
@@ -104,6 +114,11 @@ async function main() {
   }
 
   if (args[0] === '--stdin' || args[0] === '-') {
+    if (downloadMediaPath) {
+      console.error('ERR: --download-media can only be used with a URL input');
+      process.exit(2);
+    }
+
     const content = await readStdin();
     try {
       const extracted = extractFromStdin({ content, source: stdinSourceOverride || 'stdin' });
@@ -128,8 +143,9 @@ async function main() {
   const extracted = await extractFromUrl(url, {
     downloadMedia: !noDownload,
     splitSeconds: noSplit ? 0 : splitSeconds,
-    outDir,
+    outDir: downloadMediaPath ? path.dirname(downloadMediaPath) : outDir,
     cookie,
+    mediaOutPath: downloadMediaPath,
   });
 
   console.log(JSON.stringify(extracted, null, pretty ? 2 : 0));

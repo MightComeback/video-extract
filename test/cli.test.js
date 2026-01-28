@@ -284,6 +284,69 @@ test('extract tool can download + split media into segments (local server)', asy
   }
 });
 
+test('extract tool supports --download-media <path> as an alias for setting the mp4 output path', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-test-'));
+  const srcVideo = path.join(tmp, 'src.mp4');
+
+  execFileSync('ffmpeg', [
+    '-y',
+    '-loglevel',
+    'error',
+    '-f',
+    'lavfi',
+    '-i',
+    'testsrc=size=64x64:rate=10',
+    '-t',
+    '3',
+    '-c:v',
+    'libx264',
+    '-pix_fmt',
+    'yuv420p',
+    '-g',
+    '10',
+    '-keyint_min',
+    '10',
+    '-sc_threshold',
+    '0',
+    '-an',
+    srcVideo,
+  ]);
+
+  const videoBytes = fs.readFileSync(srcVideo);
+
+  let srv;
+  srv = await withServer((req, res) => {
+    if (req.url === '/page') {
+      res.setHeader('content-type', 'text/html; charset=utf-8');
+      res.end(`<html><head><title>Demo</title><meta property="og:video" content="${srv.url}/video.mp4"/></head><body>Hi</body></html>`);
+      return;
+    }
+
+    if (req.url === '/video.mp4') {
+      res.statusCode = 200;
+      res.setHeader('content-type', 'video/mp4');
+      res.end(videoBytes);
+      return;
+    }
+
+    res.statusCode = 404;
+    res.end('not found');
+  });
+
+  const outPath = path.join(tmp, 'custom.mp4');
+  try {
+    const { stdout } = await runExtract([`${srv.url}/page`, '--download-media', outPath, '--no-split', '--pretty'], {
+      timeoutMs: 120_000,
+    });
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.equal(obj.mediaPath, outPath);
+    assert.ok(fs.existsSync(outPath));
+  } finally {
+    await srv.close();
+  }
+});
+
 test('transform tool can render markdown from extractor JSON', async () => {
   const extracted = { ok: true, source: 'demo', text: 'hello world', suggestedTitle: 'Demo' };
   const { stdout } = await runTransform(['--json'], { stdin: JSON.stringify(extracted) });
