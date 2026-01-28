@@ -896,6 +896,7 @@ export async function extractFromUrl(
       mediaPath: null,
       mediaSegmentsDir: null,
       mediaSegments: [],
+      mediaSegmentsListPath: null,
       segmentSeconds: splitSeconds,
       mediaDownloadError: null,
     };
@@ -942,6 +943,15 @@ export async function extractFromUrl(
             segmentsDir,
             segmentSeconds: splitSeconds,
           });
+
+          // Convenience artifact: a newline-delimited list of segment file paths for downstream ingestion.
+          try {
+            base.mediaSegmentsListPath = path.join(base.artifactsDir, 'segments.txt');
+            fs.writeFileSync(base.mediaSegmentsListPath, base.mediaSegments.join('\n') + (base.mediaSegments.length ? '\n' : ''), 'utf8');
+          } catch {
+            // Non-fatal.
+            base.mediaSegmentsListPath = null;
+          }
         }
       } catch (e) {
         base.mediaDownloadError = String(e?.message || e);
@@ -973,6 +983,7 @@ export async function extractFromUrl(
     mediaPath: null,
     mediaSegmentsDir: null,
     mediaSegments: [],
+    mediaSegmentsListPath: null,
     segmentSeconds: splitSeconds,
     mediaDownloadError: null,
   };
@@ -1024,6 +1035,7 @@ export function extractFromStdin({ content, source }) {
     extractedJsonPath: null,
     mediaPath: null,
     mediaSegments: [],
+    mediaSegmentsListPath: null,
     segmentSeconds: 0,
     mediaDownloadError: null,
   };

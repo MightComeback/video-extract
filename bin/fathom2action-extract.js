@@ -23,7 +23,7 @@ Usage:
 
 Output:
   Prints JSON with transcript + media artifacts (best-effort):
-    { ok, source, text, title, suggestedTitle, mediaUrl, artifactsDir, transcriptPath, extractedJsonPath, mediaPath, mediaSegmentsDir, mediaSegments, segmentSeconds, fetchError, mediaDownloadError }
+    { ok, source, text, title, suggestedTitle, mediaUrl, artifactsDir, transcriptPath, extractedJsonPath, mediaPath, mediaSegmentsDir, mediaSegments, mediaSegmentsListPath, segmentSeconds, fetchError, mediaDownloadError }
 
 Notes:
   - Default (URL mode): if mediaUrl is found, it will download a local mp4 and split into 5-minute segments (300s).
