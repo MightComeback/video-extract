@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdir } from "node:fs/promises";
+import { mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
 
 export type SplitVideoOptions = {
@@ -48,6 +48,12 @@ export async function splitVideoIntoSegments(opts: SplitVideoOptions): Promise<s
     });
   });
 
-  // return deterministic list of expected segments; consumers can glob if needed
-  return [];
+  // Return deterministic list of actual segments.
+  // (ffmpeg only writes files that exist; segment count depends on input duration.)
+  const files = (await readdir(opts.outDir))
+    .filter((f) => f.startsWith(`${prefix}-`) && f.endsWith(".mp4"))
+    .sort()
+    .map((f) => path.join(opts.outDir, f));
+
+  return files;
 }
