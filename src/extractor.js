@@ -705,6 +705,20 @@ async function probeIsMediaUrl(url, { cookie = null, referer = null } = {}) {
 async function resolveMediaUrl(mediaUrl, { cookie = null, referer = null, maxDepth = 3 } = {}) {
   const start = String(mediaUrl || '').trim();
   if (!start) return '';
+
+  // Special case: HLS playlists often have a corresponding direct mp4 endpoint (much faster to download).
+  // Example: .../video.m3u8 -> .../video.mp4
+  if (/\.m3u8(\?|$)/i.test(start)) {
+    const mp4 = start.replace(/\.m3u8(\?|$)/i, '.mp4$1');
+    if (mp4 !== start) {
+      try {
+        if (await probeIsMediaUrl(mp4, { cookie, referer })) return mp4;
+      } catch {
+        // ignore
+      }
+    }
+  }
+
   if (isLikelyMediaFile(start)) return start;
 
   // Some providers serve media endpoints without a file extension.
