@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { pipeline } from 'node:stream/promises';
+import { Readable } from 'node:stream';
 
 export function readStdin() {
   return new Promise((resolve) => {
@@ -508,7 +510,7 @@ async function splitVideoIntoSegments({ inputPath, segmentsDir, segmentSeconds =
 
 export async function extractFromUrl(
   url,
-  { downloadMedia = false, splitSeconds = 300, outDir = null, cookie = null } = {}
+  { downloadMedia = false, splitSeconds = 300, outDir = null, cookie = null, mediaOutPath = null } = {}
 ) {
   const fetched = await fetchUrlText(url);
   if (fetched.ok) {
@@ -533,8 +535,13 @@ export async function extractFromUrl(
 
     // Optional: if we have a mediaUrl, download as an mp4 and split into N-second chunks.
     if (downloadMedia && base.mediaUrl) {
-      const artifactsDir = outDir ? path.resolve(outDir) : defaultArtifactsDir({ title: base.title || base.suggestedTitle });
-      const videoPath = path.join(artifactsDir, 'video.mp4');
+      const artifactsDir = mediaOutPath
+        ? path.dirname(path.resolve(mediaOutPath))
+        : outDir
+          ? path.resolve(outDir)
+          : defaultArtifactsDir({ title: base.title || base.suggestedTitle });
+
+      const videoPath = mediaOutPath ? path.resolve(mediaOutPath) : path.join(artifactsDir, 'video.mp4');
       const segmentsDir = path.join(artifactsDir, 'segments');
 
       base.artifactsDir = artifactsDir;
