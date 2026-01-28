@@ -27,6 +27,11 @@ function run(args, { stdin } = {}) {
   });
 }
 
+test('prints version when --version is provided', async () => {
+  const { stdout } = await run(['--version']);
+  assert.match(stdout.trim(), /^\d+\.\d+\.\d+$/);
+});
+
 test('prints brief when given a URL', async () => {
   const url = 'https://example.com/fathom/share/abc';
   const { stdout } = await run([url]);
