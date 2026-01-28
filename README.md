@@ -74,6 +74,30 @@ Any of these work:
 - one-per-line `name=value`
 - JSON exports: `[{"name":"...","value":"..."}, ...]`
 
+#### Getting a cookie for auth-gated share links
+
+If the share link returns **401/403**, you likely need to pass your logged-in session cookies.
+
+Quick way (Chrome):
+1. Open the share link while logged into Fathom.
+2. DevTools → **Network** → click the document request for the share page.
+3. In **Request Headers**, copy the full `cookie:` header value.
+4. Save it to a file (any of these formats work):
+
+```bash
+# option A: a raw Cookie header (works as-is)
+echo "Cookie: <paste here>" > cookie.txt
+
+# option B: just the cookie pairs
+echo "<name=value; other=value>" > cookie.txt
+```
+
+Then run:
+
+```bash
+fathom-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt --out-dir ./artifacts --pretty
+```
+
 ## What this repo does
 - Extract transcript text (best-effort)
 - Resolve media URLs
