@@ -105,8 +105,10 @@ function extractVideoUrlFromHtml(html) {
 
   // Last-resort: scan for direct media URLs embedded in scripts (common on share/call pages).
   // Use a URL-ish matcher that *excludes backslashes* so we don't accidentally slurp JSON-escaped blobs.
-  // Also handle JSON-escaped slashes like https:\/\/... by normalizing them before scanning.
-  const scan = s.replaceAll('\\/', '/');
+  // Also handle:
+  // - HTML entities (e.g. &quot;) that can otherwise be glued onto URLs inside attributes
+  // - JSON-escaped slashes like https:\/\/...
+  const scan = decodeHtmlEntities(s).replaceAll('\\/', '/');
 
   const urlish = Array.from(
     scan.matchAll(/https?:\/\/[A-Za-z0-9._~:/?#\[\]@!$&'()*+,;=%-]+/gi)
@@ -252,8 +254,16 @@ function tryExtractTranscriptFromEmbeddedJson(html) {
     return hh > 0 ? `${hh}:${two(mm)}:${two(ss)}` : `${mm}:${two(ss)}`;
   }
 
-  // Common patterns on modern share pages (Next.js, etc.)
+  // Common patterns on modern share pages / app shells.
   const scriptJson = [];
+
+  // Inertia-style app shells: <div id="app" data-page="{...}">
+  for (const m of s.matchAll(/data-page\s*=\s*"([^"]+)"/gi)) {
+    scriptJson.push(decodeHtmlEntities(m[1] || '').trim());
+  }
+  for (const m of s.matchAll(/data-page\s*=\s*'([^']+)'/gi)) {
+    scriptJson.push(decodeHtmlEntities(m[1] || '').trim());
+  }
 
   // <script type="application/json" id="__NEXT_DATA__">{...}</script>
   // Be permissive about attribute ordering.
