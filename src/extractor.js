@@ -766,7 +766,7 @@ export async function extractFromUrl(
     return base;
   }
 
-  return {
+  const base = {
     ok: false,
     source: url,
     text: 'Unable to fetch this link (likely auth/cookies). Paste transcript/notes here, or run: fathom-transform --stdin',
@@ -782,6 +782,32 @@ export async function extractFromUrl(
     segmentSeconds: splitSeconds,
     mediaDownloadError: null,
   };
+
+  // If the caller requested artifacts, still write a stub transcript + extracted.json.
+  // This keeps the "extract → transform" workflow usable even when the share link is auth-gated.
+  if (outDir) {
+    try {
+      const artifactsDir = path.resolve(outDir);
+      base.artifactsDir = artifactsDir;
+      fs.mkdirSync(artifactsDir, { recursive: true });
+
+      base.transcriptPath = path.join(artifactsDir, 'transcript.txt');
+      const stub = [
+        base.text,
+        '',
+        `Fetch error: ${base.fetchError}`,
+        'Tip: pass FATHOM_COOKIE (Cookie header) or FATHOM_COOKIE_FILE/--cookie-file to access auth-gated links.',
+      ].join('\n');
+      fs.writeFileSync(base.transcriptPath, stub.trimEnd() + '\n', 'utf8');
+
+      base.extractedJsonPath = path.join(artifactsDir, 'extracted.json');
+      fs.writeFileSync(base.extractedJsonPath, JSON.stringify(base, null, 2) + '\n', 'utf8');
+    } catch {
+      // Non-fatal: still return JSON to stdout.
+    }
+  }
+
+  return base;
 }
 
 export function extractFromStdin({ content, source }) {

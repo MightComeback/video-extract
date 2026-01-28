@@ -77,6 +77,22 @@ test('prints a helpful message when URL fetch fails', async () => {
   assert.match(stdout, /--stdin/);
 });
 
+test('still writes stub artifacts when URL fetch fails and --out-dir is provided', async () => {
+  const url = 'http://localhost:1/fathom/share/abc';
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-fail-'));
+
+  const { stdout } = await runExtract([url, '--out-dir', tmp]);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.ok, false);
+  assert.equal(obj.artifactsDir, tmp);
+  assert.ok(obj.transcriptPath);
+
+  const transcript = fs.readFileSync(obj.transcriptPath, 'utf8');
+  assert.match(transcript, /Unable to fetch this link/);
+  assert.match(transcript, /Fetch error:/);
+  assert.match(transcript, /FATHOM_COOKIE/);
+});
+
 test('strips HTML when given an HTML page', async () => {
   const html = '<html><head><title>Demo &amp; Test</title></head><body><h1>Hello</h1><p>World<br/>Line</p></body></html>';
   const url = `data:text/html,${encodeURIComponent(html)}`;
