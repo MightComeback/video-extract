@@ -1,8 +1,8 @@
 // Minimal Linear helper for Hakky cron loops.
 // Keep this tiny and dependency-free.
 // Usage (example):
-//   node -e "(async()=>{const h=require('./scripts/linear-helper'); const issue=await h.getIssue('MIG-14'); console.log(issue.state.type);})()"
-//   node -e "(async()=>{const h=require('./scripts/linear-helper'); await h.addComment('MIG-14','Shipped: ...');})()"
+//   node -e "const h=require('./scripts/linear-helper.cjs'); h.getIssue('MIG-14').then(i=>console.log(i.state.type));"
+//   node -e "const h=require('./scripts/linear-helper.cjs'); h.addComment('MIG-14','Shipped: ...');"
 
 const { linearRequest } = require('../../hakky-tools/hakky/lib/linear');
 
@@ -46,7 +46,13 @@ async function addComment(issueId, body) {
   return data.commentCreate.comment;
 }
 
+async function getIssueStateType(identifierOrId) {
+  const issue = await getIssue(identifierOrId);
+  return issue?.state?.type || '';
+}
+
 module.exports = {
   getIssue,
+  getIssueStateType,
   addComment,
 };
