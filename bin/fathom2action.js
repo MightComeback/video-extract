@@ -30,7 +30,45 @@ function usage(code = 0) {
   process.exit(code);
 }
 
-function mkBrief({ source, content, fetchError }) {
+function decodeHtmlEntities(s) {
+  return String(s)
+    .replaceAll('&amp;', '&')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#39;', "'");
+}
+
+function extractTitleFromHtml(html) {
+  const m = String(html).match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (!m) return '';
+  const raw = decodeHtmlEntities(m[1] || '').trim();
+  return raw.replace(/\s+/g, ' ').trim();
+}
+
+function stripHtmlToText(html) {
+  let s = String(html);
+  s = s.replace(/<script[\s\S]*?<\/script>/gi, ' ');
+  s = s.replace(/<style[\s\S]*?<\/style>/gi, ' ');
+  // Preserve some structure as newlines before stripping tags.
+  s = s.replace(/<(br|\/p|\/div|\/li|\/h\d|\/tr)>/gi, '\n');
+  s = s.replace(/<[^>]+>/g, ' ');
+  s = decodeHtmlEntities(s);
+  s = s.replace(/\r/g, '');
+  s = s.replace(/\n\s*\n\s*\n+/g, '\n\n');
+  s = s.replace(/[\t\f\v ]+/g, ' ');
+  return s.trim();
+}
+
+function normalizeFetchedContent(content) {
+  const s = String(content || '').trim();
+  if (!s) return { text: '', suggestedTitle: '' };
+  const looksHtml = /<\s*html[\s>]/i.test(s) || /<\s*title[\s>]/i.test(s);
+  if (!looksHtml) return { text: s, suggestedTitle: '' };
+  return { text: stripHtmlToText(s), suggestedTitle: extractTitleFromHtml(s) };
+}
+
+function mkBrief({ source, content, fetchError, suggestedTitle }) {
   const text = (content || '').trim();
   const lines = [];
   lines.push(`# Bug brief`);
@@ -40,7 +78,7 @@ function mkBrief({ source, content, fetchError }) {
   lines.push('');
   lines.push('## Suggested issue title (optional)');
   lines.push('');
-  lines.push('- ');
+  lines.push(`- ${suggestedTitle ? suggestedTitle : ''}`);
   lines.push('');
   lines.push('## Summary (1 sentence)');
   lines.push('');
@@ -145,7 +183,8 @@ async function main() {
   // Best-effort fetch: public links may work; private/authenticated ones won't.
   const fetched = await fetchUrlText(url);
   if (fetched.ok) {
-    console.log(mkBrief({ source: url, content: fetched.text }));
+    const norm = normalizeFetchedContent(fetched.text);
+    console.log(mkBrief({ source: url, content: norm.text, suggestedTitle: norm.suggestedTitle }));
     return;
   }
 

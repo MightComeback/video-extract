@@ -47,6 +47,20 @@ test('prints a helpful message when URL fetch fails', async () => {
   assert.match(stdout, /--stdin/);
 });
 
+test('strips HTML when given an HTML page', async () => {
+  const html = '<html><head><title>Demo &amp; Test</title></head><body><h1>Hello</h1><p>World<br/>Line</p></body></html>';
+  const url = `data:text/html,${encodeURIComponent(html)}`;
+  const { stdout } = await run([url]);
+  assert.match(stdout, /Source: data:text\/html/);
+  // Title should be extracted.
+  assert.match(stdout, /- Demo & Test/);
+  // Tags should not leak into raw extract.
+  assert.ok(!stdout.includes('<h1>'));
+  assert.match(stdout, /Hello/);
+  assert.match(stdout, /World/);
+  assert.match(stdout, /Line/);
+});
+
 test('reads stdin when --stdin is provided', async () => {
   const { stdout } = await run(['--stdin'], { stdin: 'hello world\n' });
   assert.match(stdout, /Source: stdin/);
