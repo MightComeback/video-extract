@@ -308,6 +308,12 @@ test('passes cookie + referer + user-agent when downloading media with ffmpeg', 
     assert.ok(fs.existsSync(obj.mediaPath));
     assert.ok(Array.isArray(obj.mediaSegments));
     assert.ok(obj.mediaSegments.length >= 1);
+
+    assert.ok(obj.mediaSegmentsListPath);
+    assert.ok(fs.existsSync(obj.mediaSegmentsListPath));
+    const list = fs.readFileSync(obj.mediaSegmentsListPath, 'utf8').trim().split(/\r?\n/).filter(Boolean);
+    assert.equal(list.length, obj.mediaSegments.length);
+    assert.equal(list[0], obj.mediaSegments[0]);
   } finally {
     await srv.close();
   }
@@ -378,6 +384,12 @@ test('extract tool can download + split media into segments (local server)', asy
     assert.ok(Array.isArray(obj.mediaSegments));
     assert.ok(obj.mediaSegments.length >= 2);
     for (const p of obj.mediaSegments) assert.ok(fs.existsSync(p));
+
+    assert.ok(obj.mediaSegmentsListPath);
+    assert.ok(fs.existsSync(obj.mediaSegmentsListPath));
+    const list = fs.readFileSync(obj.mediaSegmentsListPath, 'utf8').trim().split(/\r?\n/).filter(Boolean);
+    assert.equal(list.length, obj.mediaSegments.length);
+    assert.equal(list[0], obj.mediaSegments[0]);
   } finally {
     await srv.close();
   }
