@@ -347,7 +347,11 @@ export async function fetchUrlText(url, { cookie = null } = {}) {
     });
 
     if (!res.ok) {
-      return { ok: false, error: `HTTP ${res.status}` };
+      const hint =
+        res.status === 401 || res.status === 403
+          ? ' (auth required; pass FATHOM_COOKIE or --cookie-file)'
+          : '';
+      return { ok: false, error: `HTTP ${res.status}${hint}` };
     }
 
     const text = await res.text();
