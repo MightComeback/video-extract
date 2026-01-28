@@ -53,6 +53,20 @@ fathom-extract "https://..." --no-download --pretty
 pbpaste | fathom-extract --stdin --source "https://..." --pretty
 ```
 
+#### Gemini ingestion: split video into ~5-minute chunks
+
+When media is downloadable, the extractor writes:
+- `video.mp4`
+- `segments/segment_000.mp4`, `segments/segment_001.mp4`, …
+
+```bash
+# Explicit chunking (default is 300 seconds)
+fathom-extract "https://..." --out-dir ./artifacts --split-seconds 300 --pretty
+
+# Save the mp4 at a specific path
+fathom-extract "https://..." --download-media ./artifacts/video.mp4 --pretty
+```
+
 ### 2) Transform (JSON/raw text → markdown bug brief)
 
 Preferred name: `fathom-transform` (aliases kept for backward-compat).
