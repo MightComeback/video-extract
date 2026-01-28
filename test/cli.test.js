@@ -93,6 +93,37 @@ test('still writes stub artifacts when URL fetch fails and --out-dir is provided
   assert.match(transcript, /FATHOM_COOKIE/);
 });
 
+test('supports auth-gated pages via FATHOM_COOKIE', async () => {
+  const s = await withServer((req, res) => {
+    const cookie = String(req.headers.cookie || '');
+    if (!cookie.includes('auth=1')) {
+      res.writeHead(403, { 'content-type': 'text/plain' });
+      res.end('forbidden');
+      return;
+    }
+
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end('<html><head><title>Private Recording</title></head><body><p>hello transcript</p></body></html>');
+  });
+
+  try {
+    // Without cookie → 403.
+    const { stdout: noCookieOut } = await runExtract([`${s.url}/share/abc`]);
+    const noCookieObj = JSON.parse(noCookieOut);
+    assert.equal(noCookieObj.ok, false);
+    assert.match(String(noCookieObj.fetchError || ''), /HTTP 403/);
+
+    // With cookie → OK.
+    const { stdout: withCookieOut } = await runExtract([`${s.url}/share/abc`], { env: { FATHOM_COOKIE: 'auth=1' } });
+    const withCookieObj = JSON.parse(withCookieOut);
+    assert.equal(withCookieObj.ok, true);
+    assert.match(withCookieObj.title, /Private Recording/);
+    assert.match(withCookieObj.text, /hello transcript/);
+  } finally {
+    await s.close();
+  }
+});
+
 test('strips HTML when given an HTML page', async () => {
   const html = '<html><head><title>Demo &amp; Test</title></head><body><h1>Hello</h1><p>World<br/>Line</p></body></html>';
   const url = `data:text/html,${encodeURIComponent(html)}`;
