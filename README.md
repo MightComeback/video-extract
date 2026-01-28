@@ -53,6 +53,28 @@ fathom-extract "https://..." --no-download --pretty
 pbpaste | fathom-extract --stdin --source "https://..." --pretty
 ```
 
+#### Auth-gated links (real Fathom recordings): cookies + ffmpeg
+
+Many real Fathom share links require auth. The extractor supports passing cookies so it can fetch the transcript page and download the underlying media.
+
+Requirements:
+- `ffmpeg` on your PATH (used to download + split the video)
+- a valid Fathom session cookie
+
+Cookie options (any of these work):
+- `--cookie "name=value; other=value"`
+- `--cookie-file ./cookie.txt` (supports Netscape cookies.txt, one-per-line `name=value`, and JSON exports)
+- env vars: `FATHOM_COOKIE` or `FATHOM_COOKIE_FILE`
+
+```bash
+# Typical: cookie file → transcript + video.mp4 + 5-min segments
+fathom-extract "https://..." --cookie-file ./cookie.txt --out-dir ./artifacts --pretty
+
+# Equivalent via env var
+export FATHOM_COOKIE_FILE=./cookie.txt
+fathom-extract "https://..." --out-dir ./artifacts --pretty
+```
+
 #### Gemini ingestion: split video into ~5-minute chunks
 
 When media is downloadable, the extractor writes:
