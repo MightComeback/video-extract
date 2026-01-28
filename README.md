@@ -27,6 +27,43 @@ Produces markdown with:
 - timestamps
 - next actions
 
+## Example
+
+```bash
+pbpaste | fathom2action --stdin > bug.md
+```
+
+Example output (truncated):
+
+```md
+# Bug brief
+
+Source: stdin
+
+## Suggested issue title (optional)
+
+- 
+
+## Summary (1 sentence)
+
+- 
+
+## Repro steps
+
+1. 
+
+## Expected vs actual
+
+- Expected: 
+- Actual: 
+
+## Next actions
+
+- [ ] Create Linear/GitHub issue
+- [ ] Assign owner
+- [ ] Add severity + scope
+```
+
 ## Roadmap
 - Fetch/parse transcript from Fathom share pages when accessible
 - Optional AI fill-in (OpenAI/other) to generate summary + repro steps
