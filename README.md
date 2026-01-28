@@ -2,6 +2,28 @@
 
 Extract **transcript + video** from a Fathom link.
 
+## Install
+
+### Option A: run from the repo (recommended)
+
+```bash
+git clone git@github.com:MightComeback/fathom-extract.git
+cd fathom-extract
+
+# verify dependencies
+node -v
+ffmpeg -version
+
+# optional: make `fathom-extract` available globally
+npm link
+```
+
+### Option B: no global install (explicit path)
+
+```bash
+node ./bin/fathom2action-extract.js --help
+```
+
 ## Requirements
 - Node.js
 - `ffmpeg` (for video download + splitting)
