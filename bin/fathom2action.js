@@ -26,7 +26,7 @@ function getVersion() {
 }
 
 function usage(code = 0) {
-  console.log(`fathom2action\n\nUsage:\n  fathom2action <fathom-url>\n  fathom2action --stdin\n  fathom2action -          # read stdin\n  fathom2action --version\n\nTip:\n  If you run without args and stdin is piped, it will automatically read stdin.\n\nOutput:\n  Prints a markdown bug brief template filled with extracted context (best effort).\n\nNotes:\n  MVP intentionally works even without API keys: if we can't fetch/parse the link, pipe transcript/notes via --stdin.\n`);
+  console.log(`fathom2action\n\nUsage:\n  fathom2action <fathom-url>\n  fathom2action --stdin [--source <url-or-label>]\n  fathom2action -          # read stdin\n  fathom2action --version\n\nTip:\n  If you run without args and stdin is piped, it will automatically read stdin.\n\nOutput:\n  Prints a markdown bug brief template filled with extracted context (best effort).\n\nNotes:\n  MVP intentionally works even without API keys: if we can't fetch/parse the link, pipe transcript/notes via --stdin.\n`);
   process.exit(code);
 }
 
@@ -145,8 +145,24 @@ async function fetchUrlText(url) {
   }
 }
 
+function readFlagValue(args, flag) {
+  const i = args.indexOf(flag);
+  if (i === -1) return { args, value: null };
+  const v = args[i + 1];
+  if (!v || v.startsWith('-')) {
+    console.error(`ERR: ${flag} requires a value`);
+    process.exit(2);
+  }
+  const next = args.slice(0, i).concat(args.slice(i + 2));
+  return { args: next, value: v };
+}
+
 async function main() {
-  const args = process.argv.slice(2);
+  let args = process.argv.slice(2);
+
+  const sourceFlag = readFlagValue(args, '--source');
+  args = sourceFlag.args;
+  const stdinSourceOverride = sourceFlag.value;
 
   if (args.includes('-h') || args.includes('--help')) usage(0);
   if (args.includes('-v') || args.includes('--version')) {
@@ -162,7 +178,7 @@ async function main() {
         console.error('ERR: stdin is empty');
         process.exit(2);
       }
-      console.log(mkBrief({ source: 'stdin', content }));
+      console.log(mkBrief({ source: stdinSourceOverride || 'stdin', content }));
       return;
     }
     usage(0);
@@ -174,8 +190,13 @@ async function main() {
       console.error('ERR: stdin is empty');
       process.exit(2);
     }
-    console.log(mkBrief({ source: 'stdin', content }));
+    console.log(mkBrief({ source: stdinSourceOverride || 'stdin', content }));
     return;
+  }
+
+  if (stdinSourceOverride) {
+    console.error('ERR: --source can only be used with --stdin (or piped stdin)');
+    process.exit(2);
   }
 
   const url = args[0];
