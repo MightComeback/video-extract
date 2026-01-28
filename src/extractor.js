@@ -595,6 +595,20 @@ function normalizeCookie(cookie) {
   return c || null;
 }
 
+async function ffprobeLooksValidMp4(filePath) {
+  try {
+    // If the file is incomplete (e.g. process killed), ffprobe commonly fails with "moov atom not found".
+    await run(
+      'ffprobe',
+      ['-v', 'error', '-show_entries', 'format=duration,size', '-of', 'default=nw=1:nk=1', String(filePath)],
+      { timeoutMs: 30_000 }
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function downloadMediaWithFfmpeg({ mediaUrl, outPath, cookie, referer = null } = {}) {
   if (!mediaUrl) throw new Error('mediaUrl is required');
   if (!outPath) throw new Error('outPath is required');
@@ -614,7 +628,33 @@ async function downloadMediaWithFfmpeg({ mediaUrl, outPath, cookie, referer = nu
 
   // Fast path: stream-copy.
   try {
-    await run('ffmpeg', [...common, ...httpArgs, ...headerArgs, '-i', mediaUrl, '-c', 'copy', outPath], { timeoutMs: ffmpegDownloadTimeoutMs() });
+    await run(
+      'ffmpeg',
+      [
+        ...common,
+        ...httpArgs,
+        ...headerArgs,
+        '-i',
+        mediaUrl,
+        '-c',
+        'copy',
+        // When remuxing to MP4, ensure we write a proper moov atom.
+        '-movflags',
+        '+faststart',
+        // Common when ingesting HLS/TS into MP4.
+        '-bsf:a',
+        'aac_adtstoasc',
+        outPath
+      ],
+      { timeoutMs: ffmpegDownloadTimeoutMs() }
+    );
+
+    // Guard: if the process was killed mid-flight in a previous run, we can end up with a "moov atom not found" mp4.
+    // Validate and force a re-encode fallback if needed.
+    if (!(await ffprobeLooksValidMp4(outPath))) {
+      throw new Error('downloaded mp4 looks invalid (ffprobe failed; likely missing moov); retrying with re-encode');
+    }
+
     return { ok: true, outPath, method: 'copy' };
   } catch {
     // Fallback: re-encode (more robust across containers/streams).
@@ -636,6 +676,8 @@ async function downloadMediaWithFfmpeg({ mediaUrl, outPath, cookie, referer = nu
         'aac',
         '-b:a',
         '128k',
+        '-movflags',
+        '+faststart',
         outPath
       ],
       { timeoutMs: ffmpegDownloadTimeoutMs() }
