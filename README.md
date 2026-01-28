@@ -81,6 +81,9 @@ Any of these work:
 - `FATHOM_COOKIE=...`
 - `FATHOM_COOKIE_FILE=...`
 
+Optional:
+- `FATHOM_USER_AGENT=...` (override the default `fathom-extract/<version>` user-agent)
+
 `--cookie-file` supports:
 - Netscape cookies.txt
 - one-per-line `name=value`
