@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import process from 'node:process';
 
-import { readStdin, extractFromStdin, extractFromUrl } from '../src/extractor.js';
+import { readStdin, extractFromStdin, extractFromUrl, getVersion } from '../src/extractor.js';
 import { renderBrief } from '../src/brief.js';
 
 function usage(code = 0) {
@@ -23,6 +23,10 @@ async function main() {
   const cmd = process.argv[1]?.split('/').pop() || 'fathom2action';
   const args = process.argv.slice(2);
   if (args.includes('-h') || args.includes('--help')) usage(0);
+  if (args.includes('-v') || args.includes('--version')) {
+    process.stdout.write(`${getVersion()}\n`);
+    return;
+  }
 
   // Convenience: no args + piped stdin.
   if (!args.length && !process.stdin.isTTY) {
