@@ -597,10 +597,52 @@ function isLikelyMediaFile(url) {
   );
 }
 
+async function probeIsMediaUrl(url, { cookie = null } = {}) {
+  const u = String(url || '').trim();
+  if (!u || !/^https?:\/\//i.test(u)) return false;
+
+  const headers = {};
+  const c = normalizeCookie(cookie);
+  if (c) headers.cookie = c;
+
+  // Prefer HEAD when supported; fall back to a tiny GET.
+  async function check(res) {
+    const ct = String(res.headers.get('content-type') || '').toLowerCase();
+    return (
+      ct.startsWith('video/') ||
+      ct.includes('application/vnd.apple.mpegurl') ||
+      ct.includes('application/x-mpegurl') ||
+      ct.includes('audio/')
+    );
+  }
+
+  try {
+    const res = await fetch(u, { method: 'HEAD', redirect: 'follow', headers });
+    if (res.ok) return await check(res);
+  } catch {
+    // ignore
+  }
+
+  try {
+    const res = await fetch(u, { method: 'GET', redirect: 'follow', headers });
+    // Avoid downloading: if the server doesn't send a helpful content-type, we bail.
+    const ok = res.ok ? await check(res) : false;
+    try { res.body?.cancel?.(); } catch {}
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 async function resolveMediaUrl(mediaUrl, { cookie = null, maxDepth = 3 } = {}) {
   const start = String(mediaUrl || '').trim();
   if (!start) return '';
   if (isLikelyMediaFile(start)) return start;
+
+  // Some providers serve media endpoints without a file extension.
+  // Quick probe: if the URL itself returns a video/mpegurl content-type, treat it as the final media URL.
+  if (await probeIsMediaUrl(start, { cookie })) return start;
+
   if (maxDepth <= 0) return start;
 
   // Some share pages point og:video at an embeddable player HTML.
