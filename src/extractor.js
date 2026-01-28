@@ -225,6 +225,22 @@ function sliceLikelyTranscript(text) {
 function tryExtractTranscriptFromEmbeddedJson(html) {
   const s = String(html);
 
+  function formatTimestamp(secondsLike) {
+    const n = Number(secondsLike);
+    if (!Number.isFinite(n) || n < 0) return '';
+
+    // Heuristic: treat very large values as milliseconds.
+    const sec = n > 1e6 ? n / 1000 : n;
+
+    const total = Math.floor(sec);
+    const hh = Math.floor(total / 3600);
+    const mm = Math.floor((total % 3600) / 60);
+    const ss = total % 60;
+
+    const two = (x) => String(x).padStart(2, '0');
+    return hh > 0 ? `${hh}:${two(mm)}:${two(ss)}` : `${mm}:${two(ss)}`;
+  }
+
   // Common patterns on modern share pages (Next.js, etc.)
   const scriptJson = [];
 
@@ -270,6 +286,85 @@ function tryExtractTranscriptFromEmbeddedJson(html) {
     }
 
     if (!parsed) continue;
+
+    // Prefer structured transcript arrays when present (keeps ordering + speaker/timestamps).
+    function tryStructuredTranscript(x) {
+      const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+
+      function findTranscriptArrays(node) {
+        const out = [];
+        const seen = new Set();
+        const visited = new Set();
+
+        function walk(n) {
+          if (n == null) return;
+          if (typeof n !== 'object') return;
+          if (visited.has(n)) return;
+          visited.add(n);
+
+          if (Array.isArray(n)) {
+            for (const v of n) walk(v);
+            return;
+          }
+
+          for (const [k, v] of Object.entries(n)) {
+            const lk = String(k).toLowerCase();
+            if (
+              lk.includes('transcript') ||
+              lk === 'utterances' ||
+              lk === 'sentences' ||
+              lk === 'segments' ||
+              lk === 'captions'
+            ) {
+              if (Array.isArray(v) && !seen.has(v)) {
+                seen.add(v);
+                out.push(v);
+              }
+            }
+            walk(v);
+          }
+        }
+
+        walk(x);
+        return out;
+      }
+
+      const candidates = findTranscriptArrays(x);
+      for (const arr of candidates) {
+        if (!arr.length) continue;
+        // Require at least a couple objects with text-ish content.
+        const objs = arr.filter(isObj);
+        if (objs.length < 2) continue;
+
+        const lines = [];
+        for (const o of objs) {
+          const text = decodeHtmlEntities(o.text ?? o.content ?? o.caption ?? '').trim();
+          if (!text) continue;
+
+          const who = decodeHtmlEntities(o.speaker ?? o.speakerName ?? o.speaker_name ?? o.name ?? '').trim();
+          const t =
+            o.startTime ??
+            o.start_time ??
+            o.start ??
+            o.time ??
+            o.timestamp ??
+            (o.startMs != null ? Number(o.startMs) / 1000 : null) ??
+            null;
+          const ts = t != null ? formatTimestamp(t) : '';
+
+          const prefix = [ts, who].filter(Boolean).join(' ');
+          lines.push(prefix ? `${prefix}: ${text}` : text);
+        }
+
+        const joined = lines.join('\n').trim();
+        if (joined.length >= 20) return joined;
+      }
+
+      return '';
+    }
+
+    const structured = tryStructuredTranscript(parsed);
+    if (structured) return structured;
 
     const parts = [];
     const seen = new Set();

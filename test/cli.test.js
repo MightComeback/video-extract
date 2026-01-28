@@ -134,6 +134,28 @@ test('prefers embedded transcript JSON over tag-stripped HTML when present', asy
   assert.equal(obj.title, 'Embedded Transcript');
 });
 
+test('formats structured transcript arrays (speaker + timestamp) from embedded JSON when present', async () => {
+  const html = `
+    <html>
+      <head><title>Structured Transcript</title></head>
+      <body>
+        <script id="__NEXT_DATA__" type="application/json">
+          {"props":{"pageProps":{"utterances":[
+            {"startTime":1,"speakerName":"Ivan","text":"Hello"},
+            {"startTime":62,"speakerName":"Might","text":"Hi there"}
+          ]}}}
+        </script>
+      </body>
+    </html>
+  `;
+  const url = `data:text/html,${encodeURIComponent(html)}`;
+  const { stdout } = await runExtract([url]);
+  const obj = JSON.parse(stdout);
+  assert.equal(obj.ok, true);
+  assert.match(obj.text, /0:01 Ivan: Hello/);
+  assert.match(obj.text, /1:02 Might: Hi there/);
+});
+
 test('slices transcript section from tag-stripped HTML when a Transcript header is present', async () => {
   const html = `
     <html>
