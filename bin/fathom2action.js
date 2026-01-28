@@ -39,7 +39,14 @@ async function main() {
       const content = await readStdin();
       try {
         const extracted = extractFromStdin({ content, source: stdinSourceOverride || 'stdin' });
-        console.log(mkBrief({ source: extracted.source, content: extracted.text, suggestedTitle: extracted.suggestedTitle }));
+        console.log(
+          mkBrief({
+            source: extracted.source,
+            content: extracted.text,
+            suggestedTitle: extracted.suggestedTitle,
+            title: extracted.title
+          })
+        );
         return;
       } catch (e) {
         if (e?.code === 2) {
@@ -56,7 +63,14 @@ async function main() {
     const content = await readStdin();
     try {
       const extracted = extractFromStdin({ content, source: stdinSourceOverride || 'stdin' });
-      console.log(mkBrief({ source: extracted.source, content: extracted.text, suggestedTitle: extracted.suggestedTitle }));
+      console.log(
+        mkBrief({
+          source: extracted.source,
+          content: extracted.text,
+          suggestedTitle: extracted.suggestedTitle,
+          title: extracted.title
+        })
+      );
       return;
     } catch (e) {
       if (e?.code === 2) {
@@ -81,7 +95,8 @@ async function main() {
       source: extracted.source,
       content: extracted.text,
       fetchError: extracted.fetchError,
-      suggestedTitle: extracted.suggestedTitle
+      suggestedTitle: extracted.suggestedTitle,
+      title: extracted.title
     })
   );
 }
