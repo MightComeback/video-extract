@@ -12,7 +12,7 @@ function usage(code = 0) {
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <fathom-share-url> [--copy] [--out <path>]
+  ${cmd} <fathom-share-url> [--copy] [--out <path>] [--no-note]
   ${cmd} --stdin [--copy] [--out <path>] [--source <url>] [--title <text>]
   ${cmd} - [--copy] [--out <path>] [--source <url>] [--title <text>]
 
@@ -21,6 +21,7 @@ Options:
   --out <path>      Also write the generated brief to a file.
   --source <url>    Override the Source field (useful when piping transcript via --stdin).
   --title <text>    Override the Title field (useful when piping transcript via --stdin).
+  --no-note         Suppress the "NOTE: Unable to fetch..." hint printed to stderr when a link can't be fetched.
 
 Notes:
   - If the URL cannot be fetched (auth-gated), the tool will print a ready-to-paste brief and ask for transcript via ${cmd} --stdin.
@@ -38,6 +39,7 @@ async function main() {
   }
 
   const copyToClipboard = args.includes('--copy');
+  const suppressNote = args.includes('--no-note');
 
   function takeFlagValue(flag) {
     const idx = args.indexOf(flag);
@@ -56,7 +58,7 @@ async function main() {
   const titleOverride = takeFlagValue('--title');
   const outPath = takeFlagValue('--out');
 
-  const cleanArgs = args.filter((a) => a !== '--copy');
+  const cleanArgs = args.filter((a) => a !== '--copy' && a !== '--no-note');
 
   function maybeWriteFile(text) {
     if (!outPath) return;
@@ -194,7 +196,7 @@ async function main() {
   });
 
   // If we couldn't fetch anything useful, nudge toward --stdin.
-  if (!extracted.ok) {
+  if (!extracted.ok && !suppressNote) {
     process.stderr.write(
       `NOTE: Unable to fetch this link (often auth-gated). Paste transcript via \`${cmd} --stdin\` for best results. Example: \`pbpaste | ${cmd} --stdin\`.\n`
     );
