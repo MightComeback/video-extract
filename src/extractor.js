@@ -1113,7 +1113,7 @@ export function extractFromStdin({ content, source }) {
   function takeTitle(line) {
     // Some copy/pastes come from quoted contexts (email/Slack) where each line starts with "> ".
     // Strip a single leading quote marker for robustness.
-    const s = String(line || '').trim().replace(/^>\s*/, '');
+    const s = String(line || '').trim().replace(/^>+\s*/, '');
     if (!s) return null;
     const m = s.match(/^(?:title|subject)\s*(?:[:=\-–—])\s*(.+)$/i);
     if (m) return String(m[1] || '').trim();
@@ -1129,7 +1129,7 @@ export function extractFromStdin({ content, source }) {
   function takeSource(line) {
     // Some copy/pastes come from quoted contexts (email/Slack) where each line starts with "> ".
     // Strip a single leading quote marker for robustness.
-    const s0 = String(line || '').trim().replace(/^>\s*/, '');
+    const s0 = String(line || '').trim().replace(/^>+\s*/, '');
     if (!s0) return null;
 
     // Allow a "Source:" prefix (common in briefs) as well as a bare URL.

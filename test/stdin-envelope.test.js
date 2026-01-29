@@ -28,11 +28,11 @@ test('extractFromStdin accepts bare fathom.video URLs (no scheme) and normalizes
   assert.equal(out.title, 'Bare URL');
 });
 
-test('extractFromStdin tolerates quoted envelope lines ("> ") for Source and Title', () => {
+test('extractFromStdin tolerates quoted envelope lines (">", ">>", etc.) for Source and Title', () => {
   const input = [
-    '> Source: https://fathom.video/share/abc',
+    '>> Source: https://fathom.video/share/abc',
     '> Title: Login breaks on Safari',
-    '> 00:01 Alice: it crashes',
+    '>>> 00:01 Alice: it crashes',
   ].join('\n');
 
   const out = extractFromStdin({ content: input, source: 'stdin' });
