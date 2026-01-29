@@ -8,6 +8,10 @@ import { Readable } from 'node:stream';
 import { normalizeUrlLike } from './brief.js';
 
 export function readStdin() {
+  // If the user runs `fathom2action --stdin` interactively without piping input,
+  // stdin is a TTY and the process would otherwise hang waiting for EOF.
+  if (process.stdin.isTTY) return Promise.resolve('');
+
   return new Promise((resolve) => {
     let data = '';
     process.stdin.setEncoding('utf8');
