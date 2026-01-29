@@ -82,7 +82,12 @@ async function main() {
 
   function parseNonNegInt(name, v) {
     if (v == null) return undefined;
-    const n = Number(v);
+
+    // Treat empty env vars / accidental blanks as “unset” (avoid surprising behavior like "" → 0).
+    const raw = String(v).trim();
+    if (raw === '') return undefined;
+
+    const n = Number(raw);
     if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
       process.stderr.write(`ERROR: ${name} must be a non-negative integer (got: ${v})\n`);
       usage(2);
