@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import process from 'node:process';
+import { spawn } from 'node:child_process';
 
 import { readStdin, extractFromStdin, extractFromUrl, getVersion } from '../src/extractor.js';
 import { renderBrief } from '../src/brief.js';
@@ -9,9 +10,12 @@ function usage(code = 0) {
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <fathom-share-url>
-  ${cmd} --stdin
-  ${cmd} -
+  ${cmd} <fathom-share-url> [--copy]
+  ${cmd} --stdin [--copy]
+  ${cmd} - [--copy]
+
+Options:
+  --copy    Also copy the generated brief to clipboard (best-effort; uses pbcopy when available).
 
 Notes:
   - If the URL cannot be fetched (auth-gated), the tool will print a ready-to-paste brief and ask for transcript via ${cmd} --stdin.
@@ -28,17 +32,44 @@ async function main() {
     return;
   }
 
+  const copyToClipboard = args.includes('--copy');
+  const cleanArgs = args.filter((a) => a !== '--copy');
+
+  async function maybeCopy(text) {
+    if (!copyToClipboard) return;
+
+    // Best-effort clipboard copy (Mac). If pbcopy isn't available, we just warn.
+    await new Promise((resolve) => {
+      const child = spawn('pbcopy');
+      child.on('error', (err) => {
+        if (err?.code === 'ENOENT') {
+          process.stderr.write('NOTE: --copy requested but pbcopy is not available on this system.\n');
+          return resolve();
+        }
+        process.stderr.write(`NOTE: --copy failed: ${String(err?.message || err)}\n`);
+        resolve();
+      });
+      child.on('close', () => resolve());
+      try {
+        child.stdin.write(String(text));
+        child.stdin.end();
+      } catch {
+        resolve();
+      }
+    });
+  }
+
   async function renderFromStdin() {
     const content = await readStdin();
     try {
       const extracted = extractFromStdin({ content, source: 'stdin' });
-      process.stdout.write(
-        renderBrief({
-          source: extracted.source,
-          title: extracted.title,
-          transcript: extracted.text,
-        })
-      );
+      const out = renderBrief({
+        source: extracted.source,
+        title: extracted.title,
+        transcript: extracted.text,
+      });
+      await maybeCopy(out);
+      process.stdout.write(out);
     } catch (e) {
       if (e && e.code === 2) {
         process.stderr.write(
@@ -51,19 +82,19 @@ async function main() {
   }
 
   // Convenience: no args + piped stdin.
-  if (!args.length && !process.stdin.isTTY) {
+  if (!cleanArgs.length && !process.stdin.isTTY) {
     await renderFromStdin();
     return;
   }
 
-  if (!args.length) usage(0);
+  if (!cleanArgs.length) usage(0);
 
-  if (args[0] === '--stdin' || args[0] === '-') {
+  if (cleanArgs[0] === '--stdin' || cleanArgs[0] === '-') {
     await renderFromStdin();
     return;
   }
 
-  const url = args[0];
+  const url = cleanArgs[0];
   const extracted = await extractFromUrl(url, {
     // Keep this lightweight: we only need the transcript for a brief.
     downloadMedia: false,
@@ -84,6 +115,7 @@ async function main() {
     );
   }
 
+  await maybeCopy(brief);
   process.stdout.write(brief);
 }
 
