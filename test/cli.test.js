@@ -123,6 +123,31 @@ test('supports auth-gated pages via FATHOM_COOKIE', async () => {
   }
 });
 
+test('extract CLI accepts chat-wrapped URLs (angle brackets / Slack links) and strips trailing punctuation', async () => {
+  const s = await withServer((req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end('<html><head><title>OK</title></head><body><p>hi</p></body></html>');
+  });
+
+  try {
+    const base = `${s.url}/x`;
+
+    // <https://...>
+    const { stdout: angleOut } = await runExtract([`<${base}>`, '--no-download']);
+    assert.equal(JSON.parse(angleOut).ok, true);
+
+    // Slack: <https://...|label>
+    const { stdout: slackOut } = await runExtract([`<${base}|recording>`, '--no-download']);
+    assert.equal(JSON.parse(slackOut).ok, true);
+
+    // Common chat punctuation (e.g., "...)")
+    const { stdout: punctOut } = await runExtract([`${base})`, '--no-download']);
+    assert.equal(JSON.parse(punctOut).ok, true);
+  } finally {
+    await s.close();
+  }
+});
+
 test('cookie file supports JSON exports (name/value pairs)', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom-cookie-json-'));
   const cookiePath = path.join(tmp, 'cookies.json');
