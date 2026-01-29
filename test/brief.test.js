@@ -223,6 +223,18 @@ test('brief strips angle brackets from Source (copy/paste-friendly URLs)', () =>
   assert.doesNotMatch(out, /<https?:\/\//);
 });
 
+test('brief strips trailing punctuation from Source URLs (chat copy/paste)', () => {
+  const url = 'https://fathom.video/share/trailing-punct';
+  const out = renderBrief({
+    source: `${url}),`,
+    title: 'Some bug',
+    transcript: '00:01 Alice: It crashes',
+  });
+
+  assert.match(out, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+  assert.match(out, new RegExp(`^- Fathom: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+});
+
 test('brief teaser accepts Unicode bullet prefixes (•) and strips timestamps', async () => {
   const { stdout } = await runBrief(['--stdin'], {
     stdin: ['• 00:01 Alice: It crashes', '• 00:05 Bob: Yep', ''].join('\n'),
