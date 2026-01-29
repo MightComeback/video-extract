@@ -17,7 +17,8 @@ function stripLeadingTimestamp(s) {
   //  - (00:12) Hello
   return String(s || '')
     .replace(
-      /^(?:\[\s*|\(\s*)?(?:\d{1,2}:)?\d{1,2}:\d{2}(?:\s*(?:\]|\))\s*)?\s*/,
+      // Also strip common separators after the timestamp (":", "-", "–", "—").
+      /^(?:\[\s*|\(\s*)?(?:\d{1,2}:)?\d{1,2}:\d{2}(?:\s*(?:\]|\))\s*)?(?:\s*[:\-–—]\s*)?\s*/,
       ''
     )
     .trim();
