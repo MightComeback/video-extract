@@ -91,6 +91,15 @@ test('brief teaser strips speaker labels even without a space after colon', asyn
   assert.match(stdout, /^- Yep/m);
 });
 
+test('brief teaser strips speaker labels with fullwidth colon (：)', async () => {
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: ['00:01 Alice： It crashes', '00:02 Bob：Yep', ''].join('\n'),
+  });
+
+  assert.match(stdout, /^- It crashes/m);
+  assert.match(stdout, /^- Yep/m);
+});
+
 test('brief teaser strips speaker labels with role metadata (parens/brackets)', async () => {
   const { stdout } = await runBrief(['--stdin'], {
     stdin: ['00:01 Alice (Host): It crashes', '00:02 Bob [PM] - Yep', ''].join('\n'),
