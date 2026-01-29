@@ -1142,8 +1142,9 @@ export function extractFromStdin({ content, source }) {
       //   "https://..."
       out = out.replace(/^[(`\[\{"']+\s*/g, '');
 
-      // Strip common trailing punctuation from copy/paste
-      out = out.replace(/[)\]>'\"`.,;:]+$/g, '');
+      // Strip common trailing punctuation from copy/paste.
+      // Include ! and ? which frequently get appended in chat.
+      out = out.replace(/[)\]>'\"`.,;:!?]+$/g, '');
       return out;
     }
 
