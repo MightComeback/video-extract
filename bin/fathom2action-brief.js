@@ -99,7 +99,7 @@ async function main() {
     }
 
     process.stderr.write(
-      'NOTE: --copy requested but no clipboard command was found (tried pbcopy, wl-copy, xclip, xsel).\n'
+      'NOTE: --copy requested but no clipboard command was found (tried pbcopy, clip.exe/clip, wl-copy, xclip, xsel).\n'
     );
   }
 
