@@ -199,6 +199,16 @@ test('brief teaser strips common separators after timestamps (dash / em dash)', 
   assert.match(stdout, /^- Yep/m);
 });
 
+test('brief teaser accepts numbered list prefixes (1. / 2))', async () => {
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: ['1. 00:01 Alice: It crashes', '2) 00:05 Bob: Yep', ''].join('\n'),
+  });
+
+  assert.match(stdout, /^## Transcript teaser \(first lines\)/m);
+  assert.match(stdout, /^- It crashes/m);
+  assert.match(stdout, /^- Yep/m);
+});
+
 test('brief --stdin exits with code 2 and a helpful message when stdin is empty', async () => {
   await assert.rejects(
     runBrief(['--stdin'], {
