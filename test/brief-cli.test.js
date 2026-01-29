@@ -160,3 +160,14 @@ test('brief CLI supports env vars to hide teaser/timestamps (F2A_MAX_*)', async 
   assert.equal(stdout.includes('## Transcript teaser'), false);
   assert.equal(stdout.includes('## Timestamps'), false);
 });
+
+test('brief CLI ignores empty env var overrides for F2A_MAX_* (treats as unset)', async () => {
+  const { stdout } = await runBrief(['<http://localhost:1/share/abc>'], {
+    env: { F2A_MAX_TEASER: '', F2A_MAX_TIMESTAMPS: '   ' },
+  });
+
+  assert.ok(stdout.length > 0);
+  // Defaults should apply, so the sections should still be present.
+  assert.match(stdout, /## Transcript teaser/);
+  assert.match(stdout, /## Timestamps/);
+});
