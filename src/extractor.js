@@ -1096,7 +1096,7 @@ export function extractFromStdin({ content, source }) {
   function takeTitle(line) {
     const s = String(line || '').trim();
     if (!s) return null;
-    const m = s.match(/^title\s*:\s*(.+)$/i);
+    const m = s.match(/^(?:title|subject)\s*:\s*(.+)$/i);
     if (m) return String(m[1] || '').trim();
 
     // Markdown headings are common in copy/paste “envelopes”.
