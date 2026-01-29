@@ -1128,7 +1128,7 @@ export function extractFromStdin({ content, source }) {
       return out;
     }
 
-    const sourcePrefixed = s0.match(/^(?:source|fathom)\s*:\s*(.+)\s*$/i);
+    const sourcePrefixed = s0.match(/^(?:source|fathom|link|url)\s*:\s*(.+)\s*$/i);
     if (sourcePrefixed) {
       const u = cleanUrl(sourcePrefixed[1]);
       if (/^https?:\/\//i.test(u)) return u;

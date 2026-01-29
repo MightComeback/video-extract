@@ -86,6 +86,16 @@ test('brief --stdin treats a "Source: <url>" line as the Source', async () => {
   assert.match(stdout, /^- It crashes/m);
 });
 
+test('brief --stdin treats a "Link: <url>" line as the Source', async () => {
+  const url = 'https://fathom.video/share/link-prefixed';
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: [`Link: ${url}`, '00:01 Alice: It crashes', ''].join('\n'),
+  });
+
+  assert.match(stdout, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+  assert.match(stdout, /^- It crashes/m);
+});
+
 test('brief --stdin treats a single URL line as the Source (empty transcript)', async () => {
   const url = 'https://fathom.video/share/only-url';
   const { stdout } = await runBrief(['--stdin'], {
