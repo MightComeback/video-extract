@@ -1092,34 +1092,63 @@ export function extractFromStdin({ content, source }) {
   const lines = raw.split(/\r?\n/);
 
   let idx = 0;
-  const first = String(lines[0] || '').trim();
 
-  // Allow a "Source:" prefix (common in briefs) as well as a bare URL.
-  // Examples:
-  //   Source: https://fathom.video/share/...
-  //   Fathom: https://fathom.video/share/...
-  const sourcePrefixed = first.match(/^(?:source|fathom)\s*:\s*(https?:\/\/\S+)\s*$/i);
-  if (sourcePrefixed) {
-    src = sourcePrefixed[1];
-    idx = 1;
-  } else if (/^https?:\/\//i.test(first)) {
-    src = first;
-    idx = 1;
+  function takeTitle(line) {
+    const s = String(line || '').trim();
+    if (!s) return null;
+    const m = s.match(/^title\s*:\s*(.+)$/i);
+    if (m) return String(m[1] || '').trim();
+    if (s.startsWith('# ')) return s.slice(2).trim();
+    return null;
+  }
+
+  function takeSource(line) {
+    const s = String(line || '').trim();
+    if (!s) return null;
+
+    // Allow a "Source:" prefix (common in briefs) as well as a bare URL.
+    // Examples:
+    //   Source: https://fathom.video/share/...
+    //   Fathom: https://fathom.video/share/...
+    const sourcePrefixed = s.match(/^(?:source|fathom)\s*:\s*(https?:\/\/\S+)\s*$/i);
+    if (sourcePrefixed) return sourcePrefixed[1];
+    if (/^https?:\/\//i.test(s)) return s;
+
+    return null;
+  }
+
+  // Support both orders for copy/paste convenience:
+  //   1) Source first, then Title
+  //   2) Title first, then Source
+  while (idx < lines.length && !String(lines[idx] || '').trim()) idx++;
+
+  const firstNonEmpty = String(lines[idx] || '').trim();
+  const maybeFirstTitle = takeTitle(firstNonEmpty);
+  const maybeFirstSource = takeSource(firstNonEmpty);
+
+  if (maybeFirstSource) {
+    src = maybeFirstSource;
+    idx++;
+  } else if (maybeFirstTitle) {
+    title = maybeFirstTitle;
+    idx++;
+
+    while (idx < lines.length && !String(lines[idx] || '').trim()) idx++;
+
+    const nextLine = String(lines[idx] || '').trim();
+    const maybeNextSource = takeSource(nextLine);
+    if (maybeNextSource) {
+      src = maybeNextSource;
+      idx++;
+    }
   }
 
   // Optional title line after Source (or as the first line if Source isn't a URL).
-  // Accepted formats:
-  //   Title: ...
-  //   # ...
   while (idx < lines.length && !String(lines[idx] || '').trim()) idx++;
 
-  const maybeTitle = String(lines[idx] || '').trim();
-  const m = maybeTitle.match(/^title\s*:\s*(.+)$/i);
-  if (m) {
-    title = String(m[1] || '').trim();
-    idx++;
-  } else if (maybeTitle.startsWith('# ')) {
-    title = maybeTitle.slice(2).trim();
+  const maybeTitle = takeTitle(String(lines[idx] || '').trim());
+  if (maybeTitle) {
+    title = maybeTitle;
     idx++;
   }
 

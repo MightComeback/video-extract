@@ -114,6 +114,18 @@ test('brief --stdin accepts a Title line after the Source URL', async () => {
   assert.match(stdout, /^- Alice: It crashes/m);
 });
 
+test('brief --stdin accepts Title-first followed by Source URL (copy/paste friendly)', async () => {
+  const url = 'https://fathom.video/share/title-first';
+  const title = 'Something broke';
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: [`Title: ${title}`, url, '00:01 Alice: It crashes', ''].join('\n'),
+  });
+
+  assert.match(stdout, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+  assert.match(stdout, new RegExp(`^Title: ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+  assert.match(stdout, /^- Alice: It crashes/m);
+});
+
 test('brief --stdin allows overriding Source and Title via flags', async () => {
   const url = 'https://fathom.video/share/override-me';
   const title = 'Overridden title';
