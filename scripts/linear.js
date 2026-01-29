@@ -60,7 +60,7 @@ async function cliMain() {
 
   if (cmd === 'issue-state-type') {
     const t = await getIssueStateType(issueKey);
-    process.stdout.write(String(t ?? ''));
+    process.stdout.write(String(t ?? '') + '\n');
     return;
   }
 
@@ -71,7 +71,7 @@ async function cliMain() {
       process.exit(1);
     }
     await addComment(issueKey, body);
-    process.stdout.write('ok');
+    process.stdout.write('ok\n');
   }
 }
 
