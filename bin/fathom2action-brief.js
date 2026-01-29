@@ -11,11 +11,13 @@ function usage(code = 0) {
 
 Usage:
   ${cmd} <fathom-share-url> [--copy]
-  ${cmd} --stdin [--copy]
-  ${cmd} - [--copy]
+  ${cmd} --stdin [--copy] [--source <url>] [--title <text>]
+  ${cmd} - [--copy] [--source <url>] [--title <text>]
 
 Options:
-  --copy    Also copy the generated brief to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel).
+  --copy            Also copy the generated brief to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel).
+  --source <url>    Override the Source field (useful when piping transcript via --stdin).
+  --title <text>    Override the Title field (useful when piping transcript via --stdin).
 
 Notes:
   - If the URL cannot be fetched (auth-gated), the tool will print a ready-to-paste brief and ask for transcript via ${cmd} --stdin.
@@ -33,6 +35,23 @@ async function main() {
   }
 
   const copyToClipboard = args.includes('--copy');
+
+  function takeFlagValue(flag) {
+    const idx = args.indexOf(flag);
+    if (idx === -1) return undefined;
+    const value = args[idx + 1];
+    if (!value || value.startsWith('-')) {
+      process.stderr.write(`ERROR: ${flag} requires a value\n`);
+      usage(2);
+    }
+    // Remove flag + value from args in-place.
+    args.splice(idx, 2);
+    return value;
+  }
+
+  const sourceOverride = takeFlagValue('--source');
+  const titleOverride = takeFlagValue('--title');
+
   const cleanArgs = args.filter((a) => a !== '--copy');
 
   async function maybeCopy(text) {
@@ -85,8 +104,8 @@ async function main() {
     try {
       const extracted = extractFromStdin({ content, source: 'stdin' });
       const out = renderBrief({
-        source: extracted.source,
-        title: extracted.title,
+        source: sourceOverride || extracted.source,
+        title: titleOverride || extracted.title,
         transcript: extracted.text,
       });
       await maybeCopy(out);
@@ -123,8 +142,8 @@ async function main() {
   });
 
   const brief = renderBrief({
-    source: extracted.source,
-    title: extracted.title,
+    source: sourceOverride || extracted.source,
+    title: titleOverride || extracted.title,
     transcript: extracted.text,
     fetchError: extracted.fetchError,
   });
