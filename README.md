@@ -166,12 +166,15 @@ fathom-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt -
 
 ## CLI flags (brief generator: `fathom2action`)
 - `--stdin` / `-`: read transcript/notes from stdin (use this when the share link is auth-gated)
+- `--template`: generate a blank brief template (no URL fetch / no stdin required)
 - `--copy`: copy the output to clipboard (best-effort; tries `pbcopy`, `clip.exe`/`clip`, `wl-copy`, `xclip`, or `xsel`)
 - `--copy-brief`: copy the markdown brief to clipboard (even if `--json` is used)
 - `--out <path>`: also write the output to a file (`--out -` means “stdout”)
 - `--json`: output `{ source, title, brief }` as JSON instead of markdown
-- `--source <url>`: override the `Source` field (handy with `--stdin`)
-- `--title <text>`: override the `Title` field (handy with `--stdin`)
+- `--source <url>`: override the `Source` field (handy with `--stdin` or `--template`)
+- `--title <text>`: override the `Title` field (handy with `--stdin` or `--template`)
+- `--cmd <name>`: override the command name shown in the brief (useful for `npx` / `bunx`)
+- `--version` / `-v`: print version and exit
 - `--no-note`: suppress the helpful stderr hint printed when a link can’t be fetched
 - `--max-teaser <n>`: max number of transcript teaser bullets to render (default: 6; use 0 to hide)
 - `--max-timestamps <n>`: max number of timestamps to render (default: 6; use 0 to hide)
