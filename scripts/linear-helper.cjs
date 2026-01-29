@@ -26,6 +26,7 @@ async function getIssue(identifierOrId) {
           id
           identifier
           title
+          description
           url
           state { id name type }
         }
@@ -43,6 +44,7 @@ async function getIssue(identifierOrId) {
       id
       identifier
       title
+      description
       url
       state { id name type }
     }
