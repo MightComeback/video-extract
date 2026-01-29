@@ -4,6 +4,8 @@ import { execFile } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
+import { renderBrief } from '../src/brief.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -75,6 +77,17 @@ test('brief --stdin treats a single URL line as the Source (empty transcript)', 
   assert.match(stdout, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
   // With no transcript, we should still render an empty teaser placeholder.
   assert.match(stdout, /^## Transcript teaser \(first lines\)/m);
+});
+
+test('brief renders a non-empty Links placeholder when Source is unknown', () => {
+  const out = renderBrief({
+    // Intentionally omit `source`.
+    title: 'Some bug',
+    transcript: '00:01 Alice: It crashes',
+  });
+
+  assert.match(out, /^## Links/m);
+  assert.match(out, /^- \(add Fathom link\)$/m);
 });
 
 test('brief --stdin accepts a Title line after the Source URL', async () => {

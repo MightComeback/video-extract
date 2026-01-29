@@ -88,7 +88,7 @@ export function renderBrief({ source, title, transcript, fetchError } = {}) {
   if (src) {
     links.push(`- Fathom: ${src}`);
   } else {
-    links.push('- ');
+    links.push('- (add Fathom link)');
   }
 
   const howToUpdate = [
