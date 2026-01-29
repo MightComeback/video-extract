@@ -1098,7 +1098,12 @@ export function extractFromStdin({ content, source }) {
     if (!s) return null;
     const m = s.match(/^title\s*:\s*(.+)$/i);
     if (m) return String(m[1] || '').trim();
-    if (s.startsWith('# ')) return s.slice(2).trim();
+
+    // Markdown headings are common in copy/paste “envelopes”.
+    // Support # Title, ## Title, ### Title, etc.
+    const h = s.match(/^#+\s+(.+)$/);
+    if (h) return String(h[1] || '').trim();
+
     return null;
   }
 
