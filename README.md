@@ -41,6 +41,12 @@ fathom2action "https://fathom.video/share/<TOKEN>" --copy
 # see all flags
 fathom2action --help
 
+# output JSON ({source,title,brief})
+fathom2action "https://fathom.video/share/<TOKEN>" --json
+
+# copy *only* the rendered brief (useful with --json)
+fathom2action "https://fathom.video/share/<TOKEN>" --json --copy-brief
+
 # print version
 fathom2action --version
 ```
