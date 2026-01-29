@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import process from 'node:process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 
@@ -135,8 +136,13 @@ async function main() {
 
     // UX: allow `--out <dir>` (or `--out <dir>/`) and choose a sensible filename.
     // This avoids surprising EISDIR errors when users think of --out as an output location.
-    let p = path.resolve(process.cwd(), String(outPath));
-    const looksLikeDir = /[\\/]$/.test(String(outPath));
+    // Also expand `~` to the current user's home directory for convenience.
+    let outRaw = String(outPath);
+    if (outRaw === '~') outRaw = os.homedir();
+    if (/^~[\\/]/.test(outRaw)) outRaw = path.join(os.homedir(), outRaw.slice(2));
+
+    let p = path.resolve(process.cwd(), outRaw);
+    const looksLikeDir = /[\\/]$/.test(outRaw);
 
     const defaultFileName = outputJson ? 'bug-report-brief.json' : 'bug-report-brief.md';
 
