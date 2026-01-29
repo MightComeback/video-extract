@@ -16,8 +16,12 @@ async function getIssue(identifierOrId) {
   // Linear's `issue(id: ...)` expects a UUID. For human identifiers like MIG-14,
   // query the issues collection with a filter.
   if (looksLikeIdentifier) {
-    const q = `query IssueByIdentifier($identifier: String!) {
-      issues(filter: { identifier: { eq: $identifier } }, first: 1) {
+    const [teamKey, numStr] = key.split('-');
+    const number = Number(numStr);
+    if (!teamKey || !Number.isFinite(number)) throw new Error(`Invalid issue identifier: ${key}`);
+
+    const q = `query IssueByTeamAndNumber($teamKey: String!, $number: Float!) {
+      issues(filter: { team: { key: { eq: $teamKey } }, number: { eq: $number } }, first: 1) {
         nodes {
           id
           identifier
@@ -28,7 +32,7 @@ async function getIssue(identifierOrId) {
       }
     }`;
 
-    const data = await linearRequest({ apiKey, query: q, variables: { identifier: key } });
+    const data = await linearRequest({ apiKey, query: q, variables: { teamKey, number } });
     const issue = data?.issues?.nodes?.[0];
     if (!issue) throw new Error(`Issue not found: ${key}`);
     return issue;
