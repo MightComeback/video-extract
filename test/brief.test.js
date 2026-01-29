@@ -233,6 +233,16 @@ test('brief teaser strips bracketed/parenthesized timestamps', async () => {
   assert.match(stdout, /^- Yep/m);
 });
 
+test('brief teaser de-dupes repeated transcript lines', async () => {
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: ['00:01 Alice: It crashes', '00:02 Bob: It crashes', '00:03 Alice: It CRASHES', ''].join('\n'),
+  });
+
+  // Only one bullet for the repeated content.
+  const matches = stdout.match(/^- It crashes$/gm) || [];
+  assert.equal(matches.length, 1);
+});
+
 test('brief timestamps extraction does not skip timestamps at the start of a new line', () => {
   const out = renderBrief({
     title: 'Some bug',
