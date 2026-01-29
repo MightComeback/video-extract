@@ -70,7 +70,8 @@ function extractTimestamps(transcript, { max = 6 } = {}) {
   return out;
 }
 
-export function renderBrief({ source, title, transcript, fetchError } = {}) {
+export function renderBrief({ cmd = 'fathom2action', source, title, transcript, fetchError } = {}) {
+  const cmdName = oneLine(cmd) || 'fathom2action';
   const src = oneLine(source);
   const t = oneLine(title);
   const teaser = normalizeBullets(transcript, { max: 6 });
@@ -96,8 +97,8 @@ export function renderBrief({ source, title, transcript, fetchError } = {}) {
 
   const howToUpdate = [
     '## How to update this brief',
-    '- If you can access the Fathom link: re-run `fathom2action "<link>"`',
-    '- If the link is auth-gated: copy the transcript and run `pbpaste | fathom2action --stdin`',
+    `- If you can access the Fathom link: re-run \`${cmdName} "<link>"\``,
+    `- If the link is auth-gated: copy the transcript and run \`pbpaste | ${cmdName} --stdin\``,
   ];
 
   return [
