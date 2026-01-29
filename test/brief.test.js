@@ -365,6 +365,15 @@ test('brief --stdin exits with code 2 and a helpful message when stdin is empty'
   );
 });
 
+test('brief --stdin allows empty stdin when --source/--title overrides are provided (template mode)', async () => {
+  const { stdout } = await runBrief(['--stdin', '--source', 'https://fathom.video/share/ABC', '--title', 'Some bug'], {
+    stdin: '\n',
+  });
+
+  assert.match(stdout, /^Source: https:\/\/fathom\.video\/share\/ABC$/m);
+  assert.match(stdout, /^Title: Some bug$/m);
+});
+
 test('brief teaser strips bracketed/parenthesized timestamps', async () => {
   const { stdout } = await runBrief(['--stdin'], {
     stdin: ['[00:01] Alice: It crashes', '(00:05) Bob: Yep', ''].join('\n'),
