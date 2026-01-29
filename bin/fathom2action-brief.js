@@ -233,7 +233,8 @@ async function main() {
     //   https://...)
     //   https://...,;
     //   https://...!? (common in chat)
-    out = out.replace(/[)\]>'\"`.,;:!?]+$/g, '');
+    // Also strip a few Unicode punctuation variants (…, fullwidth !/? and Chinese/Japanese punctuation).
+    out = out.replace(/[)\]>'\"`.,;:!?…。！，？]+$/g, '');
     return out;
   }
 

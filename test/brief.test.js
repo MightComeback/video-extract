@@ -299,6 +299,17 @@ test('brief strips trailing punctuation from Source URLs (chat copy/paste)', () 
     assert.match(out, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
     assert.match(out, new RegExp(`^- Fathom: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
   }
+
+  {
+    const out = renderBrief({
+      source: `${url}…！？。`,
+      title: 'Some bug',
+      transcript: '00:01 Alice: It crashes',
+    });
+
+    assert.match(out, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+    assert.match(out, new RegExp(`^- Fathom: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+  }
 });
 
 test('brief teaser accepts Unicode bullet prefixes (•) and strips timestamps', async () => {
