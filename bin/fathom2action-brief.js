@@ -13,16 +13,17 @@ function usage(code = 0) {
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <fathom-share-url> [--copy] [--copy-brief] [--out <path>] [--json] [--no-note] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
-  ${cmd} --stdin [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
-  ${cmd} - [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
-  ${cmd} --template [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
+  ${cmd} <fathom-share-url> [--copy] [--copy-brief] [--out <path>] [--json] [--compact-json] [--no-note] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
+  ${cmd} --stdin [--copy] [--copy-brief] [--out <path>] [--json] [--compact-json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
+  ${cmd} - [--copy] [--copy-brief] [--out <path>] [--json] [--compact-json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
+  ${cmd} --template [--copy] [--copy-brief] [--out <path>] [--json] [--compact-json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
 
 Options:
   --copy                 Also copy to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel). If used with --json, copies the markdown brief.
   --copy-brief           Copy the markdown brief to clipboard (even if --json is used).
   --out <path>           Also write the generated output to a file.
   --json                 Output a JSON object with { source, title, brief } instead of markdown.
+  --compact-json         When used with --json, output compact JSON (single line; useful for piping).
   --source <url>         Override the Source field (useful when piping transcript via --stdin).
   --title <text>         Override the Title field (useful when piping transcript via --stdin).
   --template             Generate a blank brief template (no URL fetch / no stdin required).
@@ -67,6 +68,7 @@ async function main() {
   const copyToClipboard = args.includes('--copy') || truthyEnv('F2A_COPY');
   const copyBriefOnly = args.includes('--copy-brief') || truthyEnv('F2A_COPY_BRIEF');
   const outputJson = args.includes('--json');
+  const compactJson = args.includes('--compact-json');
   const templateMode = args.includes('--template');
 
   // UX: if the user asks to copy output while also requesting --json, it's almost always
@@ -137,6 +139,7 @@ async function main() {
       a !== '--copy' &&
       a !== '--copy-brief' &&
       a !== '--json' &&
+      a !== '--compact-json' &&
       a !== '--template' &&
       a !== '--no-note' &&
       a !== '--max-teaser' &&
@@ -229,15 +232,16 @@ async function main() {
 
   function formatOutput({ source, title, brief }) {
     if (!outputJson) return String(brief);
-    return JSON.stringify(
-      {
-        source: source || '',
-        title: title || '',
-        brief: String(brief),
-      },
-      null,
-      2
-    );
+
+    const payload = {
+      source: source || '',
+      title: title || '',
+      brief: String(brief),
+    };
+
+    // Default: pretty JSON for readability when copy/pasting into issues.
+    // Compact mode: convenient for piping to jq or other CLI tooling.
+    return compactJson ? JSON.stringify(payload) : JSON.stringify(payload, null, 2);
   }
 
   async function renderFromStdin() {

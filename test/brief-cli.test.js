@@ -110,6 +110,15 @@ test('brief CLI supports --json (outputs {source,title,brief})', async () => {
   assert.match(parsed.brief, /# Bug report brief/);
 });
 
+test('brief CLI supports --json --compact-json (single-line JSON)', async () => {
+  const { stdout, stderr } = await runBrief(['<http://localhost:1/share/abc>', '--json', '--compact-json']);
+  assert.match(stderr, /NOTE: Unable to fetch this link/i);
+
+  assert.match(stdout, /^\{"source"\:/);
+  const parsed = JSON.parse(stdout);
+  assert.equal(parsed.source, 'http://localhost:1/share/abc');
+});
+
 test('brief CLI accepts angle-bracket wrapped URLs (chat/markdown copy-paste)', async () => {
   const { stdout, stderr } = await runBrief(['<http://localhost:1/share/abc>']);
   assert.ok(stdout.length > 0);
