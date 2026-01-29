@@ -879,8 +879,11 @@ async function fetchTranscriptViaCopyEndpoint(copyTranscriptUrl, { cookie = null
   const headers = {
     'user-agent': getUserAgent(),
   };
-  const c0 = String(cookie || '').trim();
-  if (c0) headers.cookie = c0.toLowerCase().startsWith('cookie:') ? c0.slice('cookie:'.length).trim() : c0;
+
+  // Keep cookie handling consistent across all fetches:
+  // accept either raw cookie pairs or a full `Cookie: ...` header line.
+  const c0 = normalizeCookie(cookie);
+  if (c0) headers.cookie = c0;
   if (referer) headers.referer = String(referer);
 
   try {
