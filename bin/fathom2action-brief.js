@@ -12,13 +12,14 @@ function usage(code = 0) {
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <fathom-share-url> [--copy] [--out <path>] [--no-note] [--max-teaser <n>] [--max-timestamps <n>]
-  ${cmd} --stdin [--copy] [--out <path>] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
-  ${cmd} - [--copy] [--out <path>] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
+  ${cmd} <fathom-share-url> [--copy] [--out <path>] [--json] [--no-note] [--max-teaser <n>] [--max-timestamps <n>]
+  ${cmd} --stdin [--copy] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
+  ${cmd} - [--copy] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
 
 Options:
   --copy                 Also copy the generated brief to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel).
   --out <path>           Also write the generated brief to a file.
+  --json                 Output a JSON object with { source, title, brief } instead of markdown.
   --source <url>         Override the Source field (useful when piping transcript via --stdin).
   --title <text>         Override the Title field (useful when piping transcript via --stdin).
   --no-note              Suppress the "NOTE: Unable to fetch..." hint printed to stderr when a link can't be fetched.
@@ -45,6 +46,7 @@ async function main() {
   }
 
   const copyToClipboard = args.includes('--copy');
+  const outputJson = args.includes('--json');
   const suppressNote = args.includes('--no-note');
 
   function takeFlagValue(flag) {
@@ -84,7 +86,7 @@ async function main() {
   const maxTimestamps = parseNonNegInt('--max-timestamps', maxTimestampsRaw);
 
   const cleanArgs = args.filter(
-    (a) => a !== '--copy' && a !== '--no-note' && a !== '--max-teaser' && a !== '--max-timestamps'
+    (a) => a !== '--copy' && a !== '--json' && a !== '--no-note' && a !== '--max-teaser' && a !== '--max-timestamps'
   );
 
   function maybeWriteFile(text) {
@@ -148,18 +150,34 @@ async function main() {
     );
   }
 
+  function formatOutput({ source, title, brief }) {
+    if (!outputJson) return String(brief);
+    return JSON.stringify(
+      {
+        source: source || '',
+        title: title || '',
+        brief: String(brief),
+      },
+      null,
+      2
+    );
+  }
+
   async function renderFromStdin() {
     const content = await readStdin();
     try {
       const extracted = extractFromStdin({ content, source: 'stdin' });
-      const out = renderBrief({
+      const source = sourceOverride || extracted.source;
+      const title = titleOverride || extracted.title;
+      const brief = renderBrief({
         cmd,
-        source: sourceOverride || extracted.source,
-        title: titleOverride || extracted.title,
+        source,
+        title,
         transcript: extracted.text,
         teaserMax: maxTeaser,
         timestampsMax: maxTimestamps,
       });
+      const out = formatOutput({ source, title, brief });
       await maybeCopy(out);
       maybeWriteFile(out);
       process.stdout.write(`${out}\n`);
@@ -167,14 +185,17 @@ async function main() {
       // UX nicety: if stdin is empty but the user explicitly provided Source/Title overrides,
       // allow generating a blank template rather than erroring.
       if (e && e.code === 2 && (sourceOverride || titleOverride)) {
-        const out = renderBrief({
+        const source = sourceOverride;
+        const title = titleOverride;
+        const brief = renderBrief({
           cmd,
-          source: sourceOverride,
-          title: titleOverride,
+          source,
+          title,
           transcript: '',
           teaserMax: maxTeaser,
           timestampsMax: maxTimestamps,
         });
+        const out = formatOutput({ source, title, brief });
         await maybeCopy(out);
         maybeWriteFile(out);
         process.stdout.write(`${out}\n`);
@@ -276,9 +297,15 @@ async function main() {
     );
   }
 
-  await maybeCopy(brief);
-  maybeWriteFile(brief);
-  process.stdout.write(`${brief}\n`);
+  const out = formatOutput({
+    source: sourceOverride || extracted.source,
+    title: titleOverride || extracted.title,
+    brief,
+  });
+
+  await maybeCopy(out);
+  maybeWriteFile(out);
+  process.stdout.write(`${out}\n`);
 }
 
 main().catch((e) => {
