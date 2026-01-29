@@ -99,3 +99,15 @@ test('extractFromStdin accepts Slack-style "<url|label>" Sources', () => {
   assert.equal(out.source, 'https://fathom.video/share/abc');
   assert.equal(out.title, 'Slack link source');
 });
+
+test('extractFromStdin accepts "Recording:" as a Source alias', () => {
+  const input = [
+    'Recording: https://fathom.video/share/abc',
+    'Title: Recording label',
+    '00:01 Alice: it crashes',
+  ].join('\n');
+
+  const out = extractFromStdin({ content: input, source: 'stdin' });
+  assert.equal(out.source, 'https://fathom.video/share/abc');
+  assert.equal(out.title, 'Recording label');
+});
