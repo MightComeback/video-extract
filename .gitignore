@@ -1,0 +1,15 @@
+# dependencies
+node_modules/
+
+# build/artifacts output
+artifacts/
+segments/
+*.mp4
+*.json
+
+# local env
+.env
+.env.*
+
+# npm lockfile (repo currently has no deps; avoid noisy generated files)
+package-lock.json
