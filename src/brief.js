@@ -12,28 +12,35 @@ function normalizeUrlLike(s) {
   let v0 = oneLine(s);
   if (!v0) return '';
 
-  // Allow copy/paste-friendly forms like:
-  //   <https://example.com>
-  // and Slack-style links like:
-  //   <https://example.com|label>
-  // so we don't carry wrappers into the rendered markdown.
-  const slack = v0.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>$/i);
-  if (slack) return slack[1];
-
-  if (/^<\s*https?:\/\/.+>$/i.test(v0)) return v0.replace(/^<\s*|>$/g, '').trim();
-
-  // Accept markdown link form:
-  //   [label](https://example.com)
-  const md = v0.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)$/i);
-  if (md) return md[1];
-
-  // Strip common leading wrappers from chat/markdown copy/paste.
+  // Strip common leading wrappers from chat/markdown copy/paste early so we can still
+  // recognize wrapped URLs like: ( <https://...|label> )
   // Examples:
   //   `https://...`
   //   (https://...)
   //   "https://..."
   //   [https://...]
-  v0 = v0.replace(/^[(`\[\{"']+\s*/g, '');
+  // Don't strip leading '[' when the string is a markdown link like: [label](url)
+  if (!/^\[[^\]]*\]\(/.test(v0)) {
+    v0 = v0.replace(/^[(`\{"']+\s*/g, '').trim();
+  }
+
+  // Allow copy/paste-friendly forms like:
+  //   <https://example.com>
+  // and Slack-style links like:
+  //   <https://example.com|label>
+  // so we don't carry wrappers into the rendered markdown.
+  // Also tolerate trailing chat punctuation after the wrapper, e.g. "(<...>)".
+  const slack = v0.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
+  if (slack) return slack[1];
+
+  const angle = v0.match(/^<\s*(https?:\/\/[^>\s]+)\s*>\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
+  if (angle) return angle[1];
+
+  // Accept markdown link form:
+  //   [label](https://example.com)
+  // Also tolerate trailing punctuation after the wrapper.
+  const md = v0.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
+  if (md) return md[1];
 
   // Strip common trailing punctuation from chat copy/paste (e.g. "https://...)").
   // Also strip "!" and "?" which frequently get appended in chat.

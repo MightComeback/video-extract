@@ -56,6 +56,13 @@ test('brief CLI accepts Slack-style wrapped URLs (<url|label>)', async () => {
   assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc/);
 });
 
+test('brief CLI accepts Slack-style wrapped URLs even when surrounded by chat punctuation', async () => {
+  const { stdout, stderr } = await runBrief(['(<http://localhost:1/share/abc|Fathom>)']);
+  assert.ok(stdout.length > 0);
+  assert.match(stderr, /NOTE: Unable to fetch this link/i);
+  assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc/);
+});
+
 test('brief CLI accepts markdown link URLs ([label](url))', async () => {
   const { stdout, stderr } = await runBrief(['[Fathom](http://localhost:1/share/abc)']);
   assert.ok(stdout.length > 0);

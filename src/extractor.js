@@ -1120,20 +1120,29 @@ export function extractFromStdin({ content, source }) {
       let out = String(u || '').trim();
       if (!out) return '';
 
+      // Strip common leading wrappers early so we can still recognize wrapped URLs like:
+      //   (<https://...|label>)
+      // Don't strip leading '[' when the string is a markdown link like: [label](url)
+      if (!/^\[[^\]]*\]\(/.test(out)) {
+        out = out.replace(/^[(`\{"']+\s*/g, '').trim();
+      }
+
       // Strip <...> wrappers.
       // Also accept Slack-style links like:
       //   <https://example.com|label>
       // which are common when copying from Slack.
-      const slack = out.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>$/i);
+      // Also tolerate trailing punctuation after the wrapper, e.g. "(<...>)".
+      const slack = out.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
       if (slack) out = slack[1];
 
-      const m = out.match(/^<\s*(https?:\/\/[^>\s]+)\s*>$/i);
+      const m = out.match(/^<\s*(https?:\/\/[^>\s]+)\s*>\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
       if (m) out = m[1];
 
       // Accept markdown link form:
       //   [label](https://example.com)
       // Keep this conservative: only if the URL is http(s).
-      const md = out.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)$/i);
+      // Also tolerate trailing punctuation after the wrapper.
+      const md = out.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
       if (md) out = md[1];
 
       // Common chat/markdown wrappers.

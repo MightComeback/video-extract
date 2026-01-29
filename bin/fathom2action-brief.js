@@ -214,19 +214,28 @@ async function main() {
     let out = String(u || '').trim();
     if (!out) return '';
 
+    // Strip common leading wrappers early so we can still recognize wrapped URLs like:
+    //   (<https://...|label>)
+    // Don't strip leading '[' when the string is a markdown link like: [label](url)
+    if (!/^\[[^\]]*\]\(/.test(out)) {
+      out = out.replace(/^[(`\{"']+\s*/g, '').trim();
+    }
+
     // Allow chat/markdown-friendly wrappers like:
     //   <https://...>
     // and Slack-style links like:
     //   <https://...|label>
-    const slack = out.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>$/i);
+    // Also tolerate trailing punctuation after the wrapper, e.g. "(<...>)".
+    const slack = out.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
     if (slack) out = slack[1];
 
-    const m = out.match(/^<\s*(https?:\/\/[^>\s]+)\s*>$/i);
+    const m = out.match(/^<\s*(https?:\/\/[^>\s]+)\s*>\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
     if (m) out = m[1];
 
     // Markdown link wrapper (copy/paste from docs):
     //   [label](https://...)
-    const md = out.match(/^\s*\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)\s*$/i);
+    // Also tolerate trailing punctuation after the wrapper.
+    const md = out.match(/^\s*\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
     if (md) out = md[1];
 
     // Strip common trailing punctuation from copy/paste:
