@@ -78,3 +78,17 @@ test('brief --stdin accepts a Title line after the Source URL', async () => {
   assert.match(stdout, new RegExp(`^Title: ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
   assert.match(stdout, /^- Alice: It crashes/m);
 });
+
+test('brief --stdin exits with code 2 and a helpful message when stdin is empty', async () => {
+  await assert.rejects(
+    runBrief(['--stdin'], {
+      stdin: '\n',
+    }),
+    (err) => {
+      assert.equal(err.code, 2);
+      assert.match(String(err.stderr || ''), /stdin is empty/i);
+      assert.match(String(err.stderr || ''), /pbpaste \|/i);
+      return true;
+    }
+  );
+});

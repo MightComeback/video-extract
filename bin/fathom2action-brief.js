@@ -28,32 +28,38 @@ async function main() {
     return;
   }
 
+  async function renderFromStdin() {
+    const content = await readStdin();
+    try {
+      const extracted = extractFromStdin({ content, source: 'stdin' });
+      process.stdout.write(
+        renderBrief({
+          source: extracted.source,
+          title: extracted.title,
+          transcript: extracted.text,
+        })
+      );
+    } catch (e) {
+      if (e && e.code === 2) {
+        process.stderr.write(
+          `ERROR: stdin is empty. Paste a transcript (or a URL + transcript) and try again. Example: \`pbpaste | ${cmd} --stdin\`\n`
+        );
+        process.exit(2);
+      }
+      throw e;
+    }
+  }
+
   // Convenience: no args + piped stdin.
   if (!args.length && !process.stdin.isTTY) {
-    const content = await readStdin();
-    const extracted = extractFromStdin({ content, source: 'stdin' });
-    process.stdout.write(
-      renderBrief({
-        source: extracted.source,
-        title: extracted.title,
-        transcript: extracted.text,
-      })
-    );
+    await renderFromStdin();
     return;
   }
 
   if (!args.length) usage(0);
 
   if (args[0] === '--stdin' || args[0] === '-') {
-    const content = await readStdin();
-    const extracted = extractFromStdin({ content, source: 'stdin' });
-    process.stdout.write(
-      renderBrief({
-        source: extracted.source,
-        title: extracted.title,
-        transcript: extracted.text,
-      })
-    );
+    await renderFromStdin();
     return;
   }
 
