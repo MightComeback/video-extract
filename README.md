@@ -159,6 +159,10 @@ fathom-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt -
 - `--max-teaser <n>`: max number of transcript teaser bullets to render (default: 6; use 0 to hide)
 - `--max-timestamps <n>`: max number of timestamps to render (default: 6; use 0 to hide)
 
+Env defaults (flags win):
+- `F2A_MAX_TEASER=<n>`
+- `F2A_MAX_TIMESTAMPS=<n>`
+
 ## CLI flags (extractor: `fathom-extract`)
 - `--out-dir <dir>`: write `transcript.txt` + `extracted.json` + media artifacts
 - `--cookie <cookie>` / `--cookie-file <path>`

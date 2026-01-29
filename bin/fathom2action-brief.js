@@ -17,13 +17,17 @@ Usage:
   ${cmd} - [--copy] [--out <path>] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
 
 Options:
-  --copy            Also copy the generated brief to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel).
-  --out <path>      Also write the generated brief to a file.
-  --source <url>    Override the Source field (useful when piping transcript via --stdin).
-  --title <text>    Override the Title field (useful when piping transcript via --stdin).
+  --copy                 Also copy the generated brief to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel).
+  --out <path>           Also write the generated brief to a file.
+  --source <url>         Override the Source field (useful when piping transcript via --stdin).
+  --title <text>         Override the Title field (useful when piping transcript via --stdin).
   --no-note              Suppress the "NOTE: Unable to fetch..." hint printed to stderr when a link can't be fetched.
   --max-teaser <n>        Max number of transcript teaser bullets to render (default: 6; use 0 to hide).
   --max-timestamps <n>    Max number of timestamps to render (default: 6; use 0 to hide).
+
+Env:
+  F2A_MAX_TEASER         Default for --max-teaser (flags win).
+  F2A_MAX_TIMESTAMPS     Default for --max-timestamps (flags win).
 
 Notes:
   - If the URL cannot be fetched (auth-gated), the tool will print a ready-to-paste brief and ask for transcript via ${cmd} --stdin.
@@ -60,8 +64,11 @@ async function main() {
   const sourceOverride = takeFlagValue('--source');
   const titleOverride = takeFlagValue('--title');
   const outPath = takeFlagValue('--out');
-  const maxTeaserRaw = takeFlagValue('--max-teaser');
-  const maxTimestampsRaw = takeFlagValue('--max-timestamps');
+
+  // Defaults can be set via env for convenience in shell scripts.
+  // Flags always win.
+  const maxTeaserRaw = takeFlagValue('--max-teaser') ?? process.env.F2A_MAX_TEASER;
+  const maxTimestampsRaw = takeFlagValue('--max-timestamps') ?? process.env.F2A_MAX_TIMESTAMPS;
 
   function parseNonNegInt(name, v) {
     if (v == null) return undefined;

@@ -11,16 +11,21 @@ const __dirname = path.dirname(__filename);
 
 const briefBinPath = path.resolve(__dirname, '..', 'bin', 'fathom2action-brief.js');
 
-function runBrief(args, { timeoutMs = 30_000, cwd } = {}) {
+function runBrief(args, { timeoutMs = 30_000, cwd, env } = {}) {
   return new Promise((resolve, reject) => {
-    execFile(process.execPath, [briefBinPath, ...args], { timeout: timeoutMs, cwd }, (err, stdout, stderr) => {
-      if (err) {
-        err.stdout = stdout;
-        err.stderr = stderr;
-        return reject(err);
+    execFile(
+      process.execPath,
+      [briefBinPath, ...args],
+      { timeout: timeoutMs, cwd, env: { ...process.env, ...(env || {}) } },
+      (err, stdout, stderr) => {
+        if (err) {
+          err.stdout = stdout;
+          err.stderr = stderr;
+          return reject(err);
+        }
+        resolve({ stdout, stderr });
       }
-      resolve({ stdout, stderr });
-    });
+    );
   });
 }
 
@@ -70,4 +75,14 @@ test('brief CLI treats --out - as stdout (does not create a file named "-")', as
 
   assert.ok(stdout.length > 0);
   assert.equal(fs.existsSync(path.join(dir, '-')), false);
+});
+
+test('brief CLI supports env vars to hide teaser/timestamps (F2A_MAX_*)', async () => {
+  const { stdout } = await runBrief(['<http://localhost:1/share/abc>'], {
+    env: { F2A_MAX_TEASER: '0', F2A_MAX_TIMESTAMPS: '0' },
+  });
+
+  assert.ok(stdout.length > 0);
+  assert.equal(stdout.includes('## Transcript teaser'), false);
+  assert.equal(stdout.includes('## Timestamps'), false);
 });
