@@ -20,6 +20,7 @@ Usage:
   ${cmd} <url> [--pretty] [--out-dir <dir>] [--split-seconds 300] [--no-download] [--no-split] [--cookie <header-or-pairs>] [--cookie-file <path>] [--referer <url>] [--user-agent <ua>] [--download-media <path>]
   ${cmd} --stdin [--source <url-or-label>] [--pretty]
   ${cmd} - [--source <url-or-label>] [--pretty]
+  ${cmd} --version
 
 Output:
   Prints JSON with transcript + media artifacts (best-effort):

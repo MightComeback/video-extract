@@ -65,6 +65,11 @@ test('legacy wrapper prints version when --version is provided', async () => {
   assert.match(stdout.trim(), /^\d+\.\d+\.\d+$/);
 });
 
+test('extract CLI prints version when --version is provided', async () => {
+  const { stdout } = await runExtract(['--version']);
+  assert.match(stdout.trim(), /^\d+\.\d+\.\d+$/);
+});
+
 test('legacy wrapper behaves like brief generator (markdown output)', async () => {
   const url = 'https://example.com/fathom/share/abc';
   const { stdout, stderr } = await runLegacy([url]);
