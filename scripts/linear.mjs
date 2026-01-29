@@ -102,7 +102,7 @@ async function getIssueByIdentifier(identifier) {
 async function main() {
   if (cmd === 'issue-state-type') {
     const issue = await getIssueByIdentifier(issueKey);
-    process.stdout.write(String(issue.state?.type ?? ''));
+    process.stdout.write(String(issue.state?.type ?? '') + '\n');
     return;
   }
 
@@ -119,7 +119,7 @@ async function main() {
       { input: { issueId: issue.id, body } }
     );
 
-    process.stdout.write('ok');
+    process.stdout.write('ok\n');
     return;
   }
 }
