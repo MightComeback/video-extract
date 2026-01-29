@@ -138,12 +138,14 @@ async function main() {
     let p = path.resolve(process.cwd(), String(outPath));
     const looksLikeDir = /[\\/]$/.test(String(outPath));
 
+    const defaultFileName = outputJson ? 'bug-report-brief.json' : 'bug-report-brief.md';
+
     try {
       if (!looksLikeDir && fs.existsSync(p) && fs.statSync(p).isDirectory()) {
-        p = path.join(p, 'bug-report-brief.md');
+        p = path.join(p, defaultFileName);
       } else if (looksLikeDir) {
         fs.mkdirSync(p, { recursive: true });
-        p = path.join(p, 'bug-report-brief.md');
+        p = path.join(p, defaultFileName);
       }
     } catch {
       // ignore; we'll fall back to treating p as a file path

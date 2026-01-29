@@ -188,6 +188,19 @@ test('brief CLI allows --out to be a directory (writes bug-report-brief.md insid
   assert.equal(file.trim(), stdout.trim());
 });
 
+test('brief CLI allows --out to be a directory with --json (writes bug-report-brief.json inside it)', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-'));
+
+  const { stdout } = await runBrief(['<http://localhost:1/share/abc>', '--json', '--out', dir]);
+
+  const outPath = path.join(dir, 'bug-report-brief.json');
+  const file = fs.readFileSync(outPath, 'utf8');
+
+  assert.ok(stdout.length > 0);
+  assert.ok(file.length > 0);
+  assert.equal(file.trim(), stdout.trim());
+});
+
 test('brief CLI supports env var F2A_OUT as a default for --out', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-'));
   const outPath = path.join(dir, 'brief.md');
