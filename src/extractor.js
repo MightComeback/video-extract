@@ -1144,7 +1144,7 @@ export function extractFromStdin({ content, source }) {
       //   (<https://...|label>)
       // Don't strip leading '[' when the string is a markdown link like: [label](url)
       if (!/^\[[^\]]*\]\(/.test(out)) {
-        out = out.replace(/^[(`\{"'“”‘’]+\s*/g, '').trim();
+        out = out.replace(/^[(`\{"'“”‘’«»‹›]+\s*/g, '').trim();
       }
 
       // Strip <...> wrappers.
@@ -1170,7 +1170,7 @@ export function extractFromStdin({ content, source }) {
       //   `https://...`
       //   (https://...)
       //   "https://..."
-      out = out.replace(/^[(`\[\{"'“”‘’]+\s*/g, '');
+      out = out.replace(/^[(`\[\{"'“”‘’«»‹›]+\s*/g, '');
 
       // Common copy/paste pattern: "https://... (Fathom)".
       // Only strip parenthetical suffixes when separated by whitespace to avoid mangling URLs

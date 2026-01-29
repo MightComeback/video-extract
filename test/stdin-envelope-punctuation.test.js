@@ -38,3 +38,15 @@ test('extractFromStdin strips additional locale punctuation (guillemets / CJK br
   assert.equal(out.source, 'https://fathom.video/share/abc');
   assert.equal(out.title, 'Locale punctuation');
 });
+
+test('extractFromStdin accepts guillemet-wrapped Source URLs (locale quotes)', () => {
+  const input = [
+    'Source: «https://fathom.video/share/abc»',
+    'Title: Locale quotes',
+    '00:01 Alice: it crashes',
+  ].join('\n');
+
+  const out = extractFromStdin({ content: input, source: 'stdin' });
+  assert.equal(out.source, 'https://fathom.video/share/abc');
+  assert.equal(out.title, 'Locale quotes');
+});
