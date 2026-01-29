@@ -26,9 +26,13 @@ export function getVersion() {
   }
 }
 
-function getUserAgent() {
+function resolveUserAgent(override = null) {
+  const o = String(override || '').trim();
+  if (o) return o;
+
   const env = String(process.env.FATHOM_USER_AGENT || '').trim();
   if (env) return env;
+
   return `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom-extract)`;
 }
 
@@ -485,13 +489,13 @@ export function normalizeFetchedContent(content, baseUrl = null) {
   };
 }
 
-export async function fetchUrlText(url, { cookie = null, referer = null, timeoutMs = null } = {}) {
+export async function fetchUrlText(url, { cookie = null, referer = null, timeoutMs = null, userAgent = null } = {}) {
   const controller = new AbortController();
   const ms = timeoutMs != null ? Number(timeoutMs) : Number(process.env.FATHOM_FETCH_TIMEOUT_MS || 15_000);
   const t = setTimeout(() => controller.abort(), Number.isFinite(ms) ? ms : 15_000);
   try {
     const headers = {
-      'user-agent': getUserAgent()
+      'user-agent': resolveUserAgent(userAgent)
     };
     const c = normalizeCookie(cookie);
     if (c) headers.cookie = c;
@@ -609,14 +613,14 @@ async function ffprobeLooksValidMp4(filePath) {
   }
 }
 
-async function downloadMediaWithFfmpeg({ mediaUrl, outPath, cookie, referer = null } = {}) {
+async function downloadMediaWithFfmpeg({ mediaUrl, outPath, cookie, referer = null, userAgent = null } = {}) {
   if (!mediaUrl) throw new Error('mediaUrl is required');
   if (!outPath) throw new Error('outPath is required');
 
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
   const common = ['-y', '-loglevel', 'error'];
-  const ua = getUserAgent();
+  const ua = resolveUserAgent(userAgent);
   const c = normalizeCookie(cookie);
 
   // Prefer dedicated flags where available.
@@ -704,12 +708,12 @@ function isLikelyMediaFile(url) {
   );
 }
 
-async function probeIsMediaUrl(url, { cookie = null, referer = null } = {}) {
+async function probeIsMediaUrl(url, { cookie = null, referer = null, userAgent = null } = {}) {
   const u = String(url || '').trim();
   if (!u || !/^https?:\/\//i.test(u)) return false;
 
   const headers = {};
-  const ua = getUserAgent();
+  const ua = resolveUserAgent(userAgent);
   headers['user-agent'] = ua;
   if (referer) headers.referer = String(referer);
   const c = normalizeCookie(cookie);
@@ -745,7 +749,7 @@ async function probeIsMediaUrl(url, { cookie = null, referer = null } = {}) {
   }
 }
 
-async function resolveMediaUrl(mediaUrl, { cookie = null, referer = null, maxDepth = 3 } = {}) {
+async function resolveMediaUrl(mediaUrl, { cookie = null, referer = null, userAgent = null, maxDepth = 3 } = {}) {
   const start = String(mediaUrl || '').trim();
   if (!start) return '';
 
@@ -755,7 +759,7 @@ async function resolveMediaUrl(mediaUrl, { cookie = null, referer = null, maxDep
     const mp4 = start.replace(/\.m3u8(\?|$)/i, '.mp4$1');
     if (mp4 !== start) {
       try {
-        if (await probeIsMediaUrl(mp4, { cookie, referer })) return mp4;
+        if (await probeIsMediaUrl(mp4, { cookie, referer, userAgent })) return mp4;
       } catch {
         // ignore
       }
@@ -766,7 +770,7 @@ async function resolveMediaUrl(mediaUrl, { cookie = null, referer = null, maxDep
 
   // Some providers serve media endpoints without a file extension.
   // Quick probe: if the URL itself returns a video/mpegurl content-type, treat it as the final media URL.
-  if (await probeIsMediaUrl(start, { cookie, referer })) return start;
+  if (await probeIsMediaUrl(start, { cookie, referer, userAgent })) return start;
 
   if (maxDepth <= 0) return start;
 
@@ -782,7 +786,7 @@ async function resolveMediaUrl(mediaUrl, { cookie = null, referer = null, maxDep
   if (isLikelyMediaFile(next)) return next;
 
   // One more hop (guarded).
-  return resolveMediaUrl(next, { cookie, referer: start, maxDepth: maxDepth - 1 });
+  return resolveMediaUrl(next, { cookie, referer: start, userAgent, maxDepth: maxDepth - 1 });
 }
 
 async function splitVideoIntoSegments({ inputPath, segmentsDir, segmentSeconds = 300 } = {}) {
@@ -872,12 +876,12 @@ function extractCopyTranscriptUrlFromHtml(html, pageUrl) {
   return '';
 }
 
-async function fetchTranscriptViaCopyEndpoint(copyTranscriptUrl, { cookie = null, referer = null } = {}) {
+async function fetchTranscriptViaCopyEndpoint(copyTranscriptUrl, { cookie = null, referer = null, userAgent = null } = {}) {
   const u = String(copyTranscriptUrl || '').trim();
   if (!u) return '';
 
   const headers = {
-    'user-agent': getUserAgent(),
+    'user-agent': resolveUserAgent(userAgent),
   };
 
   // Keep cookie handling consistent across all fetches:
@@ -907,9 +911,17 @@ async function fetchTranscriptViaCopyEndpoint(copyTranscriptUrl, { cookie = null
 
 export async function extractFromUrl(
   url,
-  { downloadMedia = false, splitSeconds = 300, outDir = null, cookie = null, referer = null, mediaOutPath = null } = {}
+  {
+    downloadMedia = false,
+    splitSeconds = 300,
+    outDir = null,
+    cookie = null,
+    referer = null,
+    mediaOutPath = null,
+    userAgent = null,
+  } = {}
 ) {
-  const fetched = await fetchUrlText(url, { cookie, referer });
+  const fetched = await fetchUrlText(url, { cookie, referer, userAgent });
   if (fetched.ok) {
     const norm = normalizeFetchedContent(fetched.text, url);
 
@@ -918,11 +930,11 @@ export async function extractFromUrl(
     const copyTranscriptUrl = extractCopyTranscriptUrlFromHtml(fetched.text, url);
     const hasTimestamps = /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(String(transcriptText || ''));
     if ((!transcriptText || transcriptText.length < 300 || !hasTimestamps) && copyTranscriptUrl) {
-      const viaCopy = await fetchTranscriptViaCopyEndpoint(copyTranscriptUrl, { cookie, referer: referer || url });
+      const viaCopy = await fetchTranscriptViaCopyEndpoint(copyTranscriptUrl, { cookie, referer: referer || url, userAgent });
       if (viaCopy) transcriptText = viaCopy;
     }
 
-    const resolvedMediaUrl = await resolveMediaUrl(norm.mediaUrl || '', { cookie, referer: referer || url, maxDepth: 3 });
+    const resolvedMediaUrl = await resolveMediaUrl(norm.mediaUrl || '', { cookie, referer: referer || url, userAgent, maxDepth: 3 });
 
     const base = {
       ok: true,
@@ -980,7 +992,7 @@ export async function extractFromUrl(
       base.mediaSegmentsDir = segmentsDir;
 
       try {
-        await downloadMediaWithFfmpeg({ mediaUrl: base.mediaUrl, outPath: videoPath, cookie, referer: referer || url });
+        await downloadMediaWithFfmpeg({ mediaUrl: base.mediaUrl, outPath: videoPath, cookie, referer: referer || url, userAgent });
         base.mediaPath = videoPath;
 
         if (splitSeconds && Number.isFinite(splitSeconds) && splitSeconds > 0) {

@@ -17,7 +17,7 @@ function usage(code = 0) {
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <url> [--pretty] [--out-dir <dir>] [--split-seconds 300] [--no-download] [--no-split] [--cookie <header-or-pairs>] [--cookie-file <path>] [--referer <url>] [--download-media <path>]
+  ${cmd} <url> [--pretty] [--out-dir <dir>] [--split-seconds 300] [--no-download] [--no-split] [--cookie <header-or-pairs>] [--cookie-file <path>] [--referer <url>] [--user-agent <ua>] [--download-media <path>]
   ${cmd} --stdin [--source <url-or-label>] [--pretty]
   ${cmd} - [--source <url-or-label>] [--pretty]
 
@@ -194,6 +194,10 @@ async function main() {
   args = refererFlag.args;
   const referer = refererFlag.value;
 
+  const userAgentFlag = readFlagValue(args, '--user-agent');
+  args = userAgentFlag.args;
+  const userAgent = userAgentFlag.value;
+
   const sourceFlag = readFlagValue(args, '--source');
   args = sourceFlag.args;
   const stdinSourceOverride = sourceFlag.value;
@@ -250,6 +254,7 @@ async function main() {
     outDir: downloadMediaPath ? path.dirname(downloadMediaPath) : outDir,
     cookie,
     referer,
+    userAgent,
     mediaOutPath: downloadMediaPath,
   });
 
