@@ -50,7 +50,7 @@ function extractTimestamps(transcript, { max = 6 } = {}) {
   //  - 1:02
   //  - 00:01:23
   //  - [00:12] or (00:12)
-  const re = /(?:^|\s|\[|\()(?<ts>(?:\d{1,2}:)?\d{1,2}:\d{2}|\d{1,2}:\d{2})(?:\b|\]|\))/g;
+  const re = /(?:^|\s|\[|\()(?<ts>(?:\d{1,2}:)?\d{1,2}:\d{2})(?:\b|\]|\))/g;
 
   for (const raw of String(transcript || '').split(/\r?\n/)) {
     const line = raw.trim();
