@@ -46,7 +46,15 @@ function decodeHtmlEntities(s) {
     .replaceAll('&quot;', '"')
     .replaceAll('&apos;', "'")
     .replaceAll('&#39;', "'")
-    .replaceAll('&nbsp;', ' ');
+    .replaceAll('&nbsp;', ' ')
+    // Common named punctuation entities (frequently show up in titles/notes)
+    .replaceAll('&hellip;', '…')
+    .replaceAll('&ndash;', '–')
+    .replaceAll('&mdash;', '—')
+    .replaceAll('&rsquo;', '’')
+    .replaceAll('&lsquo;', '‘')
+    .replaceAll('&rdquo;', '”')
+    .replaceAll('&ldquo;', '“');
 
   // Best-effort numeric entities.
   // Examples: &#8217; (’) and &#x2019; (’)

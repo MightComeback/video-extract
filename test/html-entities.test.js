@@ -15,3 +15,9 @@ test('normalizeFetchedContent tolerates invalid numeric HTML entities (no throw)
   // Best-effort: the bad entity should not crash processing.
   assert.match(out.suggestedTitle, /^Bad:/);
 });
+
+test('normalizeFetchedContent decodes common named punctuation entities in <title>', () => {
+  const html = `<!doctype html><html><head><title>Roadmap &mdash; Ivan&rsquo;s notes &hellip;</title></head><body>Hello</body></html>`;
+  const out = normalizeFetchedContent(html);
+  assert.equal(out.suggestedTitle, 'Roadmap — Ivan’s notes …');
+});
