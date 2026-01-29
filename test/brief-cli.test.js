@@ -64,10 +64,19 @@ test('brief CLI accepts markdown link URLs ([label](url))', async () => {
 });
 
 test('brief CLI strips common trailing chat punctuation from URLs', async () => {
-  const { stdout, stderr } = await runBrief(['http://localhost:1/share/abc!)']);
-  assert.ok(stdout.length > 0);
-  assert.match(stderr, /NOTE: Unable to fetch this link/i);
-  assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc\b/);
+  {
+    const { stdout, stderr } = await runBrief(['http://localhost:1/share/abc!)']);
+    assert.ok(stdout.length > 0);
+    assert.match(stderr, /NOTE: Unable to fetch this link/i);
+    assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc\b/);
+  }
+
+  {
+    const { stdout, stderr } = await runBrief(['http://localhost:1/share/abc…！？。']);
+    assert.ok(stdout.length > 0);
+    assert.match(stderr, /NOTE: Unable to fetch this link/i);
+    assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc\b/);
+  }
 });
 
 test('brief CLI supports --out to write the generated brief to a file', async () => {

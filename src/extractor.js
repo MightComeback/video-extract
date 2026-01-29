@@ -1145,7 +1145,8 @@ export function extractFromStdin({ content, source }) {
 
       // Strip common trailing punctuation from copy/paste.
       // Include ! and ? which frequently get appended in chat.
-      out = out.replace(/[)\]>'\"`.,;:!?]+$/g, '');
+      // Also strip a few Unicode punctuation variants (…, fullwidth !/? and Chinese/Japanese punctuation).
+      out = out.replace(/[)\]>'\"`.,;:!?…。！，？]+$/g, '');
       return out;
     }
 
