@@ -74,8 +74,9 @@ function stripLeadingSpeakerLabel(s) {
   // Keep it short to avoid eating real content.
   const role = String.raw`(?:\s*(?:\([^)]{1,30}\)|\[[^\]]{1,30}\]))?`;
 
+  // Also handle fullwidth colon (common in some transcript exports / IMEs): "Alice： hello".
   return line
-    .replace(new RegExp(`^${speaker.source}${role}:\\s*(?!\\/\\/)`), '')
+    .replace(new RegExp(`^${speaker.source}${role}[:：]\\s*(?!\\/\\/)`), '')
     .replace(new RegExp(`^${speaker.source}${role}\\s*[\\-–—]\\s+`), '')
     .trim();
 }
