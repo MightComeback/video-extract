@@ -377,6 +377,91 @@ test('passes cookie + referer + user-agent when downloading media with ffmpeg', 
   }
 });
 
+test('supports --user-agent to override UA for media download', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom-extract-ua-'));
+  const srcVideo = path.join(tmp, 'src.mp4');
+
+  execFileSync('ffmpeg', [
+    '-y',
+    '-loglevel',
+    'error',
+    '-f',
+    'lavfi',
+    '-i',
+    'testsrc=size=64x64:rate=10',
+    '-t',
+    '3',
+    '-c:v',
+    'libx264',
+    '-pix_fmt',
+    'yuv420p',
+    '-g',
+    '10',
+    '-keyint_min',
+    '10',
+    '-sc_threshold',
+    '0',
+    '-an',
+    srcVideo,
+  ]);
+
+  const videoBytes = fs.readFileSync(srcVideo);
+  const customUa = 'CustomUA/1.0';
+
+  let srv;
+  srv = await withServer((req, res) => {
+    if (req.url === '/page') {
+      res.setHeader('content-type', 'text/html; charset=utf-8');
+      res.end(`<html><head><title>UA</title><meta property="og:video" content="${srv.url}/video.mp4"/></head><body>Hi</body></html>`);
+      return;
+    }
+
+    if (req.url === '/video.mp4') {
+      const cookie = String(req.headers.cookie || '');
+      const ua = String(req.headers['user-agent'] || '');
+      const ref = String(req.headers.referer || '');
+
+      if (!cookie.includes('auth=1')) {
+        res.statusCode = 403;
+        res.end('missing cookie');
+        return;
+      }
+      if (ua !== customUa) {
+        res.statusCode = 403;
+        res.end('missing/incorrect user-agent');
+        return;
+      }
+      if (!ref.endsWith('/page')) {
+        res.statusCode = 403;
+        res.end('missing/incorrect referer');
+        return;
+      }
+
+      res.statusCode = 200;
+      res.setHeader('content-type', 'video/mp4');
+      res.end(videoBytes);
+      return;
+    }
+
+    res.statusCode = 404;
+    res.end('not found');
+  });
+
+  try {
+    const outDir = path.join(tmp, 'out');
+    const { stdout } = await runExtract([`${srv.url}/page`, '--out-dir', outDir, '--split-seconds', '2', '--user-agent', customUa, '--pretty'], {
+      timeoutMs: 120_000,
+      env: { FATHOM_COOKIE: 'auth=1' },
+    });
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.ok(obj.mediaPath);
+    assert.ok(fs.existsSync(obj.mediaPath));
+  } finally {
+    await srv.close();
+  }
+});
+
 test('extract tool can download + split media into segments (local server)', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom-extract-test-'));
   const srcVideo = path.join(tmp, 'src.mp4');
