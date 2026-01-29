@@ -91,10 +91,18 @@ export function renderBrief({ source, title, transcript, fetchError } = {}) {
     links.push('- ');
   }
 
+  const howToUpdate = [
+    '## How to update this brief',
+    '- If you can access the Fathom link: re-run `fathom2action "<link>"`',
+    '- If the link is auth-gated: copy the transcript and run `pbpaste | fathom2action --stdin`',
+  ];
+
   return [
     ...header,
     '',
     ...links,
+    '',
+    ...howToUpdate,
     '',
     '## 1-sentence summary',
     '- ',
