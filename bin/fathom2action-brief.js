@@ -47,7 +47,8 @@ async function main() {
     const idx = args.indexOf(flag);
     if (idx === -1) return undefined;
     const value = args[idx + 1];
-    if (!value || value.startsWith('-')) {
+    // Allow "-" as a conventional value (e.g., `--out -` means stdout).
+    if (!value || (value.startsWith('-') && value !== '-')) {
       process.stderr.write(`ERROR: ${flag} requires a value\n`);
       usage(2);
     }
@@ -81,6 +82,11 @@ async function main() {
 
   function maybeWriteFile(text) {
     if (!outPath) return;
+
+    // Common CLI convention: `--out -` means “stdout”.
+    // We already print to stdout, so skip file I/O to avoid creating a file literally named "-".
+    if (String(outPath).trim() === '-') return;
+
     const p = path.resolve(process.cwd(), String(outPath));
     fs.mkdirSync(path.dirname(p), { recursive: true });
     fs.writeFileSync(p, String(text), 'utf8');

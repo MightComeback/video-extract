@@ -11,9 +11,9 @@ const __dirname = path.dirname(__filename);
 
 const briefBinPath = path.resolve(__dirname, '..', 'bin', 'fathom2action-brief.js');
 
-function runBrief(args, { timeoutMs = 30_000 } = {}) {
+function runBrief(args, { timeoutMs = 30_000, cwd } = {}) {
   return new Promise((resolve, reject) => {
-    execFile(process.execPath, [briefBinPath, ...args], { timeout: timeoutMs }, (err, stdout, stderr) => {
+    execFile(process.execPath, [briefBinPath, ...args], { timeout: timeoutMs, cwd }, (err, stdout, stderr) => {
       if (err) {
         err.stdout = stdout;
         err.stderr = stderr;
@@ -54,4 +54,13 @@ test('brief CLI supports --out to write the generated brief to a file', async ()
   assert.ok(stdout.length > 0);
   assert.ok(file.length > 0);
   assert.equal(file.trim(), stdout.trim());
+});
+
+test('brief CLI treats --out - as stdout (does not create a file named "-")', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-'));
+
+  const { stdout } = await runBrief(['<http://localhost:1/share/abc>', '--out', '-'], { cwd: dir });
+
+  assert.ok(stdout.length > 0);
+  assert.equal(fs.existsSync(path.join(dir, '-')), false);
 });
