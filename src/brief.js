@@ -23,7 +23,7 @@ function normalizeUrlLike(s) {
   if (!/^\[[^\]]*\]\(/.test(v0)) {
     // Also strip common quote prefixes from email/chat copy/paste (e.g., "> ").
     v0 = v0.replace(/^>+\s*/g, '').trim();
-    v0 = v0.replace(/^[(`\{"']+\s*/g, '').trim();
+    v0 = v0.replace(/^[(`\{"'“”‘’]+\s*/g, '').trim();
   }
 
   // Allow copy/paste-friendly forms like:
@@ -32,23 +32,23 @@ function normalizeUrlLike(s) {
   //   <https://example.com|label>
   // so we don't carry wrappers into the rendered markdown.
   // Also tolerate trailing chat punctuation after the wrapper, e.g. "(<...>)".
-  const slack = v0.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
+  const slack = v0.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
   if (slack) return slack[1];
 
-  const angle = v0.match(/^<\s*(https?:\/\/[^>\s]+)\s*>\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
+  const angle = v0.match(/^<\s*(https?:\/\/[^>\s]+)\s*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
   if (angle) return angle[1];
 
   // Accept markdown link form:
   //   [label](https://example.com)
   // Also tolerate trailing punctuation after the wrapper.
-  const md = v0.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
+  const md = v0.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
   if (md) return md[1];
 
   // Strip common trailing punctuation from chat copy/paste (e.g. "https://...)").
   // Also strip "!" and "?" which frequently get appended in chat.
   // Include a few common Unicode punctuation variants (…, fullwidth !/? and Chinese/Japanese punctuation).
   // Include backticks for cases like: `https://example.com`
-  if (/^https?:\/\//i.test(v0)) return v0.replace(/[)\]>'\"`.,;:!?…。！，？]+$/g, '');
+  if (/^https?:\/\//i.test(v0)) return v0.replace(/[)\]>'\"`“”‘’.,;:!?…。！，？]+$/g, '');
 
   return v0;
 }
