@@ -44,6 +44,13 @@ test('brief CLI accepts angle-bracket wrapped URLs (chat/markdown copy-paste)', 
   assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc/);
 });
 
+test('brief CLI accepts Slack-style wrapped URLs (<url|label>)', async () => {
+  const { stdout, stderr } = await runBrief(['<http://localhost:1/share/abc|Fathom>']);
+  assert.ok(stdout.length > 0);
+  assert.match(stderr, /NOTE: Unable to fetch this link/i);
+  assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc/);
+});
+
 test('brief CLI supports --out to write the generated brief to a file', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-'));
   const outPath = path.join(dir, 'brief.md');
