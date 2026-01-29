@@ -65,6 +65,19 @@ test('brief CLI documents --version in --help output', async () => {
   assert.match(stdout, /--version/);
 });
 
+test('brief CLI documents --template in --help output', async () => {
+  const { stdout } = await runBrief(['--help']);
+  assert.match(stdout, /--template/);
+});
+
+test('brief CLI supports --template (no fetch required)', async () => {
+  const { stdout, stderr } = await runBrief(['--template', '--source', 'https://fathom.video/share/abc', '--title', 'Test']);
+  assert.match(stdout, /# Bug report brief/);
+  assert.match(stdout, /Source: https:\/\/fathom\.video\/share\/abc/);
+  assert.match(stdout, /Title: Test/);
+  assert.doesNotMatch(stderr, /NOTE: Unable to fetch this link/i);
+});
+
 test('brief CLI help mentions chat/markdown URL wrappers', async () => {
   const { stdout } = await runBrief(['--help']);
   assert.match(stdout, /paste URLs directly from chat\/markdown/i);

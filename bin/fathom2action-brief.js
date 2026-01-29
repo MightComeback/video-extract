@@ -16,6 +16,7 @@ Usage:
   ${cmd} <fathom-share-url> [--copy] [--copy-brief] [--out <path>] [--json] [--no-note] [--max-teaser <n>] [--max-timestamps <n>]
   ${cmd} --stdin [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
   ${cmd} - [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
+  ${cmd} --template [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
 
 Options:
   --copy                 Also copy to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel). If used with --json, copies the markdown brief.
@@ -24,6 +25,7 @@ Options:
   --json                 Output a JSON object with { source, title, brief } instead of markdown.
   --source <url>         Override the Source field (useful when piping transcript via --stdin).
   --title <text>         Override the Title field (useful when piping transcript via --stdin).
+  --template             Generate a blank brief template (no URL fetch / no stdin required).
   --no-note              Suppress the "NOTE: Unable to fetch..." hint printed to stderr when a link can't be fetched.
   --max-teaser <n>       Max number of transcript teaser bullets to render (default: 6; use 0 to hide).
   --max-timestamps <n>   Max number of timestamps to render (default: 6; use 0 to hide).
@@ -63,6 +65,7 @@ async function main() {
   const copyToClipboard = args.includes('--copy') || truthyEnv('F2A_COPY');
   const copyBriefOnly = args.includes('--copy-brief') || truthyEnv('F2A_COPY_BRIEF');
   const outputJson = args.includes('--json');
+  const templateMode = args.includes('--template');
 
   // UX: if the user asks to copy output while also requesting --json, it's almost always
   // more useful to copy the rendered markdown brief (the thing you paste into Linear/GitHub)
@@ -122,6 +125,7 @@ async function main() {
       a !== '--copy' &&
       a !== '--copy-brief' &&
       a !== '--json' &&
+      a !== '--template' &&
       a !== '--no-note' &&
       a !== '--max-teaser' &&
       a !== '--max-timestamps'
@@ -272,6 +276,25 @@ async function main() {
       }
       throw e;
     }
+  }
+
+  if (templateMode) {
+    const source = sourceOverride;
+    const title = titleOverride;
+    const brief = renderBrief({
+      cmd,
+      source,
+      title,
+      transcript: '',
+      teaserMax: maxTeaser,
+      timestampsMax: maxTimestamps,
+    });
+    const out = formatOutput({ source, title, brief });
+    const copyText = copyBriefOnly || copyBriefWhenJson ? String(brief) : out;
+    await maybeCopy(copyText);
+    maybeWriteFile(out);
+    process.stdout.write(`${out}\n`);
+    return;
   }
 
   // Convenience: no args + piped stdin.
