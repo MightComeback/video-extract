@@ -17,7 +17,7 @@ Usage:
   ${cmd} - [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
 
 Options:
-  --copy                 Also copy the output to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel).
+  --copy                 Also copy to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel). If used with --json, copies the markdown brief.
   --copy-brief           Copy the markdown brief to clipboard (even if --json is used).
   --out <path>           Also write the generated output to a file.
   --json                 Output a JSON object with { source, title, brief } instead of markdown.
@@ -49,6 +49,11 @@ async function main() {
   const copyToClipboard = args.includes('--copy');
   const copyBriefOnly = args.includes('--copy-brief');
   const outputJson = args.includes('--json');
+
+  // UX: if the user asks to copy output while also requesting --json, it's almost always
+  // more useful to copy the rendered markdown brief (the thing you paste into Linear/GitHub)
+  // rather than the JSON wrapper.
+  const copyBriefWhenJson = copyToClipboard && outputJson && !copyBriefOnly;
   const suppressNote = args.includes('--no-note');
 
   function takeFlagValue(flag) {
@@ -186,7 +191,7 @@ async function main() {
         timestampsMax: maxTimestamps,
       });
       const out = formatOutput({ source, title, brief });
-      const copyText = copyBriefOnly ? String(brief) : out;
+      const copyText = copyBriefOnly || copyBriefWhenJson ? String(brief) : out;
       await maybeCopy(copyText);
       maybeWriteFile(out);
       process.stdout.write(`${out}\n`);
@@ -205,7 +210,7 @@ async function main() {
           timestampsMax: maxTimestamps,
         });
         const out = formatOutput({ source, title, brief });
-        const copyText = copyBriefOnly ? String(brief) : out;
+        const copyText = copyBriefOnly || copyBriefWhenJson ? String(brief) : out;
         await maybeCopy(copyText);
         maybeWriteFile(out);
         process.stdout.write(`${out}\n`);
@@ -313,7 +318,7 @@ async function main() {
     brief,
   });
 
-  const copyText = copyBriefOnly ? String(brief) : out;
+  const copyText = copyBriefOnly || copyBriefWhenJson ? String(brief) : out;
   await maybeCopy(copyText);
   maybeWriteFile(out);
   process.stdout.write(`${out}\n`);
