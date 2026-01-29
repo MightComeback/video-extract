@@ -29,7 +29,8 @@ function normalizeUrlLike(s) {
 
   // Strip common trailing punctuation from chat copy/paste (e.g. "https://...)").
   // Also strip "!" and "?" which frequently get appended in chat.
-  if (/^https?:\/\//i.test(v0)) return v0.replace(/[)\]>'\".,;:!?]+$/g, '');
+  // Include backticks for cases like: `https://example.com`
+  if (/^https?:\/\//i.test(v0)) return v0.replace(/[)\]>'\"`.,;:!?]+$/g, '');
 
   return v0;
 }
