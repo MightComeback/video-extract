@@ -173,6 +173,33 @@ test('cookie file supports a raw Cookie header (Cookie: ...)', async () => {
   }
 });
 
+test('cookie file supports a Cookie header line embedded among other headers', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom-cookie-header-multi-'));
+  const cookiePath = path.join(tmp, 'cookie.txt');
+  fs.writeFileSync(cookiePath, ['Host: fathom.video', 'Cookie: auth=1', 'Accept: */*', ''].join('\n'));
+
+  const s = await withServer((req, res) => {
+    const cookie = String(req.headers.cookie || '');
+    if (!cookie.includes('auth=1')) {
+      res.writeHead(403, { 'content-type': 'text/plain' });
+      res.end('forbidden');
+      return;
+    }
+
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end('<html><head><title>OK</title></head><body><p>hi</p></body></html>');
+  });
+
+  try {
+    const { stdout } = await runExtract([`${s.url}/x`, '--cookie-file', cookiePath, '--no-download']);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.equal(obj.title, 'OK');
+  } finally {
+    await s.close();
+  }
+});
+
 test('sets mediaDownloadError when download is enabled but mediaUrl is missing', async () => {
   const html = '<html><head><title>No Video</title></head><body><h2>Transcript</h2><p>00:01 Hello</p></body></html>';
   const url = `data:text/html,${encodeURIComponent(html)}`;

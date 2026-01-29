@@ -55,13 +55,15 @@ function parseCookieFileContents(raw) {
   const s = String(raw || '').trim();
   if (!s) return '';
 
-  // If a user pasted a full header, accept it.
-  if (/^cookie\s*:/i.test(s)) return s;
-
   const lines = s
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith('#'));
+
+  // If a user pasted headers (common copy/paste from DevTools), prefer an explicit Cookie: line.
+  // Accept both single-line and multi-line inputs.
+  const cookieHeaderLine = lines.find((l) => /^cookie\s*:/i.test(l));
+  if (cookieHeaderLine) return cookieHeaderLine;
 
   // Netscape cookies.txt format (7 tab-separated fields).
   // domain  flag  path  secure  expiration  name  value
