@@ -5,7 +5,8 @@
   "description": "Internal CLI: extract transcript + media from Fathom links; download mp4 and split into segments for Gemini.",
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
