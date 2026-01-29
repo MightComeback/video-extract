@@ -214,6 +214,8 @@ export function renderBrief({
     `- If the link is auth-gated: copy the transcript and pipe it into \`${cmdName} --stdin\``,
     `- Example (macOS): \`pbpaste | ${cmdName} --stdin\``,
     `- Example (Wayland): \`wl-paste | ${cmdName} --stdin\``,
+    `- Example (X11): \`xclip -selection clipboard -o | ${cmdName} --stdin\``,
+    `- Example (X11): \`xsel --clipboard --output | ${cmdName} --stdin\``,
     `- Example (Windows PowerShell): \`Get-Clipboard | ${cmdName} --stdin\``,
   ];
 
