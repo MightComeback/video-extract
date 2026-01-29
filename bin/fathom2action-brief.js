@@ -164,6 +164,23 @@ async function main() {
       maybeWriteFile(out);
       process.stdout.write(`${out}\n`);
     } catch (e) {
+      // UX nicety: if stdin is empty but the user explicitly provided Source/Title overrides,
+      // allow generating a blank template rather than erroring.
+      if (e && e.code === 2 && (sourceOverride || titleOverride)) {
+        const out = renderBrief({
+          cmd,
+          source: sourceOverride,
+          title: titleOverride,
+          transcript: '',
+          teaserMax: maxTeaser,
+          timestampsMax: maxTimestamps,
+        });
+        await maybeCopy(out);
+        maybeWriteFile(out);
+        process.stdout.write(`${out}\n`);
+        return;
+      }
+
       if (e && e.code === 2) {
         process.stderr.write(
           `ERROR: stdin is empty. Paste a transcript (or a URL + transcript) and try again. Example: \`pbpaste | ${cmd} --stdin\`\n`
