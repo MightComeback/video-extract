@@ -10,11 +10,14 @@ Turn a Fathom share link into an **actionable bug report brief** (`fathom2action
 git clone git@github.com:MightComeback/fathom-extract.git
 cd fathom-extract
 
+# install deps (this repo is dependency-light, but npm link expects a package install)
+npm install
+
 # verify dependencies
 node -v
 ffmpeg -version
 
-# optional: make `fathom-extract` available globally
+# optional: make `fathom-extract` + `fathom2action` available globally
 npm link
 ```
 
