@@ -188,6 +188,7 @@ Env defaults (flags win):
 - `F2A_MAX_TIMESTAMPS=<n>`
 - `F2A_COPY=1` (behave as if `--copy` was passed)
 - `F2A_COPY_BRIEF=1` (behave as if `--copy-brief` was passed)
+- `F2A_COMPACT_JSON=1` (behave as if `--compact-json` was passed)
 - `F2A_OUT=<path>` (behave as if `--out <path>` was passed)
 - `F2A_SOURCE=<url>` (behave as if `--source <url>` was passed)
 - `F2A_TITLE=<text>` (behave as if `--title <text>` was passed)

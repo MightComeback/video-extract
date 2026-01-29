@@ -38,6 +38,7 @@ Env:
   F2A_MAX_TIMESTAMPS     Default for --max-timestamps (flags win).
   F2A_COPY              If truthy (1/true/yes/on), behave as if --copy was passed.
   F2A_COPY_BRIEF        If truthy (1/true/yes/on), behave as if --copy-brief was passed.
+  F2A_COMPACT_JSON      If truthy (1/true/yes/on), behave as if --compact-json was passed.
   F2A_OUT               Default for --out (flags win).
   F2A_SOURCE            Default for --source (flags win).
   F2A_TITLE             Default for --title (flags win).
@@ -68,7 +69,7 @@ async function main() {
   const copyToClipboard = args.includes('--copy') || truthyEnv('F2A_COPY');
   const copyBriefOnly = args.includes('--copy-brief') || truthyEnv('F2A_COPY_BRIEF');
   const outputJson = args.includes('--json');
-  const compactJson = args.includes('--compact-json');
+  const compactJson = args.includes('--compact-json') || truthyEnv('F2A_COMPACT_JSON');
   const templateMode = args.includes('--template');
 
   // UX: if the user asks to copy output while also requesting --json, it's almost always

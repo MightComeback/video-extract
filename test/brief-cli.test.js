@@ -119,6 +119,18 @@ test('brief CLI supports --json --compact-json (single-line JSON)', async () => 
   assert.equal(parsed.source, 'http://localhost:1/share/abc');
 });
 
+test('brief CLI supports env var F2A_COMPACT_JSON=1 as a default for --compact-json', async () => {
+  const { stdout, stderr } = await runBrief(['<http://localhost:1/share/abc>', '--json'], {
+    env: { F2A_COMPACT_JSON: '1' },
+  });
+  assert.match(stderr, /NOTE: Unable to fetch this link/i);
+
+  // Single-line JSON (no pretty-print indentation).
+  assert.match(stdout, /^\{"source"\:/);
+  const parsed = JSON.parse(stdout);
+  assert.equal(parsed.source, 'http://localhost:1/share/abc');
+});
+
 test('brief CLI accepts angle-bracket wrapped URLs (chat/markdown copy-paste)', async () => {
   const { stdout, stderr } = await runBrief(['<http://localhost:1/share/abc>']);
   assert.ok(stdout.length > 0);
