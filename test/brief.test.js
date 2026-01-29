@@ -130,6 +130,17 @@ test('brief normalizes source URLs with trailing backticks', () => {
   assert.match(md, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
 });
 
+test('brief normalizes source URLs with leading wrappers', () => {
+  const url = 'https://example.com/path';
+  const md = renderBrief({
+    source: `(${url})`,
+    title: 'Test',
+    transcript: '00:01 Alice: Hi',
+  });
+
+  assert.match(md, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+});
+
 test('brief --stdin treats a "Source: <url>" line as the Source', async () => {
   const url = 'https://fathom.video/share/source-prefixed';
   const { stdout } = await runBrief(['--stdin'], {

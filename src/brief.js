@@ -9,7 +9,7 @@ function oneLine(s) {
 }
 
 function normalizeUrlLike(s) {
-  const v0 = oneLine(s);
+  let v0 = oneLine(s);
   if (!v0) return '';
 
   // Allow copy/paste-friendly forms like:
@@ -26,6 +26,14 @@ function normalizeUrlLike(s) {
   //   [label](https://example.com)
   const md = v0.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)$/i);
   if (md) return md[1];
+
+  // Strip common leading wrappers from chat/markdown copy/paste.
+  // Examples:
+  //   `https://...`
+  //   (https://...)
+  //   "https://..."
+  //   [https://...]
+  v0 = v0.replace(/^[(`\[\{"']+\s*/g, '');
 
   // Strip common trailing punctuation from chat copy/paste (e.g. "https://...)").
   // Also strip "!" and "?" which frequently get appended in chat.
