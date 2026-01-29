@@ -1,6 +1,6 @@
-# fathom-extract
+# fathom2action (fathom-extract)
 
-Extract **transcript + video** from a Fathom link.
+Turn a Fathom share link into an **actionable bug report brief** (`fathom2action`), and optionally extract the **transcript + video** (`fathom-extract`).
 
 ## Install
 
