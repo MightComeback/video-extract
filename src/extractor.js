@@ -1065,28 +1065,47 @@ export function extractFromStdin({ content, source }) {
     throw err;
   }
 
-  // Convenience: allow pasting a URL as the first line, followed by transcript.
+  // Convenience: allow pasting a URL as the first line, followed by optional Title, followed by transcript.
   // Example:
   //   https://fathom.video/share/...
+  //   Title: Login breaks on Safari
   //   00:01 Alice: ...
   let src = source || 'stdin';
-  let text = raw;
+  let title = '';
 
   const lines = raw.split(/\r?\n/);
+
+  let idx = 0;
   const first = String(lines[0] || '').trim();
   if (/^https?:\/\//i.test(first)) {
-    // If the user pastes just a URL, treat it as the Source and leave transcript empty.
-    // If they paste URL + transcript, split it.
     src = first;
-    text = lines.length >= 2 ? lines.slice(1).join('\n').trim() : '';
+    idx = 1;
   }
+
+  // Optional title line after Source (or as the first line if Source isn't a URL).
+  // Accepted formats:
+  //   Title: ...
+  //   # ...
+  while (idx < lines.length && !String(lines[idx] || '').trim()) idx++;
+
+  const maybeTitle = String(lines[idx] || '').trim();
+  const m = maybeTitle.match(/^title\s*:\s*(.+)$/i);
+  if (m) {
+    title = String(m[1] || '').trim();
+    idx++;
+  } else if (maybeTitle.startsWith('# ')) {
+    title = maybeTitle.slice(2).trim();
+    idx++;
+  }
+
+  const text = lines.slice(idx).join('\n').trim();
 
   return {
     ok: true,
     source: src,
     text,
     mediaUrl: '',
-    title: '',
+    title,
     suggestedTitle: '',
     fetchError: null,
     artifactsDir: null,
