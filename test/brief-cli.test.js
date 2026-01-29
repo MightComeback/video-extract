@@ -179,3 +179,13 @@ test('brief CLI ignores empty env var overrides for F2A_MAX_* (treats as unset)'
   assert.match(stdout, /## Transcript teaser/);
   assert.match(stdout, /## Timestamps/);
 });
+
+test('brief CLI supports env var to enable clipboard copy (F2A_COPY)', async () => {
+  const { stdout, stderr } = await runBrief(['<http://localhost:1/share/abc>'], {
+    // Force clipboard commands to be missing so we can assert on stderr deterministically.
+    env: { F2A_COPY: '1', PATH: '/nonexistent' },
+  });
+
+  assert.ok(stdout.length > 0);
+  assert.match(stderr, /NOTE: --copy requested but no clipboard command was found/i);
+});
