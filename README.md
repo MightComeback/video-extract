@@ -37,6 +37,12 @@ fathom2action "https://fathom.video/share/<TOKEN>"
 
 # (optional) copy the brief directly to your clipboard
 fathom2action "https://fathom.video/share/<TOKEN>" --copy
+
+# see all flags
+fathom2action --help
+
+# print version
+fathom2action --version
 ```
 
 If the link is auth-gated (401/403) or otherwise not fetchable, paste transcript/notes:
