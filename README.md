@@ -49,6 +49,9 @@ If the link is auth-gated (401/403) or otherwise not fetchable, paste transcript
 
 ```bash
 pbpaste | fathom2action --stdin
+
+# Windows PowerShell
+Get-Clipboard | fathom2action --stdin
 ```
 
 You can also paste a small “envelope” for better output (copy/paste friendly):
