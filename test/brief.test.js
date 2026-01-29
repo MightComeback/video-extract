@@ -112,6 +112,16 @@ test('brief teaser accepts Unicode bullet prefixes (•) and strips timestamps',
   assert.match(stdout, /^- Bob: Yep/m);
 });
 
+test('brief teaser accepts bullets even without a space after the bullet', async () => {
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: ['•00:01 Alice: It crashes', '-00:05 Bob: Yep', ''].join('\n'),
+  });
+
+  assert.match(stdout, /^## Transcript teaser \(first lines\)/m);
+  assert.match(stdout, /^- Alice: It crashes/m);
+  assert.match(stdout, /^- Bob: Yep/m);
+});
+
 test('brief --stdin exits with code 2 and a helpful message when stdin is empty', async () => {
   await assert.rejects(
     runBrief(['--stdin'], {

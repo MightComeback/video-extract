@@ -31,7 +31,7 @@ function normalizeBullets(lines, { max = 6 } = {}) {
 
     // Accept common bullet prefixes from transcripts / note exports.
     // Includes ASCII bullets (-, *) and the Unicode bullet (•).
-    const cleaned = stripLeadingTimestamp(line.replace(/^[-*•]\s+/, ''));
+    const cleaned = stripLeadingTimestamp(line.replace(/^[-*•]\s*/, ''));
     if (!cleaned) continue;
 
     out.push(`- ${cleaned}`);
