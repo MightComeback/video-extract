@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 // Primary CLI (extract-only)
 const extractBinPath = path.resolve(__dirname, '..', 'bin', 'fathom2action-extract.js');
 
-// Legacy wrapper (kept, but should behave like extractor)
+// Legacy wrapper (kept for backwards compatibility)
 const legacyBinPath = path.resolve(__dirname, '..', 'bin', 'fathom2action.js');
 
 function runBin(bin, args, { stdin, timeoutMs = 30_000, env = null } = {}) {
@@ -65,12 +65,16 @@ test('legacy wrapper prints version when --version is provided', async () => {
   assert.match(stdout.trim(), /^\d+\.\d+\.\d+$/);
 });
 
-test('legacy wrapper behaves like extractor (JSON output)', async () => {
+test('legacy wrapper behaves like brief generator (markdown output)', async () => {
   const url = 'https://example.com/fathom/share/abc';
-  const { stdout } = await runLegacy([url, '--no-download']);
-  const obj = JSON.parse(stdout);
-  assert.equal(obj.ok, false); // fetch will fail (no server), but should still be JSON
-  assert.equal(obj.source, url);
+  const { stdout, stderr } = await runLegacy([url]);
+
+  // Brief is markdown, not JSON.
+  assert.match(stdout, /# Bug report brief/);
+  assert.match(stdout, new RegExp(`Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+
+  // When fetch fails (likely), we should nudge toward --stdin.
+  assert.match(stderr, /NOTE: Unable to fetch/);
 });
 
 test('still writes stub artifacts when URL fetch fails and --out-dir is provided', async () => {
