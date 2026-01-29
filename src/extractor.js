@@ -202,7 +202,10 @@ function stripHtmlToText(html) {
   s = s.replace(/<script[\s\S]*?<\/script>/gi, ' ');
   s = s.replace(/<style[\s\S]*?<\/style>/gi, ' ');
   // Preserve some structure as newlines before stripping tags.
-  s = s.replace(/<(br|\/p|\/div|\/li|\/h\d|\/tr)>/gi, '\n');
+  // Support <br>, <br/>, and <br />.
+  s = s.replace(/<br\s*\/?\s*>/gi, '\n');
+  // Common block-ish closing tags.
+  s = s.replace(/<\s*\/(p|div|li|h\d|tr)\s*>/gi, '\n');
   s = s.replace(/<[^>]+>/g, ' ');
   s = decodeHtmlEntities(s);
   s = s.replace(/\r/g, '');
