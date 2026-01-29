@@ -1115,7 +1115,7 @@ export function extractFromStdin({ content, source }) {
     // Strip a single leading quote marker for robustness.
     const s = String(line || '').trim().replace(/^>+\s*/, '');
     if (!s) return null;
-    const m = s.match(/^(?:title|subject|topic|description)\s*(?:[:=\-–—])\s*(.+)$/i);
+    const m = s.match(/^(?:title|subject|topic|description|summary)\s*(?:[:=\-–—])\s*(.+)$/i);
     if (m) return String(m[1] || '').trim();
 
     // Markdown headings are common in copy/paste “envelopes”.
