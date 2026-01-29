@@ -90,6 +90,18 @@ test('brief renders a non-empty Links placeholder when Source is unknown', () =>
   assert.match(out, /^- \(add Fathom link\)$/m);
 });
 
+test('brief uses provided cmd name in "How to update this brief" section', () => {
+  const out = renderBrief({
+    cmd: 'mycmd',
+    title: 'Some bug',
+    transcript: '00:01 Alice: It crashes',
+  });
+
+  assert.match(out, /## How to update this brief/);
+  assert.match(out, /re-run `mycmd "<link>"`/);
+  assert.match(out, /pbpaste \| mycmd --stdin/);
+});
+
 test('brief --stdin accepts a Title line after the Source URL', async () => {
   const url = 'https://fathom.video/share/abc';
   const title = 'Login breaks on Safari';
