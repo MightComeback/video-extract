@@ -30,6 +30,8 @@ Options:
 Env:
   F2A_MAX_TEASER         Default for --max-teaser (flags win).
   F2A_MAX_TIMESTAMPS     Default for --max-timestamps (flags win).
+  F2A_COPY              If truthy (1/true/yes/on), behave as if --copy was passed.
+  F2A_COPY_BRIEF        If truthy (1/true/yes/on), behave as if --copy-brief was passed.
 
 Notes:
   - You can paste URLs directly from chat/markdown, e.g. <https://...>, <https://...|label>, or [label](https://...). Trailing punctuation is ignored.
@@ -47,8 +49,13 @@ async function main() {
     return;
   }
 
-  const copyToClipboard = args.includes('--copy');
-  const copyBriefOnly = args.includes('--copy-brief');
+  function truthyEnv(name) {
+    const v = String(process.env[name] || '').trim().toLowerCase();
+    return v === '1' || v === 'true' || v === 'yes' || v === 'y' || v === 'on';
+  }
+
+  const copyToClipboard = args.includes('--copy') || truthyEnv('F2A_COPY');
+  const copyBriefOnly = args.includes('--copy-brief') || truthyEnv('F2A_COPY_BRIEF');
   const outputJson = args.includes('--json');
 
   // UX: if the user asks to copy output while also requesting --json, it's almost always
