@@ -287,6 +287,12 @@ async function main() {
     //   https://...,;
     //   https://...!? (common in chat)
     // Also strip a few Unicode punctuation variants (…, fullwidth !/? and Chinese/Japanese punctuation).
+
+    // Common copy/paste pattern: "https://... (Fathom)".
+    // Only strip parenthetical suffixes when separated by whitespace to avoid mangling URLs
+    // that legitimately contain parentheses.
+    if (/^https?:\/\//i.test(out)) out = out.replace(/\s+\([^)]*\)\s*$/g, '');
+
     out = out.replace(/[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]+$/g, '');
 
     // Convenience: accept bare fathom.video URLs (no scheme) from chat copy/paste.
