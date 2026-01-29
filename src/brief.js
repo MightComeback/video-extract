@@ -1,5 +1,7 @@
 // Deterministic markdown brief generator
 
+
+// MIG-14: extraction pipeline expected to be resilient to missing optional fields.
 function oneLine(s) {
   return String(s || '')
     .replace(/\r/g, '')
