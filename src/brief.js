@@ -9,12 +9,25 @@ function oneLine(s) {
 }
 
 function normalizeUrlLike(s) {
-  const v = oneLine(s);
+  const v0 = oneLine(s);
+  if (!v0) return '';
+
   // Allow copy/paste-friendly forms like:
   //   <https://example.com>
-  // so we don't carry angle brackets into the rendered markdown.
-  if (/^<https?:\/\/.+>$/.test(v)) return v.slice(1, -1);
-  return v;
+  // and Slack-style links like:
+  //   <https://example.com|label>
+  // so we don't carry wrappers into the rendered markdown.
+  const slack = v0.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>$/i);
+  if (slack) return slack[1];
+
+  if (/^<\s*https?:\/\/.+>$/i.test(v0)) return v0.replace(/^<\s*|>$/g, '').trim();
+
+  // Accept markdown link form:
+  //   [label](https://example.com)
+  const md = v0.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)$/i);
+  if (md) return md[1];
+
+  return v0;
 }
 
 function stripLeadingTimestamp(s) {

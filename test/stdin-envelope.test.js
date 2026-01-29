@@ -63,3 +63,27 @@ test('extractFromStdin treats "Subject:" as a Title alias', () => {
   assert.equal(out.source, 'https://fathom.video/share/abc');
   assert.equal(out.title, 'Login breaks on Safari');
 });
+
+test('extractFromStdin accepts markdown link Sources like "[label](url)"', () => {
+  const input = [
+    'Source: [Fathom link](https://fathom.video/share/abc)',
+    'Title: Markdown link source',
+    '00:01 Alice: it crashes',
+  ].join('\n');
+
+  const out = extractFromStdin({ content: input, source: 'stdin' });
+  assert.equal(out.source, 'https://fathom.video/share/abc');
+  assert.equal(out.title, 'Markdown link source');
+});
+
+test('extractFromStdin accepts Slack-style "<url|label>" Sources', () => {
+  const input = [
+    'Source: <https://fathom.video/share/abc|Fathom>',
+    'Title: Slack link source',
+    '00:01 Alice: it crashes',
+  ].join('\n');
+
+  const out = extractFromStdin({ content: input, source: 'stdin' });
+  assert.equal(out.source, 'https://fathom.video/share/abc');
+  assert.equal(out.title, 'Slack link source');
+});
