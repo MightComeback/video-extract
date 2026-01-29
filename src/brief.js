@@ -264,7 +264,9 @@ export function renderBrief({
     '',
     '## Environment / context',
     '- Who: ',
-    '- Where: ',
+    '- Where (page/URL): ',
+    '- Browser / OS: ',
+    '- Build / SHA: ',
     '- When: ',
     '',
 
