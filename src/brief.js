@@ -8,6 +8,15 @@ function oneLine(s) {
     .trim();
 }
 
+function normalizeUrlLike(s) {
+  const v = oneLine(s);
+  // Allow copy/paste-friendly forms like:
+  //   <https://example.com>
+  // so we don't carry angle brackets into the rendered markdown.
+  if (/^<https?:\/\/.+>$/.test(v)) return v.slice(1, -1);
+  return v;
+}
+
 function stripLeadingTimestamp(s) {
   // Only strip when it appears at the start of the line.
   // Examples:
@@ -76,7 +85,7 @@ function extractTimestamps(transcript, { max = 6 } = {}) {
 
 export function renderBrief({ cmd = 'fathom2action', source, title, transcript, fetchError } = {}) {
   const cmdName = oneLine(cmd) || 'fathom2action';
-  const src = oneLine(source);
+  const src = normalizeUrlLike(source);
   const t = oneLine(title);
   const teaser = normalizeBullets(transcript, { max: 6 });
   const timestamps = extractTimestamps(transcript, { max: 6 });

@@ -138,6 +138,19 @@ test('brief --stdin allows overriding Source and Title via flags', async () => {
   assert.match(stdout, /^- Alice: It crashes/m);
 });
 
+test('brief strips angle brackets from Source (copy/paste-friendly URLs)', () => {
+  const url = 'https://fathom.video/share/angle-brackets';
+  const out = renderBrief({
+    source: `<${url}>`,
+    title: 'Some bug',
+    transcript: '00:01 Alice: It crashes',
+  });
+
+  assert.match(out, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+  assert.match(out, new RegExp(`^- Fathom: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+  assert.doesNotMatch(out, /<https?:\/\//);
+});
+
 test('brief teaser accepts Unicode bullet prefixes (•) and strips timestamps', async () => {
   const { stdout } = await runBrief(['--stdin'], {
     stdin: ['• 00:01 Alice: It crashes', '• 00:05 Bob: Yep', ''].join('\n'),
