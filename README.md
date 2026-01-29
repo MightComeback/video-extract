@@ -184,6 +184,7 @@ fathom-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt -
 - `--copy-brief`: copy the markdown brief to clipboard (even if `--json` is used)
 - `--out <path>`: also write the output to a file (`--out -` means “stdout”)
 - `--json`: output `{ source, title, brief }` as JSON instead of markdown
+- `--compact-json`: when used with `--json`, output single-line JSON (useful for piping)
 - `--source <url>`: override the `Source` field (handy with `--stdin` or `--template`)
 - `--title <text>`: override the `Title` field (handy with `--stdin` or `--template`)
 - `--cmd <name>`: override the command name shown in the brief (useful for `npx` / `bunx`)
