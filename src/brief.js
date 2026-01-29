@@ -108,7 +108,9 @@ function stripLeadingSpeakerLabel(s) {
   //  - Alice — hello
   // Keep this conservative to avoid deleting meaningful prefixes.
   // Allow a bit of punctuation that appears in names (., ', -, underscores).
-  const speaker = /[A-Za-z0-9][A-Za-z0-9 ._\-'’]{0,40}/;
+  // Support non-ASCII speaker names (e.g., Cyrillic/accents) seen in real transcripts.
+  // Keep it conservative to avoid eating real content.
+  const speaker = /[\p{L}\p{N}][\p{L}\p{N} ._\-'’]{0,40}/u;
 
   // Optional role/metadata that often appears in exports:
   //  - Alice (Host): hello
@@ -118,9 +120,9 @@ function stripLeadingSpeakerLabel(s) {
 
   // Also handle fullwidth colon (common in some transcript exports / IMEs): "Alice： hello".
   return line
-    .replace(new RegExp(`^${speaker.source}${role}[:：]\\s*(?!\\/\\/)`), '')
+    .replace(new RegExp(`^${speaker.source}${role}[:：]\\s*(?!\\/\\/)`, 'u'), '')
     // Allow "Alice - hello", "Alice—hello", etc. Some exporters omit spaces around dash separators.
-    .replace(new RegExp(`^${speaker.source}${role}\\s*[\\-–—]\\s*`), '')
+    .replace(new RegExp(`^${speaker.source}${role}\\s*[\\-–—]\\s*`, 'u'), '')
     .trim();
 }
 

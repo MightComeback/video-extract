@@ -110,6 +110,15 @@ test('brief teaser strips speaker labels with fullwidth colon (：)', async () =
   assert.match(stdout, /^- Yep/m);
 });
 
+test('brief teaser strips non-ASCII speaker labels (e.g. Cyrillic)', async () => {
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: ['00:01 Іван: Привіт', '00:02 María: Hola', ''].join('\n'),
+  });
+
+  assert.match(stdout, /^- Привіт/m);
+  assert.match(stdout, /^- Hola/m);
+});
+
 test('brief teaser strips speaker labels with role metadata (parens/brackets)', async () => {
   const { stdout } = await runBrief(['--stdin'], {
     stdin: ['00:01 Alice (Host): It crashes', '00:02 Bob [PM] - Yep', ''].join('\n'),
