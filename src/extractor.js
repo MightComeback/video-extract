@@ -50,11 +50,24 @@ function decodeHtmlEntities(s) {
   // Examples: &#8217; (’) and &#x2019; (’)
   out = out.replaceAll(/&#(\d+);/g, (_, n) => {
     const cp = Number(n);
-    return Number.isFinite(cp) ? String.fromCodePoint(cp) : _;
+    if (!Number.isFinite(cp)) return _;
+    // Guard against invalid ranges that would throw in fromCodePoint.
+    if (cp < 0 || cp > 0x10ffff) return _;
+    try {
+      return String.fromCodePoint(cp);
+    } catch {
+      return _;
+    }
   });
   out = out.replaceAll(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
     const cp = parseInt(hex, 16);
-    return Number.isFinite(cp) ? String.fromCodePoint(cp) : _;
+    if (!Number.isFinite(cp)) return _;
+    if (cp < 0 || cp > 0x10ffff) return _;
+    try {
+      return String.fromCodePoint(cp);
+    } catch {
+      return _;
+    }
   });
 
   return out;
