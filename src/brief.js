@@ -63,6 +63,9 @@ function stripLeadingSpeakerLabel(s) {
 }
 
 function normalizeBullets(lines, { max = 6 } = {}) {
+  const limit = Number(max);
+  if (!Number.isFinite(limit) || limit <= 0) return [];
+
   const out = [];
   const seen = new Set();
 
@@ -88,13 +91,16 @@ function normalizeBullets(lines, { max = 6 } = {}) {
     seen.add(key);
 
     out.push(`- ${cleaned}`);
-    if (out.length >= max) break;
+    if (out.length >= limit) break;
   }
 
   return out;
 }
 
 function extractTimestamps(transcript, { max = 6 } = {}) {
+  const limit = Number(max);
+  if (!Number.isFinite(limit) || limit <= 0) return [];
+
   const out = [];
   const seen = new Set();
 
@@ -120,7 +126,7 @@ function extractTimestamps(transcript, { max = 6 } = {}) {
       if (seen.has(ts)) continue;
       seen.add(ts);
       out.push(ts);
-      if (out.length >= max) return out;
+      if (out.length >= limit) return out;
     }
   }
 
@@ -139,8 +145,11 @@ export function renderBrief({
   const cmdName = oneLine(cmd) || 'fathom2action';
   const src = normalizeUrlLike(source);
   const t = oneLine(title);
-  const teaser = normalizeBullets(transcript, { max: Number(teaserMax) || 6 });
-  const timestamps = extractTimestamps(transcript, { max: Number(timestampsMax) || 6 });
+  const teaserLimit = teaserMax == null ? 6 : Number(teaserMax);
+  const timestampsLimit = timestampsMax == null ? 6 : Number(timestampsMax);
+
+  const teaser = normalizeBullets(transcript, { max: Number.isFinite(teaserLimit) ? teaserLimit : 6 });
+  const timestamps = extractTimestamps(transcript, { max: Number.isFinite(timestampsLimit) ? timestampsLimit : 6 });
 
   const header = [
     '# Bug report brief',
@@ -193,14 +202,22 @@ export function renderBrief({
     '- Where: ',
     '- When: ',
     '',
-    '## Timestamps',
-    ...(timestamps.length ? timestamps.map((ts) => `- ${ts} — `) : ['- ']),
-    '',
+
+    // Optional sections: allow callers to hide them entirely by passing 0.
+    ...(timestampsLimit > 0
+      ? ['## Timestamps', ...(timestamps.length ? timestamps.map((ts) => `- ${ts} — `) : ['- ']), '']
+      : []),
+
     '## Next actions',
     '- [ ] ',
     '',
-    '## Transcript teaser (first lines)',
-    ...(teaser.length ? teaser : ['- (paste transcript via `fathom2action --stdin` for a better teaser)']),
-    '',
+
+    ...(teaserLimit > 0
+      ? [
+          '## Transcript teaser (first lines)',
+          ...(teaser.length ? teaser : ['- (paste transcript via `fathom2action --stdin` for a better teaser)']),
+          '',
+        ]
+      : []),
   ].join('\n');
 }

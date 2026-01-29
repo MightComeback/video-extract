@@ -22,8 +22,8 @@ Options:
   --source <url>    Override the Source field (useful when piping transcript via --stdin).
   --title <text>    Override the Title field (useful when piping transcript via --stdin).
   --no-note              Suppress the "NOTE: Unable to fetch..." hint printed to stderr when a link can't be fetched.
-  --max-teaser <n>        Max number of transcript teaser bullets to render (default: 6).
-  --max-timestamps <n>    Max number of timestamps to render (default: 6).
+  --max-teaser <n>        Max number of transcript teaser bullets to render (default: 6; use 0 to hide).
+  --max-timestamps <n>    Max number of timestamps to render (default: 6; use 0 to hide).
 
 Notes:
   - If the URL cannot be fetched (auth-gated), the tool will print a ready-to-paste brief and ask for transcript via ${cmd} --stdin.
@@ -62,18 +62,18 @@ async function main() {
   const maxTeaserRaw = takeFlagValue('--max-teaser');
   const maxTimestampsRaw = takeFlagValue('--max-timestamps');
 
-  function parsePosInt(name, v) {
+  function parseNonNegInt(name, v) {
     if (v == null) return undefined;
     const n = Number(v);
-    if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
-      process.stderr.write(`ERROR: ${name} must be a positive integer (got: ${v})\n`);
+    if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
+      process.stderr.write(`ERROR: ${name} must be a non-negative integer (got: ${v})\n`);
       usage(2);
     }
     return n;
   }
 
-  const maxTeaser = parsePosInt('--max-teaser', maxTeaserRaw);
-  const maxTimestamps = parsePosInt('--max-timestamps', maxTimestampsRaw);
+  const maxTeaser = parseNonNegInt('--max-teaser', maxTeaserRaw);
+  const maxTimestamps = parseNonNegInt('--max-timestamps', maxTimestampsRaw);
 
   const cleanArgs = args.filter(
     (a) => a !== '--copy' && a !== '--no-note' && a !== '--max-teaser' && a !== '--max-timestamps'

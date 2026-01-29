@@ -62,6 +62,17 @@ test('brief supports limiting teaser bullets and timestamps via flags', async ()
   assert.equal(teaser.length, 2);
 });
 
+test('brief allows hiding timestamps/teaser sections via --max-*=0', async () => {
+  const { stdout } = await runBrief(['--stdin', '--max-teaser', '0', '--max-timestamps', '0'], {
+    stdin: ['00:01 Alice: First', '00:02 Bob: Second', ''].join('\n'),
+  });
+
+  assert.doesNotMatch(stdout, /^## Timestamps/m);
+  assert.doesNotMatch(stdout, /^## Transcript teaser \(first lines\)/m);
+  // Still includes the main sections.
+  assert.match(stdout, /^## Next actions/m);
+});
+
 test('brief teaser strips speaker labels with punctuation', async () => {
   const { stdout } = await runBrief(['--stdin'], {
     stdin: ['00:01 QA-1: Repro is flaky', "00:02 Ivan K.: Yep", ''].join('\n'),
