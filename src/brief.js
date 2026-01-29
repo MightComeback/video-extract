@@ -50,9 +50,15 @@ function stripLeadingSpeakerLabel(s) {
   // Allow a bit of punctuation that appears in names (., ', -, underscores).
   const speaker = /[A-Za-z0-9][A-Za-z0-9 ._\-'’]{0,40}/;
 
+  // Optional role/metadata that often appears in exports:
+  //  - Alice (Host): hello
+  //  - Alice [Host]: hello
+  // Keep it short to avoid eating real content.
+  const role = String.raw`(?:\s*(?:\([^)]{1,30}\)|\[[^\]]{1,30}\]))?`;
+
   return line
-    .replace(new RegExp(`^${speaker.source}:\\s+(?!\\/\\/)`), '')
-    .replace(new RegExp(`^${speaker.source}\\s*[\\-–—]\\s+`), '')
+    .replace(new RegExp(`^${speaker.source}${role}:\\s+(?!\\/\\/)`), '')
+    .replace(new RegExp(`^${speaker.source}${role}\\s*[\\-–—]\\s+`), '')
     .trim();
 }
 
