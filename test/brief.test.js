@@ -43,9 +43,9 @@ test('brief supports --stdin and prints deterministic sections', async () => {
   assert.match(stdout, /^- 00:05 — /m);
   assert.match(stdout, /^## Next actions/m);
   assert.match(stdout, /^## Transcript teaser \(first lines\)/m);
-  // Teaser strips leading timestamps for readability.
-  assert.match(stdout, /^- Alice: It crashes/m);
-  assert.match(stdout, /^- Bob: Yep/m);
+  // Teaser strips leading timestamps + speaker labels for readability.
+  assert.match(stdout, /^- It crashes/m);
+  assert.match(stdout, /^- Yep/m);
 });
 
 test('brief --stdin treats a leading URL line as the Source', async () => {
@@ -55,7 +55,7 @@ test('brief --stdin treats a leading URL line as the Source', async () => {
   });
 
   assert.match(stdout, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
-  assert.match(stdout, /^- Alice: It crashes/m);
+  assert.match(stdout, /^- It crashes/m);
 });
 
 test('brief --stdin treats a "Source: <url>" line as the Source', async () => {
@@ -65,7 +65,7 @@ test('brief --stdin treats a "Source: <url>" line as the Source', async () => {
   });
 
   assert.match(stdout, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
-  assert.match(stdout, /^- Alice: It crashes/m);
+  assert.match(stdout, /^- It crashes/m);
 });
 
 test('brief --stdin treats a single URL line as the Source (empty transcript)', async () => {
@@ -111,7 +111,7 @@ test('brief --stdin accepts a Title line after the Source URL', async () => {
 
   assert.match(stdout, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
   assert.match(stdout, new RegExp(`^Title: ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
-  assert.match(stdout, /^- Alice: It crashes/m);
+  assert.match(stdout, /^- It crashes/m);
 });
 
 test('brief --stdin accepts Title-first followed by Source URL (copy/paste friendly)', async () => {
@@ -123,7 +123,7 @@ test('brief --stdin accepts Title-first followed by Source URL (copy/paste frien
 
   assert.match(stdout, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
   assert.match(stdout, new RegExp(`^Title: ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
-  assert.match(stdout, /^- Alice: It crashes/m);
+  assert.match(stdout, /^- It crashes/m);
 });
 
 test('brief --stdin allows overriding Source and Title via flags', async () => {
@@ -135,7 +135,7 @@ test('brief --stdin allows overriding Source and Title via flags', async () => {
 
   assert.match(stdout, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
   assert.match(stdout, new RegExp(`^Title: ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
-  assert.match(stdout, /^- Alice: It crashes/m);
+  assert.match(stdout, /^- It crashes/m);
 });
 
 test('brief strips angle brackets from Source (copy/paste-friendly URLs)', () => {
@@ -157,8 +157,8 @@ test('brief teaser accepts Unicode bullet prefixes (•) and strips timestamps',
   });
 
   assert.match(stdout, /^## Transcript teaser \(first lines\)/m);
-  assert.match(stdout, /^- Alice: It crashes/m);
-  assert.match(stdout, /^- Bob: Yep/m);
+  assert.match(stdout, /^- It crashes/m);
+  assert.match(stdout, /^- Yep/m);
 });
 
 test('brief teaser accepts bullets even without a space after the bullet', async () => {
@@ -167,8 +167,8 @@ test('brief teaser accepts bullets even without a space after the bullet', async
   });
 
   assert.match(stdout, /^## Transcript teaser \(first lines\)/m);
-  assert.match(stdout, /^- Alice: It crashes/m);
-  assert.match(stdout, /^- Bob: Yep/m);
+  assert.match(stdout, /^- It crashes/m);
+  assert.match(stdout, /^- Yep/m);
 });
 
 test('brief teaser strips common separators after timestamps (dash / em dash)', async () => {
@@ -177,8 +177,8 @@ test('brief teaser strips common separators after timestamps (dash / em dash)', 
   });
 
   assert.match(stdout, /^## Transcript teaser \(first lines\)/m);
-  assert.match(stdout, /^- Alice: It crashes/m);
-  assert.match(stdout, /^- Bob: Yep/m);
+  assert.match(stdout, /^- It crashes/m);
+  assert.match(stdout, /^- Yep/m);
 });
 
 test('brief --stdin exits with code 2 and a helpful message when stdin is empty', async () => {
@@ -201,8 +201,8 @@ test('brief teaser strips bracketed/parenthesized timestamps', async () => {
   });
 
   assert.match(stdout, /^## Transcript teaser \(first lines\)/m);
-  assert.match(stdout, /^- Alice: It crashes/m);
-  assert.match(stdout, /^- Bob: Yep/m);
+  assert.match(stdout, /^- It crashes/m);
+  assert.match(stdout, /^- Yep/m);
 });
 
 test('brief timestamps extraction does not skip timestamps at the start of a new line', () => {

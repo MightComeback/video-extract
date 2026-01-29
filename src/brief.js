@@ -33,6 +33,24 @@ function stripLeadingTimestamp(s) {
     .trim();
 }
 
+function stripLeadingSpeakerLabel(s) {
+  const line = String(s || '').trim();
+  if (!line) return '';
+
+  // Avoid stripping URLs like "http://...".
+  if (/^https?:\/\//i.test(line)) return line;
+
+  // Common transcript forms:
+  //  - Alice: hello
+  //  - Alice - hello
+  //  - Alice — hello
+  // Keep this conservative to avoid deleting meaningful prefixes.
+  return line
+    .replace(/^[A-Za-z][A-Za-z ]{0,40}:\s+(?!\/\/)/, '')
+    .replace(/^[A-Za-z][A-Za-z ]{0,40}\s*[\-–—]\s+/, '')
+    .trim();
+}
+
 function normalizeBullets(lines, { max = 6 } = {}) {
   const out = [];
   for (const raw of String(lines || '').split(/\r?\n/)) {
@@ -41,7 +59,9 @@ function normalizeBullets(lines, { max = 6 } = {}) {
 
     // Accept common bullet prefixes from transcripts / note exports.
     // Includes ASCII bullets (-, *) and the Unicode bullet (•).
-    const cleaned = stripLeadingTimestamp(line.replace(/^[-*•]\s*/, ''));
+    const noBullet = line.replace(/^[-*•]\s*/, '');
+    const noTs = stripLeadingTimestamp(noBullet);
+    const cleaned = stripLeadingSpeakerLabel(noTs);
     if (!cleaned) continue;
 
     out.push(`- ${cleaned}`);
