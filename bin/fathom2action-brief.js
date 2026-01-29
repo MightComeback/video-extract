@@ -108,6 +108,7 @@ async function main() {
     try {
       const extracted = extractFromStdin({ content, source: 'stdin' });
       const out = renderBrief({
+        cmd,
         source: sourceOverride || extracted.source,
         title: titleOverride || extracted.title,
         transcript: extracted.text,
@@ -157,6 +158,7 @@ async function main() {
   });
 
   const brief = renderBrief({
+    cmd,
     source: sourceOverride || extracted.source,
     title: titleOverride || extracted.title,
     transcript: extracted.text,
