@@ -194,6 +194,17 @@ test('brief normalizes source URLs with leading wrappers', () => {
   assert.match(md, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
 });
 
+test('brief normalizes Slack-style angle URLs with labels + trailing punctuation', () => {
+  const url = 'https://example.com/path?q=1';
+  const md = renderBrief({
+    source: `(<${url}|Example>)`,
+    title: 'Test',
+    transcript: '00:01 Alice: Hi',
+  });
+
+  assert.match(md, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+});
+
 test('brief --stdin treats a "Source: <url>" line as the Source', async () => {
   const url = 'https://fathom.video/share/source-prefixed';
   const { stdout } = await runBrief(['--stdin'], {
