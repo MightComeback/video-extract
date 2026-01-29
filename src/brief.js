@@ -64,6 +64,8 @@ function stripLeadingSpeakerLabel(s) {
 
 function normalizeBullets(lines, { max = 6 } = {}) {
   const out = [];
+  const seen = new Set();
+
   for (const raw of String(lines || '').split(/\r?\n/)) {
     const line = raw.trim();
     if (!line) continue;
@@ -80,9 +82,15 @@ function normalizeBullets(lines, { max = 6 } = {}) {
     const cleaned = stripLeadingSpeakerLabel(noTs);
     if (!cleaned) continue;
 
+    // Avoid noisy repeats when transcript exporters duplicate lines.
+    const key = cleaned.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+
     out.push(`- ${cleaned}`);
     if (out.length >= max) break;
   }
+
   return out;
 }
 
