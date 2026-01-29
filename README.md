@@ -216,3 +216,8 @@ npm install
 npm test
 npm run lint
 ```
+
+## Migration (MIG-14)
+
+- [ ] Keep extractor output stable across inputs (golden tests)
+- [ ] Document required env vars and examples
