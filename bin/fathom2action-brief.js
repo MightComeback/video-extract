@@ -33,6 +33,8 @@ Env:
   F2A_COPY              If truthy (1/true/yes/on), behave as if --copy was passed.
   F2A_COPY_BRIEF        If truthy (1/true/yes/on), behave as if --copy-brief was passed.
   F2A_OUT               Default for --out (flags win).
+  F2A_SOURCE            Default for --source (flags win).
+  F2A_TITLE             Default for --title (flags win).
   F2A_NO_NOTE          If truthy (1/true/yes/on), behave as if --no-note was passed.
 
 Notes:
@@ -80,8 +82,8 @@ async function main() {
     return value;
   }
 
-  const sourceOverride = takeFlagValue('--source');
-  const titleOverride = takeFlagValue('--title');
+  const sourceOverride = takeFlagValue('--source') ?? envOrUndefined('F2A_SOURCE');
+  const titleOverride = takeFlagValue('--title') ?? envOrUndefined('F2A_TITLE');
 
   function envOrUndefined(name) {
     const raw = String(process.env[name] || '').trim();
