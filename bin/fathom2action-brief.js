@@ -145,9 +145,25 @@ async function main() {
     usage(2);
   }
 
-  const url = cleanArgs[0];
+  function cleanUrl(u) {
+    let out = String(u || '').trim();
+    if (!out) return '';
+
+    // Allow chat/markdown-friendly wrappers like:
+    //   <https://...>
+    const m = out.match(/^<\s*(https?:\/\/[^>\s]+)\s*>$/i);
+    if (m) out = m[1];
+
+    // Strip common trailing punctuation from copy/paste:
+    //   https://...)
+    //   https://...,;
+    out = out.replace(/[)\]>'\".,;:]+$/g, '');
+    return out;
+  }
+
+  const url = cleanUrl(cleanArgs[0]);
   if (!/^https?:\/\//i.test(url)) {
-    process.stderr.write(`ERROR: expected a URL starting with http(s):// (got: ${url})\n`);
+    process.stderr.write(`ERROR: expected a URL starting with http(s):// (got: ${cleanArgs[0]})\n`);
     usage(2);
   }
 

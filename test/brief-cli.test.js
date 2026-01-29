@@ -34,3 +34,10 @@ test('brief CLI prints version with --version', async () => {
   assert.equal(stderr.trim(), '');
   assert.match(stdout.trim(), /^\d+\.\d+\.\d+/);
 });
+
+test('brief CLI accepts angle-bracket wrapped URLs (chat/markdown copy-paste)', async () => {
+  const { stdout, stderr } = await runBrief(['<http://localhost:1/share/abc>']);
+  assert.ok(stdout.length > 0);
+  assert.match(stderr, /NOTE: Unable to fetch this link/i);
+  assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc/);
+});
