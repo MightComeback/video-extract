@@ -76,7 +76,8 @@ async function main() {
           // Not installed? try the next candidate.
           if (err?.code === 'ENOENT') return resolve(false);
           process.stderr.write(`NOTE: --copy failed (${cmd}): ${String(err?.message || err)}\n`);
-          resolve(true);
+          // Clipboard command exists but failed; keep trying other candidates.
+          resolve(false);
         });
         child.on('close', (code) => resolve(code === 0));
         try {
