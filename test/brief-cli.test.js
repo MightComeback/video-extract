@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -40,4 +42,16 @@ test('brief CLI accepts angle-bracket wrapped URLs (chat/markdown copy-paste)', 
   assert.ok(stdout.length > 0);
   assert.match(stderr, /NOTE: Unable to fetch this link/i);
   assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc/);
+});
+
+test('brief CLI supports --out to write the generated brief to a file', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-'));
+  const outPath = path.join(dir, 'brief.md');
+
+  const { stdout } = await runBrief(['<http://localhost:1/share/abc>', '--out', outPath]);
+  const file = fs.readFileSync(outPath, 'utf8');
+
+  assert.ok(stdout.length > 0);
+  assert.ok(file.length > 0);
+  assert.equal(file.trim(), stdout.trim());
 });

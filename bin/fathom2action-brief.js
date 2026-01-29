@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import process from 'node:process';
+import fs from 'node:fs';
+import path from 'node:path';
 import { spawn } from 'node:child_process';
 
 import { readStdin, extractFromStdin, extractFromUrl, getVersion } from '../src/extractor.js';
@@ -10,12 +12,13 @@ function usage(code = 0) {
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <fathom-share-url> [--copy]
-  ${cmd} --stdin [--copy] [--source <url>] [--title <text>]
-  ${cmd} - [--copy] [--source <url>] [--title <text>]
+  ${cmd} <fathom-share-url> [--copy] [--out <path>]
+  ${cmd} --stdin [--copy] [--out <path>] [--source <url>] [--title <text>]
+  ${cmd} - [--copy] [--out <path>] [--source <url>] [--title <text>]
 
 Options:
   --copy            Also copy the generated brief to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel).
+  --out <path>      Also write the generated brief to a file.
   --source <url>    Override the Source field (useful when piping transcript via --stdin).
   --title <text>    Override the Title field (useful when piping transcript via --stdin).
 
@@ -51,8 +54,16 @@ async function main() {
 
   const sourceOverride = takeFlagValue('--source');
   const titleOverride = takeFlagValue('--title');
+  const outPath = takeFlagValue('--out');
 
   const cleanArgs = args.filter((a) => a !== '--copy');
+
+  function maybeWriteFile(text) {
+    if (!outPath) return;
+    const p = path.resolve(process.cwd(), String(outPath));
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, String(text), 'utf8');
+  }
 
   async function maybeCopy(text) {
     if (!copyToClipboard) return;
@@ -114,6 +125,7 @@ async function main() {
         transcript: extracted.text,
       });
       await maybeCopy(out);
+      maybeWriteFile(out);
       process.stdout.write(`${out}\n`);
     } catch (e) {
       if (e && e.code === 2) {
@@ -189,6 +201,7 @@ async function main() {
   }
 
   await maybeCopy(brief);
+  maybeWriteFile(brief);
   process.stdout.write(`${brief}\n`);
 }
 
