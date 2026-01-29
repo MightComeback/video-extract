@@ -245,3 +245,15 @@ test('extractFromStdin accepts "Fathom link:" as a Source alias', () => {
   assert.equal(out.source, 'https://fathom.video/share/abc');
   assert.equal(out.title, 'Fathom link label');
 });
+
+test('extractFromStdin accepts "Share link:" as a Source alias', () => {
+  const input = [
+    'Share link: https://fathom.video/share/abc',
+    'Title: Share link label',
+    '00:01 Alice: it crashes',
+  ].join('\n');
+
+  const out = extractFromStdin({ content: input, source: 'stdin' });
+  assert.equal(out.source, 'https://fathom.video/share/abc');
+  assert.equal(out.title, 'Share link label');
+});
