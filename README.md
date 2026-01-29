@@ -52,6 +52,9 @@ fathom2action "https://fathom.video/share/<TOKEN>" --json --copy-brief
 
 # print version
 fathom2action --version
+
+# hide timestamps/teaser sections (useful when you want a very compact brief)
+fathom2action "https://fathom.video/share/<TOKEN>" --max-timestamps 0 --max-teaser 0
 ```
 
 If the link is auth-gated (401/403) or otherwise not fetchable, paste transcript/notes:
