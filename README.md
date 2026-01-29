@@ -70,6 +70,15 @@ pbpaste | fathom2action --stdin
 Get-Clipboard | fathom2action --stdin
 ```
 
+If you just want a blank brief to fill in manually (no URL fetch / no stdin):
+
+```bash
+fathom2action --template --copy
+
+# optionally pre-fill Source/Title
+fathom2action --template --source "https://fathom.video/share/<TOKEN>" --title "Login breaks on Safari" --copy
+```
+
 You can also paste a small “envelope” for better output (copy/paste friendly):
 
 ```text
