@@ -15,7 +15,7 @@ Usage:
   ${cmd} - [--copy]
 
 Options:
-  --copy    Also copy the generated brief to clipboard (best-effort; tries pbcopy, wl-copy, or xclip).
+  --copy    Also copy the generated brief to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel).
 
 Notes:
   - If the URL cannot be fetched (auth-gated), the tool will print a ready-to-paste brief and ask for transcript via ${cmd} --stdin.
@@ -42,11 +42,12 @@ async function main() {
     // Tries common clipboard CLIs in order:
     // - macOS: pbcopy
     // - Wayland: wl-copy
-    // - X11: xclip
+    // - X11: xclip / xsel
     const candidates = [
       { cmd: 'pbcopy', args: [] },
       { cmd: 'wl-copy', args: [] },
       { cmd: 'xclip', args: ['-selection', 'clipboard'] },
+      { cmd: 'xsel', args: ['--clipboard', '--input'] },
     ];
 
     async function tryCommand(cmd, args) {
@@ -75,7 +76,7 @@ async function main() {
     }
 
     process.stderr.write(
-      'NOTE: --copy requested but no clipboard command was found (tried pbcopy, wl-copy, xclip).\n'
+      'NOTE: --copy requested but no clipboard command was found (tried pbcopy, wl-copy, xclip, xsel).\n'
     );
   }
 
