@@ -269,6 +269,11 @@ export function renderBrief({
     '- Build / SHA: ',
     '- When: ',
     '',
+    '## Attachments / evidence',
+    '- Screenshot(s): ',
+    '- Console/logs: ',
+    '- Video: ',
+    '',
 
     // Optional sections: allow callers to hide them entirely by passing 0.
     ...(timestampsLimit > 0
