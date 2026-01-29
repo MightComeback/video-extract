@@ -48,17 +48,39 @@ async function linearGraphQL(query, variables) {
 }
 
 async function getIssueByIdentifier(identifier) {
-  // Linear's Issue "id" parameter accepts the issue UUID; in practice it also accepts the human identifier
-  // like "MIG-14" for many workspaces.
+  const key = String(identifier);
+  const looksLikeIdentifier = /^[A-Z]+-\d+$/.test(key);
+
+  // For human identifiers like "MIG-14", query issues collection via team key + number.
+  if (looksLikeIdentifier) {
+    const [teamKey, numStr] = key.split('-');
+    const number = Number(numStr);
+    if (!teamKey || !Number.isFinite(number)) throw new Error(`Invalid issue identifier: ${key}`);
+
+    const data = await linearGraphQL(
+      `query IssueByTeamAndNumber($teamKey: String!, $number: Float!) {
+        issues(filter: { team: { key: { eq: $teamKey } }, number: { eq: $number } }, first: 1) {
+          nodes { id identifier title state { type name } }
+        }
+      }`,
+      { teamKey, number }
+    );
+
+    const issue = data?.issues?.nodes?.[0];
+    if (!issue) throw new Error(`Issue not found: ${key}`);
+    return issue;
+  }
+
+  // Otherwise treat as a UUID.
   const data = await linearGraphQL(
     `query IssueById($id: String!) {
       issue(id: $id) { id identifier title state { type name } }
     }`,
-    { id: identifier }
+    { id: key }
   );
 
   const issue = data?.issue;
-  if (!issue) throw new Error(`Issue not found: ${identifier}`);
+  if (!issue) throw new Error(`Issue not found: ${key}`);
   return issue;
 }
 
