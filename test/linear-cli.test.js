@@ -21,6 +21,7 @@ test('scripts/linear.js prints help with --help and exits 0 (no env required)', 
   const res = run(['--help'], { LINEAR_API_KEY: '' });
   assert.equal(res.status, 0);
   assert.match(res.stdout, /Usage:\s*\n\s*node scripts\/linear\.js issue-state-type/i);
+  assert.match(res.stdout, /node scripts\/linear\.js issue <ISSUE_KEY>/i);
 });
 
 test('scripts/linear.js exits non-zero on unknown command and prints help', () => {

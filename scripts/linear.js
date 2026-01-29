@@ -28,10 +28,12 @@ export default {
 // --- CLI (for cron / quick use) ---
 // Commands:
 //   node scripts/linear.js issue-state-type MIG-14
+//   node scripts/linear.js issue MIG-14
 //   node scripts/linear.js comment MIG-14 "text..."
 function printHelp() {
   process.stdout.write(`Usage:
   node scripts/linear.js issue-state-type <ISSUE_KEY>
+  node scripts/linear.js issue <ISSUE_KEY>
   node scripts/linear.js comment <ISSUE_KEY> "text..."
 
 Requires env:
@@ -47,7 +49,7 @@ async function cliMain() {
     process.exit(0);
   }
 
-  if (cmd !== 'issue-state-type' && cmd !== 'comment') {
+  if (cmd !== 'issue-state-type' && cmd !== 'issue' && cmd !== 'comment') {
     process.stderr.write(`Unknown command: ${cmd}\n`);
     printHelp();
     process.exit(1);
@@ -61,6 +63,12 @@ async function cliMain() {
   if (cmd === 'issue-state-type') {
     const t = await getIssueStateType(issueKey);
     process.stdout.write(String(t ?? '') + '\n');
+    return;
+  }
+
+  if (cmd === 'issue') {
+    const issue = await getIssue(issueKey);
+    process.stdout.write(JSON.stringify(issue, null, 2) + '\n');
     return;
   }
 
