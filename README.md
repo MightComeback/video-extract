@@ -191,6 +191,7 @@ Env defaults (flags win):
 - `F2A_OUT=<path>` (behave as if `--out <path>` was passed)
 - `F2A_SOURCE=<url>` (behave as if `--source <url>` was passed)
 - `F2A_TITLE=<text>` (behave as if `--title <text>` was passed)
+- `F2A_CMD=<name>` (behave as if `--cmd <name>` was passed)
 - `F2A_NO_NOTE=1` (behave as if `--no-note` was passed)
 
 ## CLI flags (extractor: `fathom-extract`)
