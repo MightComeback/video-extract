@@ -78,6 +78,20 @@ test('brief CLI supports --template (no fetch required)', async () => {
   assert.doesNotMatch(stderr, /NOTE: Unable to fetch this link/i);
 });
 
+test('brief CLI supports --cmd to override the command name shown in the brief', async () => {
+  const { stdout, stderr } = await runBrief([
+    '--template',
+    '--cmd',
+    'npx fathom2action',
+    '--source',
+    'https://fathom.video/share/abc',
+    '--title',
+    'Test',
+  ]);
+  assert.match(stdout, /re-run\s+`npx fathom2action "<link>"`/);
+  assert.doesNotMatch(stderr, /NOTE: Unable to fetch this link/i);
+});
+
 test('brief CLI help mentions chat/markdown URL wrappers', async () => {
   const { stdout } = await runBrief(['--help']);
   assert.match(stdout, /paste URLs directly from chat\/markdown/i);

@@ -13,10 +13,10 @@ function usage(code = 0) {
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <fathom-share-url> [--copy] [--copy-brief] [--out <path>] [--json] [--no-note] [--max-teaser <n>] [--max-timestamps <n>]
-  ${cmd} --stdin [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
-  ${cmd} - [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
-  ${cmd} --template [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
+  ${cmd} <fathom-share-url> [--copy] [--copy-brief] [--out <path>] [--json] [--no-note] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
+  ${cmd} --stdin [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
+  ${cmd} - [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
+  ${cmd} --template [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
 
 Options:
   --copy                 Also copy to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel). If used with --json, copies the markdown brief.
@@ -29,6 +29,7 @@ Options:
   --no-note              Suppress the "NOTE: Unable to fetch..." hint printed to stderr when a link can't be fetched.
   --max-teaser <n>       Max number of transcript teaser bullets to render (default: 6; use 0 to hide).
   --max-timestamps <n>   Max number of timestamps to render (default: 6; use 0 to hide).
+  --cmd <name>           Override the command name shown in the "How to update this brief" section (useful when running via npx, bunx, etc.).
   --version              Print version and exit.
 
 Env:
@@ -39,6 +40,7 @@ Env:
   F2A_OUT               Default for --out (flags win).
   F2A_SOURCE            Default for --source (flags win).
   F2A_TITLE             Default for --title (flags win).
+  F2A_CMD               Default for --cmd (flags win).
   F2A_NO_NOTE          If truthy (1/true/yes/on), behave as if --no-note was passed.
 
 Notes:
@@ -89,6 +91,8 @@ async function main() {
 
   const sourceOverride = takeFlagValue('--source') ?? envOrUndefined('F2A_SOURCE');
   const titleOverride = takeFlagValue('--title') ?? envOrUndefined('F2A_TITLE');
+  const cmdOverride = takeFlagValue('--cmd') ?? envOrUndefined('F2A_CMD');
+  const cmdName = String(cmdOverride || cmd).trim() || cmd;
 
   function envOrUndefined(name) {
     const raw = String(process.env[name] || '').trim();
@@ -128,7 +132,8 @@ async function main() {
       a !== '--template' &&
       a !== '--no-note' &&
       a !== '--max-teaser' &&
-      a !== '--max-timestamps'
+      a !== '--max-timestamps' &&
+      a !== '--cmd'
   );
 
   function maybeWriteFile(text) {
@@ -234,7 +239,7 @@ async function main() {
       const source = sourceOverride || extracted.source;
       const title = titleOverride || extracted.title;
       const brief = renderBrief({
-        cmd,
+        cmd: cmdName,
         source,
         title,
         transcript: extracted.text,
@@ -253,7 +258,7 @@ async function main() {
         const source = sourceOverride;
         const title = titleOverride;
         const brief = renderBrief({
-          cmd,
+          cmd: cmdName,
           source,
           title,
           transcript: '',
@@ -270,7 +275,7 @@ async function main() {
 
       if (e && e.code === 2) {
         process.stderr.write(
-          `ERROR: stdin is empty. Paste a transcript (or a URL + transcript) and try again. Example: \`pbpaste | ${cmd} --stdin\`\n`
+          `ERROR: stdin is empty. Paste a transcript (or a URL + transcript) and try again. Example: \`pbpaste | ${cmdName} --stdin\`\n`
         );
         process.exit(2);
       }
@@ -282,7 +287,7 @@ async function main() {
     const source = sourceOverride;
     const title = titleOverride;
     const brief = renderBrief({
-      cmd,
+      cmd: cmdName,
       source,
       title,
       transcript: '',
@@ -333,7 +338,7 @@ async function main() {
   });
 
   const brief = renderBrief({
-    cmd,
+    cmd: cmdName,
     source: sourceOverride || extracted.source,
     title: titleOverride || extracted.title,
     transcript: extracted.text,
@@ -345,7 +350,7 @@ async function main() {
   // If we couldn't fetch anything useful, nudge toward --stdin.
   if (!extracted.ok && !suppressNote) {
     process.stderr.write(
-      `NOTE: Unable to fetch this link (often auth-gated). Paste transcript via \`${cmd} --stdin\` for best results. Example: \`pbpaste | ${cmd} --stdin\`.\n`
+      `NOTE: Unable to fetch this link (often auth-gated). Paste transcript via \`${cmdName} --stdin\` for best results. Example: \`pbpaste | ${cmdName} --stdin\`.\n`
     );
   }
 
