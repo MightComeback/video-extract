@@ -60,6 +60,11 @@ test('brief CLI documents --copy-brief in --help output', async () => {
   assert.match(stdout, /--copy-brief/);
 });
 
+test('brief CLI documents --version in --help output', async () => {
+  const { stdout } = await runBrief(['--help']);
+  assert.match(stdout, /--version/);
+});
+
 test('brief CLI help mentions chat/markdown URL wrappers', async () => {
   const { stdout } = await runBrief(['--help']);
   assert.match(stdout, /paste URLs directly from chat\/markdown/i);

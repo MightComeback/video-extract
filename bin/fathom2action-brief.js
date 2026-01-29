@@ -26,6 +26,7 @@ Options:
   --no-note              Suppress the "NOTE: Unable to fetch..." hint printed to stderr when a link can't be fetched.
   --max-teaser <n>       Max number of transcript teaser bullets to render (default: 6; use 0 to hide).
   --max-timestamps <n>   Max number of timestamps to render (default: 6; use 0 to hide).
+  --version              Print version and exit.
 
 Env:
   F2A_MAX_TEASER         Default for --max-teaser (flags win).
