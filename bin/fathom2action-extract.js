@@ -62,8 +62,20 @@ function parseCookieFileContents(raw) {
 
   // If a user pasted headers (common copy/paste from DevTools), prefer an explicit Cookie: line.
   // Accept both single-line and multi-line inputs.
+  // Also handle a multi-line copy where "Cookie:" is on its own line and the value is on the next line.
   const cookieHeaderLine = lines.find((l) => /^cookie\s*:/i.test(l));
-  if (cookieHeaderLine) return cookieHeaderLine;
+  if (cookieHeaderLine) {
+    const m = cookieHeaderLine.match(/^cookie\s*:\s*(.*)$/i);
+    const v = String(m?.[1] || '').trim();
+    if (v) return cookieHeaderLine;
+
+    // "Cookie:" with no value — take the next non-empty line as the value.
+    const i = lines.indexOf(cookieHeaderLine);
+    const next = lines.slice(i + 1).find((l) => l && !/^\w+\s*:/i.test(l));
+    if (next) return `Cookie: ${next}`;
+
+    return cookieHeaderLine;
+  }
 
   // Netscape cookies.txt format (7 tab-separated fields).
   // domain  flag  path  secure  expiration  name  value
