@@ -4,6 +4,7 @@ Quick notes for ongoing migration work.
 
 ## Dev
 
-- Install deps: `pnpm i`
-- Run tests: `pnpm test`
+- Install deps: `npm install`
+- Run tests: `npm test`
+- Run lint: `npm run lint`
 
