@@ -32,11 +32,21 @@ function normalizeUrlLike(s) {
   //   <https://example.com|label>
   // so we don't carry wrappers into the rendered markdown.
   // Also tolerate trailing chat punctuation after the wrapper, e.g. "(<...>)".
-  const slack = v0.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
-  if (slack) return slack[1];
+  const slack = v0.match(/^<\s*([^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
+  if (slack) {
+    const u = String(slack[1] || '').trim();
+    if (/^https?:\/\//i.test(u)) return u;
+    const bare = u.match(/^(?:www\.)?fathom\.video\/[\S]+/i);
+    if (bare) return `https://${bare[0]}`;
+  }
 
-  const angle = v0.match(/^<\s*(https?:\/\/[^>\s]+)\s*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
-  if (angle) return angle[1];
+  const angle = v0.match(/^<\s*([^>\s]+)\s*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
+  if (angle) {
+    const u = String(angle[1] || '').trim();
+    if (/^https?:\/\//i.test(u)) return u;
+    const bare = u.match(/^(?:www\.)?fathom\.video\/[\S]+/i);
+    if (bare) return `https://${bare[0]}`;
+  }
 
   // Accept markdown link form:
   //   [label](https://example.com)

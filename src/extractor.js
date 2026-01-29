@@ -1152,10 +1152,10 @@ export function extractFromStdin({ content, source }) {
       //   <https://example.com|label>
       // which are common when copying from Slack.
       // Also tolerate trailing punctuation after the wrapper, e.g. "(<...>)".
-      const slack = out.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
+      const slack = out.match(/^<\s*([^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
       if (slack) out = slack[1];
 
-      const m = out.match(/^<\s*(https?:\/\/[^>\s]+)\s*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
+      const m = out.match(/^<\s*([^>\s]+)\s*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
       if (m) out = m[1];
 
       // Accept markdown link form:

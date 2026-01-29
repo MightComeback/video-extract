@@ -270,10 +270,10 @@ async function main() {
     // and Slack-style links like:
     //   <https://...|label>
     // Also tolerate trailing punctuation after the wrapper, e.g. "(<...>)".
-    const slack = out.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
+    const slack = out.match(/^<\s*([^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
     if (slack) out = slack[1];
 
-    const m = out.match(/^<\s*(https?:\/\/[^>\s]+)\s*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
+    const m = out.match(/^<\s*([^>\s]+)\s*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
     if (m) out = m[1];
 
     // Markdown link wrapper (copy/paste from docs):

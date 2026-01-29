@@ -161,6 +161,18 @@ test('extractFromStdin accepts Slack-style "<url|label>" Sources', () => {
   assert.equal(out.title, 'Slack link source');
 });
 
+test('extractFromStdin accepts Slack-style "<url|label>" Sources even without a scheme', () => {
+  const input = [
+    'Source: <fathom.video/share/abc|Fathom>',
+    'Title: Slack link (bare) source',
+    '00:01 Alice: it crashes',
+  ].join('\n');
+
+  const out = extractFromStdin({ content: input, source: 'stdin' });
+  assert.equal(out.source, 'https://fathom.video/share/abc');
+  assert.equal(out.title, 'Slack link (bare) source');
+});
+
 test('extractFromStdin accepts "Recording:" as a Source alias', () => {
   const input = [
     'Recording: https://fathom.video/share/abc',
