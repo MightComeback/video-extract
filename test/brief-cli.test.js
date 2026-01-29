@@ -42,6 +42,11 @@ test('brief CLI prints version with --version', async () => {
   assert.match(stdout.trim(), /^\d+\.\d+\.\d+/);
 });
 
+test('brief CLI documents --copy-brief in --help output', async () => {
+  const { stdout } = await runBrief(['--help']);
+  assert.match(stdout, /--copy-brief/);
+});
+
 test('brief CLI supports --json (outputs {source,title,brief})', async () => {
   const { stdout, stderr } = await runBrief(['<http://localhost:1/share/abc>', '--json']);
   assert.match(stderr, /NOTE: Unable to fetch this link/i);

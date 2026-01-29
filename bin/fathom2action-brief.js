@@ -12,13 +12,14 @@ function usage(code = 0) {
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <fathom-share-url> [--copy] [--out <path>] [--json] [--no-note] [--max-teaser <n>] [--max-timestamps <n>]
-  ${cmd} --stdin [--copy] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
-  ${cmd} - [--copy] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
+  ${cmd} <fathom-share-url> [--copy] [--copy-brief] [--out <path>] [--json] [--no-note] [--max-teaser <n>] [--max-timestamps <n>]
+  ${cmd} --stdin [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
+  ${cmd} - [--copy] [--copy-brief] [--out <path>] [--json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
 
 Options:
-  --copy                 Also copy the generated brief to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel).
-  --out <path>           Also write the generated brief to a file.
+  --copy                 Also copy the output to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel).
+  --copy-brief           Copy the markdown brief to clipboard (even if --json is used).
+  --out <path>           Also write the generated output to a file.
   --json                 Output a JSON object with { source, title, brief } instead of markdown.
   --source <url>         Override the Source field (useful when piping transcript via --stdin).
   --title <text>         Override the Title field (useful when piping transcript via --stdin).
@@ -46,6 +47,7 @@ async function main() {
   }
 
   const copyToClipboard = args.includes('--copy');
+  const copyBriefOnly = args.includes('--copy-brief');
   const outputJson = args.includes('--json');
   const suppressNote = args.includes('--no-note');
 
@@ -86,7 +88,13 @@ async function main() {
   const maxTimestamps = parseNonNegInt('--max-timestamps', maxTimestampsRaw);
 
   const cleanArgs = args.filter(
-    (a) => a !== '--copy' && a !== '--json' && a !== '--no-note' && a !== '--max-teaser' && a !== '--max-timestamps'
+    (a) =>
+      a !== '--copy' &&
+      a !== '--copy-brief' &&
+      a !== '--json' &&
+      a !== '--no-note' &&
+      a !== '--max-teaser' &&
+      a !== '--max-timestamps'
   );
 
   function maybeWriteFile(text) {
@@ -102,7 +110,7 @@ async function main() {
   }
 
   async function maybeCopy(text) {
-    if (!copyToClipboard) return;
+    if (!copyToClipboard && !copyBriefOnly) return;
 
     // Best-effort clipboard copy.
     // Tries common clipboard CLIs in order:
@@ -178,7 +186,8 @@ async function main() {
         timestampsMax: maxTimestamps,
       });
       const out = formatOutput({ source, title, brief });
-      await maybeCopy(out);
+      const copyText = copyBriefOnly ? String(brief) : out;
+      await maybeCopy(copyText);
       maybeWriteFile(out);
       process.stdout.write(`${out}\n`);
     } catch (e) {
@@ -196,7 +205,8 @@ async function main() {
           timestampsMax: maxTimestamps,
         });
         const out = formatOutput({ source, title, brief });
-        await maybeCopy(out);
+        const copyText = copyBriefOnly ? String(brief) : out;
+        await maybeCopy(copyText);
         maybeWriteFile(out);
         process.stdout.write(`${out}\n`);
         return;
@@ -303,7 +313,8 @@ async function main() {
     brief,
   });
 
-  await maybeCopy(out);
+  const copyText = copyBriefOnly ? String(brief) : out;
+  await maybeCopy(copyText);
   maybeWriteFile(out);
   process.stdout.write(`${out}\n`);
 }
