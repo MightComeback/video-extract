@@ -93,8 +93,8 @@ function normalizeBullets(lines, { max = 6 } = {}) {
     if (!line) continue;
 
     // Accept common bullet prefixes from transcripts / note exports.
-    // Includes ASCII bullets (-, *) and the Unicode bullet (•).
-    const noBullet = line.replace(/^[-*•]\s*/, '');
+    // Includes ASCII bullets (-, *) and common Unicode bullets/dashes (•, – , —).
+    const noBullet = line.replace(/^[-*•–—]\s*/, '');
 
     // Also accept numbered list prefixes commonly produced by note exports:
     //  - "1. ..."
