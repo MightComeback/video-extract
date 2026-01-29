@@ -264,13 +264,21 @@ async function main() {
 
     // Allow chat/markdown-friendly wrappers like:
     //   <https://...>
-    // and Slack-style links like:
     //   <https://...|label>
-    const slack = out.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>$/i);
+    //   [label](https://...)
+    //   [label](data:...)
+
+    // Slack: <https://...|label>
+    const slack = out.match(/^<\s*((?:https?:\/\/|data:)[^|>\s]+)\s*\|[^>]*>$/i);
     if (slack) out = slack[1];
 
-    const m = out.match(/^<\s*(https?:\/\/[^>\s]+)\s*>$/i);
+    // Angle brackets: <https://...>
+    const m = out.match(/^<\s*((?:https?:\/\/|data:)[^>\s]+)\s*>$/i);
     if (m) out = m[1];
+
+    // Markdown link: [label](https://...)
+    const md = out.match(/^\[[^\]]*\]\(\s*((?:https?:\/\/|data:)[^)\s]+)\s*\)$/i);
+    if (md) out = md[1];
 
     // Strip common trailing punctuation from copy/paste:
     //   https://...)
