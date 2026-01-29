@@ -48,6 +48,20 @@ test('brief supports --stdin and prints deterministic sections', async () => {
   assert.match(stdout, /^- Yep/m);
 });
 
+test('brief supports limiting teaser bullets and timestamps via flags', async () => {
+  const { stdout } = await runBrief(['--stdin', '--max-teaser', '2', '--max-timestamps', '1'], {
+    stdin: ['00:01 Alice: First', '00:02 Bob: Second', '00:03 Carol: Third', ''].join('\n'),
+  });
+
+  // Only 1 timestamp line should be rendered.
+  const ts = stdout.match(/^- \d{1,2}:\d{2}(?::\d{2})? — /gm) || [];
+  assert.equal(ts.length, 1);
+
+  // Only 2 teaser bullets should be rendered.
+  const teaser = stdout.match(/^- (First|Second|Third)$/gm) || [];
+  assert.equal(teaser.length, 2);
+});
+
 test('brief teaser strips speaker labels with punctuation', async () => {
   const { stdout } = await runBrief(['--stdin'], {
     stdin: ['00:01 QA-1: Repro is flaky', "00:02 Ivan K.: Yep", ''].join('\n'),

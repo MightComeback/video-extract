@@ -12,16 +12,18 @@ function usage(code = 0) {
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <fathom-share-url> [--copy] [--out <path>] [--no-note]
-  ${cmd} --stdin [--copy] [--out <path>] [--source <url>] [--title <text>]
-  ${cmd} - [--copy] [--out <path>] [--source <url>] [--title <text>]
+  ${cmd} <fathom-share-url> [--copy] [--out <path>] [--no-note] [--max-teaser <n>] [--max-timestamps <n>]
+  ${cmd} --stdin [--copy] [--out <path>] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
+  ${cmd} - [--copy] [--out <path>] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>]
 
 Options:
   --copy            Also copy the generated brief to clipboard (best-effort; tries pbcopy, wl-copy, xclip, or xsel).
   --out <path>      Also write the generated brief to a file.
   --source <url>    Override the Source field (useful when piping transcript via --stdin).
   --title <text>    Override the Title field (useful when piping transcript via --stdin).
-  --no-note         Suppress the "NOTE: Unable to fetch..." hint printed to stderr when a link can't be fetched.
+  --no-note              Suppress the "NOTE: Unable to fetch..." hint printed to stderr when a link can't be fetched.
+  --max-teaser <n>        Max number of transcript teaser bullets to render (default: 6).
+  --max-timestamps <n>    Max number of timestamps to render (default: 6).
 
 Notes:
   - If the URL cannot be fetched (auth-gated), the tool will print a ready-to-paste brief and ask for transcript via ${cmd} --stdin.
@@ -57,8 +59,25 @@ async function main() {
   const sourceOverride = takeFlagValue('--source');
   const titleOverride = takeFlagValue('--title');
   const outPath = takeFlagValue('--out');
+  const maxTeaserRaw = takeFlagValue('--max-teaser');
+  const maxTimestampsRaw = takeFlagValue('--max-timestamps');
 
-  const cleanArgs = args.filter((a) => a !== '--copy' && a !== '--no-note');
+  function parsePosInt(name, v) {
+    if (v == null) return undefined;
+    const n = Number(v);
+    if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
+      process.stderr.write(`ERROR: ${name} must be a positive integer (got: ${v})\n`);
+      usage(2);
+    }
+    return n;
+  }
+
+  const maxTeaser = parsePosInt('--max-teaser', maxTeaserRaw);
+  const maxTimestamps = parsePosInt('--max-timestamps', maxTimestampsRaw);
+
+  const cleanArgs = args.filter(
+    (a) => a !== '--copy' && a !== '--no-note' && a !== '--max-teaser' && a !== '--max-timestamps'
+  );
 
   function maybeWriteFile(text) {
     if (!outPath) return;
@@ -125,6 +144,8 @@ async function main() {
         source: sourceOverride || extracted.source,
         title: titleOverride || extracted.title,
         transcript: extracted.text,
+        teaserMax: maxTeaser,
+        timestampsMax: maxTimestamps,
       });
       await maybeCopy(out);
       maybeWriteFile(out);
@@ -193,6 +214,8 @@ async function main() {
     title: titleOverride || extracted.title,
     transcript: extracted.text,
     fetchError: extracted.fetchError,
+    teaserMax: maxTeaser,
+    timestampsMax: maxTimestamps,
   });
 
   // If we couldn't fetch anything useful, nudge toward --stdin.

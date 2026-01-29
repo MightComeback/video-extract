@@ -127,12 +127,20 @@ function extractTimestamps(transcript, { max = 6 } = {}) {
   return out;
 }
 
-export function renderBrief({ cmd = 'fathom2action', source, title, transcript, fetchError } = {}) {
+export function renderBrief({
+  cmd = 'fathom2action',
+  source,
+  title,
+  transcript,
+  fetchError,
+  teaserMax = 6,
+  timestampsMax = 6,
+} = {}) {
   const cmdName = oneLine(cmd) || 'fathom2action';
   const src = normalizeUrlLike(source);
   const t = oneLine(title);
-  const teaser = normalizeBullets(transcript, { max: 6 });
-  const timestamps = extractTimestamps(transcript, { max: 6 });
+  const teaser = normalizeBullets(transcript, { max: Number(teaserMax) || 6 });
+  const timestamps = extractTimestamps(transcript, { max: Number(timestampsMax) || 6 });
 
   const header = [
     '# Bug report brief',
