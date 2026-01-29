@@ -1172,6 +1172,11 @@ export function extractFromStdin({ content, source }) {
       //   "https://..."
       out = out.replace(/^[(`\[\{"'“”‘’]+\s*/g, '');
 
+      // Common copy/paste pattern: "https://... (Fathom)".
+      // Only strip parenthetical suffixes when separated by whitespace to avoid mangling URLs
+      // that legitimately contain parentheses.
+      out = out.replace(/\s+\([^)]*\)\s*$/g, '');
+
       // Strip common trailing punctuation from copy/paste.
       // Include ! and ? which frequently get appended in chat.
       // Also strip a few Unicode punctuation variants (…, fullwidth !/? and Chinese/Japanese punctuation).

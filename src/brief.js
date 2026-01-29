@@ -48,11 +48,21 @@ function normalizeUrlLike(s) {
   // Also strip "!" and "?" which frequently get appended in chat.
   // Include a few common Unicode punctuation variants (…, fullwidth !/? and Chinese/Japanese punctuation).
   // Include backticks for cases like: `https://example.com`
-  if (/^https?:\/\//i.test(v0)) return v0.replace(/[)\]>'\"`“”‘’.,;:!?…。！，？]+$/g, '');
+  if (/^https?:\/\//i.test(v0)) {
+    // Common copy/paste pattern: "https://... (Fathom)".
+    // Only strip parenthetical suffixes when separated by whitespace to avoid mangling URLs
+    // that legitimately contain parentheses.
+    v0 = v0.replace(/\s+\([^)]*\)\s*$/g, '');
+    return v0.replace(/[)\]>'\"`“”‘’.,;:!?…。！，？]+$/g, '');
+  }
 
   // Convenience: accept bare fathom.video URLs (no scheme) from chat copy/paste.
   const bare = v0.match(/^(?:www\.)?fathom\.video\/[\S]+/i);
-  if (bare) return `https://${bare[0]}`.replace(/[)\]>'\"`“”‘’.,;:!?…。！，？]+$/g, '');
+  if (bare) {
+    let u = `https://${bare[0]}`;
+    u = u.replace(/\s+\([^)]*\)\s*$/g, '');
+    return u.replace(/[)\]>'\"`“”‘’.,;:!?…。！，？]+$/g, '');
+  }
 
   return v0;
 }
