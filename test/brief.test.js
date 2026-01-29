@@ -157,3 +157,13 @@ test('brief --stdin exits with code 2 and a helpful message when stdin is empty'
     }
   );
 });
+
+test('brief teaser strips bracketed/parenthesized timestamps', async () => {
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: ['[00:01] Alice: It crashes', '(00:05) Bob: Yep', ''].join('\n'),
+  });
+
+  assert.match(stdout, /^## Transcript teaser \(first lines\)/m);
+  assert.match(stdout, /^- Alice: It crashes/m);
+  assert.match(stdout, /^- Bob: Yep/m);
+});
