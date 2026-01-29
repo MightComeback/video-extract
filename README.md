@@ -221,3 +221,7 @@ npm run lint
 
 - [ ] Keep extractor output stable across inputs (golden tests)
 - [ ] Document required env vars and examples
+
+### Env vars (helpers)
+
+- `LINEAR_API_KEY`: required to use `scripts/linear.js` (used by the always-on shipping loop)
