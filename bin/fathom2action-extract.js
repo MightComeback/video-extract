@@ -29,6 +29,7 @@ Notes:
   - Default (URL mode): if mediaUrl is found, it will download a local mp4 and split into 5-minute segments (300s).
   - If --out-dir is set, the extractor will also write transcript.txt + extracted.json for easy piping to other tools.
   - For auth-gated links, pass a Cookie header via --cookie/FATHOM_COOKIE, or a cookie file via FATHOM_COOKIE_FILE/--cookie-file.
+  - For pages that require a Referer header, use --referer or set FATHOM_REFERER.
   - --download-media <path> is a convenience alias that sets the downloaded mp4 output path.
 `);
   process.exit(code);
@@ -204,7 +205,9 @@ async function main() {
 
   const refererFlag = readFlagValue(args, '--referer');
   args = refererFlag.args;
-  const referer = refererFlag.value;
+  // Allow env default for convenience in scripts.
+  const envReferer = String(process.env.FATHOM_REFERER || '').trim();
+  const referer = refererFlag.value ? String(refererFlag.value) : envReferer || null;
 
   const userAgentFlag = readFlagValue(args, '--user-agent');
   args = userAgentFlag.args;
