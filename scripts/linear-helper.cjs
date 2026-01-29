@@ -53,9 +53,12 @@ async function getIssue(identifierOrId) {
   return data.issue;
 }
 
-async function addComment(issueId, body) {
+async function addComment(issueIdentifierOrId, body) {
   const apiKey = process.env.LINEAR_API_KEY;
   if (!apiKey) throw new Error('LINEAR_API_KEY missing');
+
+  // Allow passing either a UUID (Linear issue id) or a human identifier like MIG-14.
+  const issue = await getIssue(issueIdentifierOrId);
 
   const q = `mutation IssueComment($input: CommentCreateInput!) {
     commentCreate(input: $input) {
@@ -67,7 +70,7 @@ async function addComment(issueId, body) {
   const data = await linearRequest({
     apiKey,
     query: q,
-    variables: { input: { issueId: String(issueId), body: String(body) } },
+    variables: { input: { issueId: String(issue.id), body: String(body) } },
   });
 
   if (!data?.commentCreate?.success) throw new Error('Failed to create Linear comment');
