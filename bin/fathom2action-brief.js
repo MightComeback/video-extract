@@ -210,7 +210,8 @@ async function main() {
     // Strip common trailing punctuation from copy/paste:
     //   https://...)
     //   https://...,;
-    out = out.replace(/[)\]>'\".,;:]+$/g, '');
+    //   https://...!? (common in chat)
+    out = out.replace(/[)\]>'\"`.,;:!?]+$/g, '');
     return out;
   }
 
