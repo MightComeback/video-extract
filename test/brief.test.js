@@ -11,16 +11,21 @@ const __dirname = path.dirname(__filename);
 
 const briefBinPath = path.resolve(__dirname, '..', 'bin', 'fathom2action-brief.js');
 
-function runBrief(args, { stdin, timeoutMs = 20_000 } = {}) {
+function runBrief(args, { stdin, timeoutMs = 20_000, cwd, env } = {}) {
   return new Promise((resolve, reject) => {
-    const child = execFile(process.execPath, [briefBinPath, ...args], { timeout: timeoutMs }, (err, stdout, stderr) => {
-      if (err) {
-        err.stdout = stdout;
-        err.stderr = stderr;
-        return reject(err);
+    const child = execFile(
+      process.execPath,
+      [briefBinPath, ...args],
+      { timeout: timeoutMs, cwd, env: { ...process.env, ...(env || {}) } },
+      (err, stdout, stderr) => {
+        if (err) {
+          err.stdout = stdout;
+          err.stderr = stderr;
+          return reject(err);
+        }
+        resolve({ stdout, stderr });
       }
-      resolve({ stdout, stderr });
-    });
+    );
 
     if (stdin != null) {
       child.stdin.write(stdin);
@@ -433,6 +438,16 @@ test('brief --stdin allows empty stdin when --source/--title overrides are provi
 
   assert.match(stdout, /^Source: https:\/\/fathom\.video\/share\/ABC$/m);
   assert.match(stdout, /^Title: Some bug$/m);
+});
+
+test('brief --stdin allows empty stdin when F2A_SOURCE/F2A_TITLE env overrides are provided (template mode)', async () => {
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: '\n',
+    env: { F2A_SOURCE: 'https://fathom.video/share/XYZ', F2A_TITLE: 'Env title bug' },
+  });
+
+  assert.match(stdout, /^Source: https:\/\/fathom\.video\/share\/XYZ$/m);
+  assert.match(stdout, /^Title: Env title bug$/m);
 });
 
 test('brief teaser strips bracketed/parenthesized timestamps', async () => {
