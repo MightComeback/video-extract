@@ -1141,7 +1141,7 @@ export function extractFromStdin({ content, source }) {
       //   (<https://...|label>)
       // Don't strip leading '[' when the string is a markdown link like: [label](url)
       if (!/^\[[^\]]*\]\(/.test(out)) {
-        out = out.replace(/^[(`\{"']+\s*/g, '').trim();
+        out = out.replace(/^[(`\{"'“”‘’]+\s*/g, '').trim();
       }
 
       // Strip <...> wrappers.
@@ -1149,17 +1149,17 @@ export function extractFromStdin({ content, source }) {
       //   <https://example.com|label>
       // which are common when copying from Slack.
       // Also tolerate trailing punctuation after the wrapper, e.g. "(<...>)".
-      const slack = out.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
+      const slack = out.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
       if (slack) out = slack[1];
 
-      const m = out.match(/^<\s*(https?:\/\/[^>\s]+)\s*>\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
+      const m = out.match(/^<\s*(https?:\/\/[^>\s]+)\s*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
       if (m) out = m[1];
 
       // Accept markdown link form:
       //   [label](https://example.com)
       // Keep this conservative: only if the URL is http(s).
       // Also tolerate trailing punctuation after the wrapper.
-      const md = out.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)\s*[)\]>'\"`.,;:!?…。！，？]*$/i);
+      const md = out.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
       if (md) out = md[1];
 
       // Common chat/markdown wrappers.
@@ -1167,12 +1167,12 @@ export function extractFromStdin({ content, source }) {
       //   `https://...`
       //   (https://...)
       //   "https://..."
-      out = out.replace(/^[(`\[\{"']+\s*/g, '');
+      out = out.replace(/^[(`\[\{"'“”‘’]+\s*/g, '');
 
       // Strip common trailing punctuation from copy/paste.
       // Include ! and ? which frequently get appended in chat.
       // Also strip a few Unicode punctuation variants (…, fullwidth !/? and Chinese/Japanese punctuation).
-      out = out.replace(/[)\]>'\"`.,;:!?…。！，？]+$/g, '');
+      out = out.replace(/[)\]>'\"`“”‘’.,;:!?…。！，？]+$/g, '');
       return out;
     }
 
