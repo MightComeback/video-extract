@@ -51,6 +51,24 @@ If the link is auth-gated (401/403) or otherwise not fetchable, paste transcript
 pbpaste | fathom2action --stdin
 ```
 
+You can also paste a small “envelope” for better output (copy/paste friendly):
+
+```text
+Source: https://fathom.video/share/<TOKEN>
+Title: Login breaks on Safari
+
+00:01 Alice: It crashes when I click “Sign in”…
+```
+
+Or (same thing) without prefixes:
+
+```text
+https://fathom.video/share/<TOKEN>
+# Login breaks on Safari
+
+00:01 Alice: It crashes when I click “Sign in”…
+```
+
 ### 1) Auth-gated Fathom link → transcript + video.mp4 + 5-min segments
 
 ```bash
