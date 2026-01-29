@@ -23,7 +23,7 @@ function normalizeUrlLike(s) {
   if (!/^\[[^\]]*\]\(/.test(v0)) {
     // Also strip common quote prefixes from email/chat copy/paste (e.g., "> ").
     v0 = v0.replace(/^>+\s*/g, '').trim();
-    v0 = v0.replace(/^[(`\{"'“”‘’]+\s*/g, '').trim();
+    v0 = v0.replace(/^[(`\{"'“”‘’«»‹›]+\s*/g, '').trim();
   }
 
   // Allow copy/paste-friendly forms like:

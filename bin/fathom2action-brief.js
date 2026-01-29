@@ -269,7 +269,7 @@ async function main() {
     if (!/^\[[^\]]*\]\(/.test(out)) {
       // Strip common quote prefixes from email/chat copy/paste (e.g., "> ").
       out = out.replace(/^>+\s*/g, '').trim();
-      out = out.replace(/^[(`\{"'“”‘’]+\s*/g, '').trim();
+      out = out.replace(/^[(`\{"'“”‘’«»‹›]+\s*/g, '').trim();
     }
 
     // Allow chat/markdown-friendly wrappers like:
