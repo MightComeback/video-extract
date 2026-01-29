@@ -193,6 +193,7 @@ Env defaults (flags win):
 - `--out-dir <dir>`: write `transcript.txt` + `extracted.json` + media artifacts
 - `--cookie <cookie>` / `--cookie-file <path>`
 - `--referer <url>` / `FATHOM_REFERER=...`: set an explicit `Referer` header (some auth flows/CDNs require this)
+- `--user-agent <ua>` / `FATHOM_USER_AGENT=...`: override the `User-Agent` header used for fetch + media download
 - `--split-seconds <n>` / `FATHOM_SPLIT_SECONDS=<n>`
 - `--no-download` (skip video download)
 - `--no-split` (download video but don’t split)
