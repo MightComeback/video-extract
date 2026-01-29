@@ -142,6 +142,15 @@ test('brief teaser strips speaker labels when dash separator has no spaces', asy
   assert.match(stdout, /^- Yep/m);
 });
 
+test('brief teaser strips numbered list prefixes with non-ASCII separators (e.g. 1． / 1、)', async () => {
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: ['1． 00:01 Alice: It crashes', '2、 00:02 Bob: Yep', ''].join('\n'),
+  });
+
+  assert.match(stdout, /^- It crashes/m);
+  assert.match(stdout, /^- Yep/m);
+});
+
 test('brief normalizes Source URLs with leading quote prefixes (> ...)', () => {
   const brief = renderBrief({
     source: '> <https://example.com/path?q=1>',

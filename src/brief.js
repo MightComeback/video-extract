@@ -145,7 +145,12 @@ function normalizeBullets(lines, { max = 6 } = {}) {
     // Also accept numbered list prefixes commonly produced by note exports:
     //  - "1. ..."
     //  - "2) ..."
-    const noNumber = noBullet.replace(/^\d{1,3}[.)]\s*/, '');
+    // Also accept some common non-ASCII list separators used in localized note exports:
+    //  - Fullwidth dot: 1． ... (U+FF0E)
+    //  - Ideographic full stop: 1。 ... (U+3002)
+    //  - Ideographic comma: 1、 ... (U+3001)
+    //  - Fullwidth close paren: 1） ... (U+FF09)
+    const noNumber = noBullet.replace(/^\d{1,3}(?:[.)]|[\uFF0E\u3002\u3001\uFF09])\s*/, '');
     const noTs = stripLeadingTimestamp(noNumber);
     const cleaned = stripLeadingSpeakerLabel(noTs);
     if (!cleaned) continue;
