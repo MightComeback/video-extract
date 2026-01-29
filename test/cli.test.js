@@ -589,3 +589,28 @@ test('supports --referer for pages that require a Referer header', async () => {
     await s.close();
   }
 });
+
+test('supports FATHOM_REFERER env var for pages that require a Referer header', async () => {
+  const s = await withServer((req, res) => {
+    const referer = String(req.headers.referer || '');
+    if (!referer.includes('https://fathom.video/')) {
+      res.writeHead(403, { 'content-type': 'text/plain' });
+      res.end('missing referer');
+      return;
+    }
+
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end('<html><head><title>Env Referer OK</title></head><body><p>hello transcript</p></body></html>');
+  });
+
+  try {
+    const { stdout } = await runExtract([`${s.url}/share/abc`, '--no-download'], {
+      env: { FATHOM_REFERER: 'https://fathom.video/' },
+    });
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.equal(obj.title, 'Env Referer OK');
+  } finally {
+    await s.close();
+  }
+});

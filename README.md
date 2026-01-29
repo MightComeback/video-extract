@@ -166,7 +166,7 @@ Env defaults (flags win):
 ## CLI flags (extractor: `fathom-extract`)
 - `--out-dir <dir>`: write `transcript.txt` + `extracted.json` + media artifacts
 - `--cookie <cookie>` / `--cookie-file <path>`
-- `--referer <url>`: set an explicit `Referer` header (some auth flows/CDNs require this)
+- `--referer <url>` / `FATHOM_REFERER=...`: set an explicit `Referer` header (some auth flows/CDNs require this)
 - `--split-seconds <n>` / `FATHOM_SPLIT_SECONDS=<n>`
 - `--no-download` (skip video download)
 - `--no-split` (download video but don’t split)
