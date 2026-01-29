@@ -1078,7 +1078,16 @@ export function extractFromStdin({ content, source }) {
 
   let idx = 0;
   const first = String(lines[0] || '').trim();
-  if (/^https?:\/\//i.test(first)) {
+
+  // Allow a "Source:" prefix (common in briefs) as well as a bare URL.
+  // Examples:
+  //   Source: https://fathom.video/share/...
+  //   Fathom: https://fathom.video/share/...
+  const sourcePrefixed = first.match(/^(?:source|fathom)\s*:\s*(https?:\/\/\S+)\s*$/i);
+  if (sourcePrefixed) {
+    src = sourcePrefixed[1];
+    idx = 1;
+  } else if (/^https?:\/\//i.test(first)) {
     src = first;
     idx = 1;
   }
