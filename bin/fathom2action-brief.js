@@ -41,7 +41,7 @@ Env:
   F2A_SOURCE            Default for --source (flags win).
   F2A_TITLE             Default for --title (flags win).
   F2A_CMD               Default for --cmd (flags win).
-  F2A_NO_NOTE          If truthy (1/true/yes/on), behave as if --no-note was passed.
+  F2A_NO_NOTE           If truthy (1/true/yes/on), behave as if --no-note was passed.
 
 Notes:
   - You can paste URLs directly from chat/markdown, e.g. <https://...>, <https://...|label>, or [label](https://...). Trailing punctuation is ignored.
