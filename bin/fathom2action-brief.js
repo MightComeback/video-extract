@@ -32,6 +32,7 @@ Env:
   F2A_MAX_TIMESTAMPS     Default for --max-timestamps (flags win).
   F2A_COPY              If truthy (1/true/yes/on), behave as if --copy was passed.
   F2A_COPY_BRIEF        If truthy (1/true/yes/on), behave as if --copy-brief was passed.
+  F2A_OUT               Default for --out (flags win).
 
 Notes:
   - You can paste URLs directly from chat/markdown, e.g. <https://...>, <https://...|label>, or [label](https://...). Trailing punctuation is ignored.
@@ -80,7 +81,13 @@ async function main() {
 
   const sourceOverride = takeFlagValue('--source');
   const titleOverride = takeFlagValue('--title');
-  const outPath = takeFlagValue('--out');
+
+  function envOrUndefined(name) {
+    const raw = String(process.env[name] || '').trim();
+    return raw === '' ? undefined : raw;
+  }
+
+  const outPath = takeFlagValue('--out') ?? envOrUndefined('F2A_OUT');
 
   // Defaults can be set via env for convenience in shell scripts.
   // Flags always win.
