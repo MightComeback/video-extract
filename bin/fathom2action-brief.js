@@ -64,6 +64,9 @@ async function main() {
     // - X11: xclip / xsel
     const candidates = [
       { cmd: 'pbcopy', args: [] },
+      // Windows (Git Bash / WSL): clipboard helper
+      { cmd: 'clip.exe', args: [] },
+      { cmd: 'clip', args: [] },
       { cmd: 'wl-copy', args: [] },
       { cmd: 'xclip', args: ['-selection', 'clipboard'] },
       { cmd: 'xsel', args: ['--clipboard', '--input'] },
