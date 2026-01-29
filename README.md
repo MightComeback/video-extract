@@ -193,3 +193,11 @@ Env defaults (flags win):
 - `--pretty` (pretty JSON)
 
 <!-- Tracking: MIG-14 -->
+
+## Run locally
+
+```bash
+bun install
+bun test
+bun run start
+```
