@@ -258,7 +258,34 @@ async function main() {
     process.exit(2);
   }
 
-  const url = args[0];
+  function cleanUrl(u) {
+    let out = String(u || '').trim();
+    if (!out) return '';
+
+    // Allow chat/markdown-friendly wrappers like:
+    //   <https://...>
+    // and Slack-style links like:
+    //   <https://...|label>
+    const slack = out.match(/^<\s*(https?:\/\/[^|>\s]+)\s*\|[^>]*>$/i);
+    if (slack) out = slack[1];
+
+    const m = out.match(/^<\s*(https?:\/\/[^>\s]+)\s*>$/i);
+    if (m) out = m[1];
+
+    // Strip common trailing punctuation from copy/paste:
+    //   https://...)
+    //   https://...,;
+    //   https://...!? (common in chat)
+    out = out.replace(/[)\]>'\"`.,;:!?]+$/g, '');
+    return out;
+  }
+
+  const url = cleanUrl(args[0]);
+  // For tests and convenience, allow `data:` URLs too.
+  if (!/^https?:\/\//i.test(url) && !/^data:/i.test(url)) {
+    console.error(`ERR: expected a URL starting with http(s):// or data: (got: ${args[0]})`);
+    process.exit(2);
+  }
 
   const extracted = await extractFromUrl(url, {
     downloadMedia: !noDownload,
