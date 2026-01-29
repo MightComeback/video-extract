@@ -27,6 +27,9 @@ function normalizeUrlLike(s) {
   const md = v0.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)$/i);
   if (md) return md[1];
 
+  // Strip common trailing punctuation from chat copy/paste (e.g. "https://...)").
+  if (/^https?:\/\//i.test(v0)) return v0.replace(/[)\]>'\".,;:]+$/g, '');
+
   return v0;
 }
 
