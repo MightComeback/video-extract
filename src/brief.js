@@ -50,6 +50,10 @@ function normalizeUrlLike(s) {
   // Include backticks for cases like: `https://example.com`
   if (/^https?:\/\//i.test(v0)) return v0.replace(/[)\]>'\"`“”‘’.,;:!?…。！，？]+$/g, '');
 
+  // Convenience: accept bare fathom.video URLs (no scheme) from chat copy/paste.
+  const bare = v0.match(/^(?:www\.)?fathom\.video\/[\S]+/i);
+  if (bare) return `https://${bare[0]}`.replace(/[)\]>'\"`“”‘’.,;:!?…。！，？]+$/g, '');
+
   return v0;
 }
 

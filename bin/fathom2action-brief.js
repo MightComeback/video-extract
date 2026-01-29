@@ -283,6 +283,14 @@ async function main() {
     //   https://...!? (common in chat)
     // Also strip a few Unicode punctuation variants (…, fullwidth !/? and Chinese/Japanese punctuation).
     out = out.replace(/[)\]>'\"`“”‘’.,;:!?…。！，？]+$/g, '');
+
+    // Convenience: accept bare fathom.video URLs (no scheme) from chat copy/paste.
+    // Example: fathom.video/share/<TOKEN>
+    if (!/^https?:\/\//i.test(out)) {
+      const bare = out.match(/^(?:www\.)?fathom\.video\/[\S]+/i);
+      if (bare) out = `https://${bare[0]}`;
+    }
+
     return out;
   }
 

@@ -16,6 +16,18 @@ test('extractFromStdin supports markdown headings like "## Title"', () => {
   assert.match(out.text, /00:01/);
 });
 
+test('extractFromStdin accepts bare fathom.video URLs (no scheme) and normalizes to https://', () => {
+  const input = [
+    'Source: fathom.video/share/abc',
+    'Title: Bare URL',
+    '00:01 Alice: it crashes',
+  ].join('\n');
+
+  const out = extractFromStdin({ content: input, source: 'stdin' });
+  assert.equal(out.source, 'https://fathom.video/share/abc');
+  assert.equal(out.title, 'Bare URL');
+});
+
 test('extractFromStdin tolerates quoted envelope lines ("> ") for Source and Title', () => {
   const input = [
     '> Source: https://fathom.video/share/abc',
