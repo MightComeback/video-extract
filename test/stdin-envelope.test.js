@@ -27,3 +27,15 @@ test('extractFromStdin accepts angle-bracket wrapped Source URLs', () => {
   assert.equal(out.source, 'https://fathom.video/share/abc');
   assert.equal(out.title, 'Some title');
 });
+
+test('extractFromStdin accepts common chat wrappers around Source URLs', () => {
+  const input = [
+    'Source: `https://fathom.video/share/abc`',
+    'Title: Wrapped URL',
+    '00:01 Alice: it crashes',
+  ].join('\n');
+
+  const out = extractFromStdin({ content: input, source: 'stdin' });
+  assert.equal(out.source, 'https://fathom.video/share/abc');
+  assert.equal(out.title, 'Wrapped URL');
+});

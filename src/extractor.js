@@ -1123,8 +1123,15 @@ export function extractFromStdin({ content, source }) {
       const m = out.match(/^<\s*(https?:\/\/[^>\s]+)\s*>$/i);
       if (m) out = m[1];
 
+      // Common chat/markdown wrappers.
+      // Examples:
+      //   `https://...`
+      //   (https://...)
+      //   "https://..."
+      out = out.replace(/^[(`\[\{"']+\s*/g, '');
+
       // Strip common trailing punctuation from copy/paste
-      out = out.replace(/[)\]>'\".,;:]+$/g, '');
+      out = out.replace(/[)\]>'\"`.,;:]+$/g, '');
       return out;
     }
 
