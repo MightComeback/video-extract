@@ -1030,7 +1030,7 @@ export async function extractFromUrl(
   const base = {
     ok: false,
     source: url,
-    text: 'Unable to fetch this link (likely auth/cookies). If you already have transcript/notes, pipe them into: fathom-extract --stdin',
+    text: 'Unable to fetch this link (likely auth/cookies). If you already have transcript/notes, pipe them into: fathom2action --stdin',
     mediaUrl: '',
     title: '',
     suggestedTitle: '',
