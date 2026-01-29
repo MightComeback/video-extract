@@ -109,6 +109,15 @@ test('brief teaser strips speaker labels with role metadata (parens/brackets)', 
   assert.match(stdout, /^- Yep/m);
 });
 
+test('brief teaser strips speaker labels when dash separator has no spaces', async () => {
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: ['00:01 Alice—It crashes', '00:02 Bob—Yep', ''].join('\n'),
+  });
+
+  assert.match(stdout, /^- It crashes/m);
+  assert.match(stdout, /^- Yep/m);
+});
+
 test('brief --stdin treats a leading URL line as the Source', async () => {
   const url = 'https://fathom.video/share/abc';
   const { stdout } = await runBrief(['--stdin'], {
