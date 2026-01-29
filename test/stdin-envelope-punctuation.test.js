@@ -50,3 +50,15 @@ test('extractFromStdin accepts guillemet-wrapped Source URLs (locale quotes)', (
   assert.equal(out.source, 'https://fathom.video/share/abc');
   assert.equal(out.title, 'Locale quotes');
 });
+
+test('extractFromStdin strips trailing brace punctuation from Source URLs', () => {
+  const input = [
+    'Source: <https://fathom.video/share/abc>}',
+    'Title: Brace punctuation',
+    '00:01 Alice: it crashes',
+  ].join('\n');
+
+  const out = extractFromStdin({ content: input, source: 'stdin' });
+  assert.equal(out.source, 'https://fathom.video/share/abc');
+  assert.equal(out.title, 'Brace punctuation');
+});
