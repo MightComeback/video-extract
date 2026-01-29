@@ -155,7 +155,10 @@ export function renderBrief({ cmd = 'fathom2action', source, title, transcript, 
   const howToUpdate = [
     '## How to update this brief',
     `- If you can access the Fathom link: re-run \`${cmdName} "<link>"\``,
-    `- If the link is auth-gated: copy the transcript and run \`pbpaste | ${cmdName} --stdin\``,
+    `- If the link is auth-gated: copy the transcript and pipe it into \`${cmdName} --stdin\``,
+    `- Example (macOS): \`pbpaste | ${cmdName} --stdin\``,
+    `- Example (Wayland): \`wl-paste | ${cmdName} --stdin\``,
+    `- Example (Windows PowerShell): \`Get-Clipboard | ${cmdName} --stdin\``,
   ];
 
   return [
