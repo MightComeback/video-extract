@@ -181,6 +181,7 @@ Env defaults (flags win):
 - `F2A_MAX_TIMESTAMPS=<n>`
 - `F2A_COPY=1` (behave as if `--copy` was passed)
 - `F2A_COPY_BRIEF=1` (behave as if `--copy-brief` was passed)
+- `F2A_OUT=<path>` (behave as if `--out <path>` was passed)
 
 ## CLI flags (extractor: `fathom-extract`)
 - `--out-dir <dir>`: write `transcript.txt` + `extracted.json` + media artifacts

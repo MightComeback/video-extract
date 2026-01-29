@@ -157,6 +157,20 @@ test('brief CLI supports --out to write the generated brief to a file', async ()
   assert.equal(file.trim(), stdout.trim());
 });
 
+test('brief CLI supports env var F2A_OUT as a default for --out', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-'));
+  const outPath = path.join(dir, 'brief.md');
+
+  const { stdout } = await runBrief(['<http://localhost:1/share/abc>'], {
+    env: { F2A_OUT: outPath },
+  });
+  const file = fs.readFileSync(outPath, 'utf8');
+
+  assert.ok(stdout.length > 0);
+  assert.ok(file.length > 0);
+  assert.equal(file.trim(), stdout.trim());
+});
+
 test('brief CLI treats --out - as stdout (does not create a file named "-")', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-'));
 
