@@ -129,7 +129,22 @@ async function main() {
     // We already print to stdout, so skip file I/O to avoid creating a file literally named "-".
     if (String(outPath).trim() === '-') return;
 
-    const p = path.resolve(process.cwd(), String(outPath));
+    // UX: allow `--out <dir>` (or `--out <dir>/`) and choose a sensible filename.
+    // This avoids surprising EISDIR errors when users think of --out as an output location.
+    let p = path.resolve(process.cwd(), String(outPath));
+    const looksLikeDir = /[\\/]$/.test(String(outPath));
+
+    try {
+      if (!looksLikeDir && fs.existsSync(p) && fs.statSync(p).isDirectory()) {
+        p = path.join(p, 'bug-report-brief.md');
+      } else if (looksLikeDir) {
+        fs.mkdirSync(p, { recursive: true });
+        p = path.join(p, 'bug-report-brief.md');
+      }
+    } catch {
+      // ignore; we'll fall back to treating p as a file path
+    }
+
     fs.mkdirSync(path.dirname(p), { recursive: true });
     fs.writeFileSync(p, String(text), 'utf8');
   }
