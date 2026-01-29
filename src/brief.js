@@ -56,6 +56,10 @@ function extractTimestamps(transcript, { max = 6 } = {}) {
     const line = raw.trim();
     if (!line) continue;
 
+    // Reset between lines: global regexes keep lastIndex, which can skip matches
+    // at the start of the next line.
+    re.lastIndex = 0;
+
     let m;
     while ((m = re.exec(line))) {
       const ts = String(m.groups?.ts || '').trim();

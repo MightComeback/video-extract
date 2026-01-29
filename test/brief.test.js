@@ -179,3 +179,14 @@ test('brief teaser strips bracketed/parenthesized timestamps', async () => {
   assert.match(stdout, /^- Alice: It crashes/m);
   assert.match(stdout, /^- Bob: Yep/m);
 });
+
+test('brief timestamps extraction does not skip timestamps at the start of a new line', () => {
+  const out = renderBrief({
+    title: 'Some bug',
+    transcript: ['foo 00:01', '00:05 bar', ''].join('\n'),
+  });
+
+  // Both timestamps should appear.
+  assert.match(out, /^- 00:01 — /m);
+  assert.match(out, /^- 00:05 — /m);
+});
