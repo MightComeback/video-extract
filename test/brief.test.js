@@ -66,3 +66,15 @@ test('brief --stdin treats a single URL line as the Source (empty transcript)', 
   // With no transcript, we should still render an empty teaser placeholder.
   assert.match(stdout, /^## Transcript teaser \(first lines\)/m);
 });
+
+test('brief --stdin accepts a Title line after the Source URL', async () => {
+  const url = 'https://fathom.video/share/abc';
+  const title = 'Login breaks on Safari';
+  const { stdout } = await runBrief(['--stdin'], {
+    stdin: [url, `Title: ${title}`, '00:01 Alice: It crashes', ''].join('\n'),
+  });
+
+  assert.match(stdout, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+  assert.match(stdout, new RegExp(`^Title: ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+  assert.match(stdout, /^- Alice: It crashes/m);
+});
