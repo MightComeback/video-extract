@@ -269,25 +269,39 @@ async function main() {
     //   <https://...>
     //   <https://...|label>
     //   [label](https://...)
-    //   [label](data:...)
+    // ...and tolerate leading wrappers / quoting often seen in copy-paste:
+    //   (> <https://...|label>)
+    //   "<https://...>".
+    // Keep "[label](url)" intact so we can parse it.
+    if (!/^\[[^\]]*\]\(/.test(out)) {
+      out = out.replace(/^>+\s*/g, '').trim();
+      out = out.replace(/^[(`\{"'“”‘’]+\s*/g, '').trim();
+    }
 
     // Slack: <https://...|label>
-    const slack = out.match(/^<\s*((?:https?:\/\/|data:)[^|>\s]+)\s*\|[^>]*>$/i);
+    // Also tolerate trailing punctuation after the wrapper, e.g. "(<...|label>)".
+    const slack = out.match(
+      /^<\s*((?:https?:\/\/|data:)[^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]*$/i
+    );
     if (slack) out = slack[1];
 
     // Angle brackets: <https://...>
-    const m = out.match(/^<\s*((?:https?:\/\/|data:)[^>\s]+)\s*>$/i);
+    const m = out.match(
+      /^<\s*((?:https?:\/\/|data:)[^>\s]+)\s*>\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]*$/i
+    );
     if (m) out = m[1];
 
     // Markdown link: [label](https://...)
-    const md = out.match(/^\[[^\]]*\]\(\s*((?:https?:\/\/|data:)[^)\s]+)\s*\)$/i);
+    const md = out.match(
+      /^\[[^\]]*\]\(\s*((?:https?:\/\/|data:)[^)\s]+)\s*\)\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]*$/i
+    );
     if (md) out = md[1];
 
     // Strip common trailing punctuation from copy/paste:
     //   https://...)
     //   https://...,;
     //   https://...!? (common in chat)
-    out = out.replace(/[)\]>'\"`.,;:!?]+$/g, '');
+    out = out.replace(/[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]+$/g, '');
     return out;
   }
 

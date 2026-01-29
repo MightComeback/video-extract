@@ -140,6 +140,10 @@ test('extract CLI accepts chat-wrapped URLs (angle brackets / Slack links) and s
     const { stdout: slackOut } = await runExtract([`<${base}|recording>`, '--no-download']);
     assert.equal(JSON.parse(slackOut).ok, true);
 
+    // Slack link wrapped by common chat punctuation (e.g., "(<...|label>)")
+    const { stdout: slackWrappedOut } = await runExtract([`(<${base}|recording>)`, '--no-download']);
+    assert.equal(JSON.parse(slackWrappedOut).ok, true);
+
     // Markdown link: [label](https://...)
     const { stdout: mdOut } = await runExtract([`[Recording](${base})`, '--no-download']);
     assert.equal(JSON.parse(mdOut).ok, true);
