@@ -151,6 +151,13 @@ test('brief CLI accepts guillemet-wrapped URLs (locale quotes)', async () => {
   assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc/);
 });
 
+test('brief CLI accepts brace-wrapped URLs (common in some copy/paste contexts)', async () => {
+  const { stdout, stderr } = await runBrief(['{http://localhost:1/share/abc}']);
+  assert.ok(stdout.length > 0);
+  assert.match(stderr, /NOTE: Unable to fetch this link/i);
+  assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc\b/);
+});
+
 test('brief CLI supports --out to write the generated brief to a file', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-'));
   const outPath = path.join(dir, 'brief.md');
