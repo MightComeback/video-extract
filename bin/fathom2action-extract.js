@@ -27,6 +27,7 @@ Output:
     { ok, source, text, title, suggestedTitle, mediaUrl, artifactsDir, transcriptPath, extractedJsonPath, mediaPath, mediaSegmentsDir, mediaSegments, mediaSegmentsListPath, segmentSeconds, fetchError, mediaDownloadError }
 
 Notes:
+  - You can paste URLs directly from chat/markdown, e.g. <https://...>, <https://...|label>, or [label](https://...). Trailing punctuation is ignored.
   - Default (URL mode): if mediaUrl is found, it will download a local mp4 and split into 5-minute segments (300s).
   - If --out-dir is set, the extractor will also write transcript.txt + extracted.json for easy piping to other tools.
   - For auth-gated links, pass a Cookie header via --cookie/FATHOM_COOKIE, or a cookie file via FATHOM_COOKIE_FILE/--cookie-file.
