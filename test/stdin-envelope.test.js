@@ -124,3 +124,15 @@ test('extractFromStdin accepts "Recording:" as a Source alias', () => {
   assert.equal(out.source, 'https://fathom.video/share/abc');
   assert.equal(out.title, 'Recording label');
 });
+
+test('extractFromStdin accepts "Meeting:" as a Source alias', () => {
+  const input = [
+    'Meeting: https://fathom.video/share/abc',
+    'Title: Meeting label',
+    '00:01 Alice: it crashes',
+  ].join('\n');
+
+  const out = extractFromStdin({ content: input, source: 'stdin' });
+  assert.equal(out.source, 'https://fathom.video/share/abc');
+  assert.equal(out.title, 'Meeting label');
+});
