@@ -149,7 +149,17 @@ fathom-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt -
 ## What this repo does NOT do
 - No LLM processing
 
-## CLI flags (extractor)
+## CLI flags (brief generator: `fathom2action`)
+- `--stdin` / `-`: read transcript/notes from stdin (use this when the share link is auth-gated)
+- `--copy`: copy the generated brief to clipboard (best-effort; tries `pbcopy`, `wl-copy`, `xclip`, or `xsel`)
+- `--out <path>`: also write the generated brief to a file
+- `--source <url>`: override the `Source` field (handy with `--stdin`)
+- `--title <text>`: override the `Title` field (handy with `--stdin`)
+- `--no-note`: suppress the helpful stderr hint printed when a link can’t be fetched
+- `--max-teaser <n>`: max number of transcript teaser bullets to render (default: 6; use 0 to hide)
+- `--max-timestamps <n>`: max number of timestamps to render (default: 6; use 0 to hide)
+
+## CLI flags (extractor: `fathom-extract`)
 - `--out-dir <dir>`: write `transcript.txt` + `extracted.json` + media artifacts
 - `--cookie <cookie>` / `--cookie-file <path>`
 - `--referer <url>`: set an explicit `Referer` header (some auth flows/CDNs require this)
