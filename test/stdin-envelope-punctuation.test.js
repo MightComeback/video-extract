@@ -26,3 +26,15 @@ test('extractFromStdin also strips common Unicode trailing punctuation from Sour
   assert.equal(out.source, 'https://fathom.video/share/abc');
   assert.equal(out.title, 'Unicode punctuation');
 });
+
+test('extractFromStdin strips additional locale punctuation (guillemets / CJK brackets) from Source URLs', () => {
+  const input = [
+    'Source: https://fathom.video/share/abc»）』',
+    'Title: Locale punctuation',
+    '00:01 Alice: it crashes',
+  ].join('\n');
+
+  const out = extractFromStdin({ content: input, source: 'stdin' });
+  assert.equal(out.source, 'https://fathom.video/share/abc');
+  assert.equal(out.title, 'Locale punctuation');
+});

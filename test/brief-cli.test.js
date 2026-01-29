@@ -114,6 +114,14 @@ test('brief CLI strips common trailing chat punctuation from URLs', async () => 
     assert.match(stderr, /NOTE: Unable to fetch this link/i);
     assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc\b/);
   }
+
+  {
+    // Common when copy/pasting from some locales / apps.
+    const { stdout, stderr } = await runBrief(['http://localhost:1/share/abc»）』']);
+    assert.ok(stdout.length > 0);
+    assert.match(stderr, /NOTE: Unable to fetch this link/i);
+    assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc\b/);
+  }
 });
 
 test('brief CLI strips parenthetical labels after URLs', async () => {

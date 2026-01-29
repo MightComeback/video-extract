@@ -270,16 +270,16 @@ async function main() {
     // and Slack-style links like:
     //   <https://...|label>
     // Also tolerate trailing punctuation after the wrapper, e.g. "(<...>)".
-    const slack = out.match(/^<\s*([^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
+    const slack = out.match(/^<\s*([^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]*$/i);
     if (slack) out = slack[1];
 
-    const m = out.match(/^<\s*([^>\s]+)\s*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
+    const m = out.match(/^<\s*([^>\s]+)\s*>\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]*$/i);
     if (m) out = m[1];
 
     // Markdown link wrapper (copy/paste from docs):
     //   [label](https://...)
     // Also tolerate trailing punctuation after the wrapper.
-    const md = out.match(/^\s*\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
+    const md = out.match(/^\s*\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]*$/i);
     if (md) out = md[1];
 
     // Strip common trailing punctuation from copy/paste:
@@ -287,7 +287,7 @@ async function main() {
     //   https://...,;
     //   https://...!? (common in chat)
     // Also strip a few Unicode punctuation variants (…, fullwidth !/? and Chinese/Japanese punctuation).
-    out = out.replace(/[)\]>'\"`“”‘’.,;:!?…。！，？]+$/g, '');
+    out = out.replace(/[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]+$/g, '');
 
     // Convenience: accept bare fathom.video URLs (no scheme) from chat copy/paste.
     // Example: fathom.video/share/<TOKEN>

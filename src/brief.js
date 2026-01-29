@@ -32,7 +32,7 @@ function normalizeUrlLike(s) {
   //   <https://example.com|label>
   // so we don't carry wrappers into the rendered markdown.
   // Also tolerate trailing chat punctuation after the wrapper, e.g. "(<...>)".
-  const slack = v0.match(/^<\s*([^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
+  const slack = v0.match(/^<\s*([^|>\s]+)\s*\|[^>]*>\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]*$/i);
   if (slack) {
     const u = String(slack[1] || '').trim();
     if (/^https?:\/\//i.test(u)) return u;
@@ -40,7 +40,7 @@ function normalizeUrlLike(s) {
     if (bare) return `https://${bare[0]}`;
   }
 
-  const angle = v0.match(/^<\s*([^>\s]+)\s*>\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
+  const angle = v0.match(/^<\s*([^>\s]+)\s*>\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]*$/i);
   if (angle) {
     const u = String(angle[1] || '').trim();
     if (/^https?:\/\//i.test(u)) return u;
@@ -51,7 +51,7 @@ function normalizeUrlLike(s) {
   // Accept markdown link form:
   //   [label](https://example.com)
   // Also tolerate trailing punctuation after the wrapper.
-  const md = v0.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)\s*[)\]>'\"`“”‘’.,;:!?…。！，？]*$/i);
+  const md = v0.match(/^\[[^\]]*\]\(\s*(https?:\/\/[^)\s]+)\s*\)\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]*$/i);
   if (md) return md[1];
 
   // Strip common trailing punctuation from chat copy/paste (e.g. "https://...)").
@@ -63,7 +63,7 @@ function normalizeUrlLike(s) {
     // Only strip parenthetical suffixes when separated by whitespace to avoid mangling URLs
     // that legitimately contain parentheses.
     v0 = v0.replace(/\s+\([^)]*\)\s*$/g, '');
-    return v0.replace(/[)\]>'\"`“”‘’.,;:!?…。！，？]+$/g, '');
+    return v0.replace(/[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]+$/g, '');
   }
 
   // Convenience: accept bare fathom.video URLs (no scheme) from chat copy/paste.
@@ -71,7 +71,7 @@ function normalizeUrlLike(s) {
   if (bare) {
     let u = `https://${bare[0]}`;
     u = u.replace(/\s+\([^)]*\)\s*$/g, '');
-    return u.replace(/[)\]>'\"`“”‘’.,;:!?…。！，？]+$/g, '');
+    return u.replace(/[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』]+$/g, '');
   }
 
   return v0;
