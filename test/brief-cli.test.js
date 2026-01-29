@@ -56,6 +56,13 @@ test('brief CLI accepts Slack-style wrapped URLs (<url|label>)', async () => {
   assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc/);
 });
 
+test('brief CLI strips common trailing chat punctuation from URLs', async () => {
+  const { stdout, stderr } = await runBrief(['http://localhost:1/share/abc!)']);
+  assert.ok(stdout.length > 0);
+  assert.match(stderr, /NOTE: Unable to fetch this link/i);
+  assert.match(stdout, /Source: http:\/\/localhost:1\/share\/abc\b/);
+});
+
 test('brief CLI supports --out to write the generated brief to a file', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fathom2action-'));
   const outPath = path.join(dir, 'brief.md');
