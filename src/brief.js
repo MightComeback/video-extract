@@ -241,6 +241,7 @@ export function renderBrief({
     `- Example (X11): \`xclip -selection clipboard -o | ${cmdName} --stdin\``,
     `- Example (X11): \`xsel --clipboard --output | ${cmdName} --stdin\``,
     `- Example (Windows PowerShell): \`Get-Clipboard | ${cmdName} --stdin\``,
+    `- Example (Windows cmd.exe): \`powershell -NoProfile -Command Get-Clipboard | ${cmdName} --stdin\``,
   ];
 
   return [
