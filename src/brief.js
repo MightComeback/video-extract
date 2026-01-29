@@ -12,6 +12,12 @@ export function normalizeUrlLike(s) {
   let v0 = oneLine(s);
   if (!v0) return '';
 
+  // Accept copy/paste-friendly prefixes (common in notes/envelopes):
+  //   Source: https://...
+  //   Link: <https://...>
+  //   URL: https://...
+  v0 = v0.replace(/^(?:source|link|url)\s*:\s*/i, '').trim();
+
   // Strip common leading wrappers from chat/markdown copy/paste early so we can still
   // recognize wrapped URLs like: ( <https://...|label> )
   // Examples:
