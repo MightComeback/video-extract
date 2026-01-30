@@ -254,7 +254,7 @@ function extractEnvironment(transcript) {
   const s = String(transcript || '').toLowerCase();
   const hits = [];
 
-  const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera'];
+  const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi'];
   const os = ['mac', 'macos', 'windows', 'linux', 'android', 'ios', 'iphone', 'ipad'];
 
   for (const b of browsers) {
