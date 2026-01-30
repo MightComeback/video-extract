@@ -25,3 +25,9 @@ test('MIG-14: extractEnvironment detects Ubuntu', (t) => {
   const output = renderBrief({ transcript });
   assert.match(output, /Browser \/ OS: .*Ubuntu/);
 });
+
+test('MIG-14: extractEnvironment detects Samsung Internet', (t) => {
+  const transcript = "I saw this on Samsung Internet browser.";
+  const output = renderBrief({ transcript });
+  assert.ok(output.includes('Browser / OS: Samsung Internet'));
+});
