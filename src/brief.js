@@ -227,6 +227,34 @@ function extractTimestamps(transcript, { max = 6 } = {}) {
   return out;
 }
 
+function extractEnvironment(transcript) {
+  const s = String(transcript || '').toLowerCase();
+  const hits = [];
+
+  const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera'];
+  const os = ['mac', 'macos', 'windows', 'linux', 'android', 'ios', 'iphone', 'ipad'];
+
+  for (const b of browsers) {
+    if (s.includes(b)) hits.push(b.charAt(0).toUpperCase() + b.slice(1));
+  }
+  for (const o of os) {
+    if (s.includes(o)) {
+      // Normalize macos -> macOS, ios -> iOS
+      if (o === 'macos') hits.push('macOS');
+      else if (o === 'ios' || o === 'iphone' || o === 'ipad') hits.push('iOS');
+      else hits.push(o.charAt(0).toUpperCase() + o.slice(1));
+    }
+  }
+
+  // Dedupe keys like Mac vs macOS
+  const unique = [...new Set(hits)];
+  if (unique.includes('Mac') && unique.includes('macOS')) {
+    unique.splice(unique.indexOf('Mac'), 1);
+  }
+
+  return unique.join(', ');
+}
+
 export function renderBrief({
   cmd = 'fathom2action',
   source,
@@ -248,6 +276,7 @@ export function renderBrief({
 
   const teaser = normalizeBullets(transcript, { max: Number.isFinite(teaserLimit) ? teaserLimit : 6 });
   const timestamps = extractTimestamps(transcript, { max: Number.isFinite(timestampsLimit) ? timestampsLimit : 6 });
+  const envLikely = extractEnvironment(transcript);
 
   const header = [
     '# Bug report brief',
@@ -301,7 +330,7 @@ export function renderBrief({
     '## Environment / context',
     '- Who: ',
     '- Where (page/URL): ',
-    '- Browser / OS: ',
+    `- Browser / OS: ${envLikely || ''}`,
     '- Build / SHA: ',
     `- When: ${d || ''}`,
     '',
