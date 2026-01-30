@@ -435,6 +435,22 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check API payloads / Validation');
   }
 
+  // Redis / Connection
+  if (
+    actualHints.some(h => /redis|connection refused|econnrefused|socket hang up/i.test(h)) ||
+    /redis|connection refused|econnrefused|socket hang up/i.test(lowerT)
+  ) {
+    actions.add('Check Redis / backend connectivity');
+  }
+
+  // File Upload
+  if (
+    actualHints.some(h => /upload|attachment|file too large|payload too large|entity too large/i.test(h)) ||
+    /upload|attachment|file too large|payload too large|entity too large/i.test(lowerT)
+  ) {
+    actions.add('Check file upload limits / S3');
+  }
+
   // API Rates / CORS
   if (
     actualHints.some(h => /cors|access-control-allow-origin|cross-origin|blocked by cors/i.test(h)) ||
