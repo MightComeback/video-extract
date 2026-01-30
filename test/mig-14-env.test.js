@@ -13,3 +13,9 @@ test('MIG-14: extractEnvironment detects Chromium', (t) => {
   const output = renderBrief({ transcript });
   assert.ok(output.includes('Browser / OS: Chromium'));
 });
+
+test('MIG-14: extractEnvironment detects DuckDuckGo', (t) => {
+  const transcript = "I'm using DuckDuckGo browser on my phone.";
+  const output = renderBrief({ transcript });
+  assert.ok(output.includes('Browser / OS: DuckDuckGo'));
+});

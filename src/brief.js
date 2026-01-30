@@ -254,11 +254,14 @@ function extractEnvironment(transcript) {
   const s = String(transcript || '').toLowerCase();
   const hits = [];
 
-  const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium'];
+  const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo'];
   const os = ['mac', 'macos', 'windows', 'linux', 'android', 'ios', 'iphone', 'ipad'];
 
   for (const b of browsers) {
-    if (new RegExp(`\\b${b}\\b`, 'i').test(s)) hits.push(b.charAt(0).toUpperCase() + b.slice(1));
+    if (new RegExp(`\\b${b}\\b`, 'i').test(s)) {
+      if (b === 'duckduckgo') hits.push('DuckDuckGo');
+      else hits.push(b.charAt(0).toUpperCase() + b.slice(1));
+    }
   }
   for (const o of os) {
     if (new RegExp(`\\b${o}\\b`, 'i').test(s)) {
