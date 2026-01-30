@@ -1,0 +1,38 @@
+import { test } from 'node:test';
+import assert from 'node:assert';
+import { renderBrief } from '../src/brief.js';
+
+test('renderBrief produces minimal markdown with empty input', () => {
+  const output = renderBrief();
+  assert.ok(output.includes('# Bug report brief'));
+  assert.ok(output.includes('Source: (unknown)'));
+});
+
+test('renderBrief includes source and title', () => {
+  const output = renderBrief({
+    source: 'https://fathom.video/share/12345',
+    title: 'My Meeting'
+  });
+  assert.ok(output.includes('Source: https://fathom.video/share/12345'));
+  assert.ok(output.includes('Title: My Meeting'));
+  assert.ok(output.includes('- Fathom: https://fathom.video/share/12345'));
+});
+
+test('renderBrief includes transcript teaser', () => {
+  const transcript = `
+00:01 Hello
+00:02 World
+00:03 Stick to the plan
+  `;
+  const output = renderBrief({ transcript });
+  assert.ok(output.includes('## Transcript teaser'));
+  assert.ok(output.includes('- Hello'));
+  assert.ok(output.includes('- World'));
+});
+
+test('renderBrief respects timestamp limit', () => {
+  const transcript = '00:01 t1\n00:02 t2';
+  // If we pass timestampsMax: 0, it should hide the section
+  const output = renderBrief({ transcript, timestampsMax: 0 });
+  assert.ok(!output.includes('## Timestamps'));
+});
