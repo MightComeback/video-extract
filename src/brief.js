@@ -257,6 +257,7 @@ function extractEnvironment(transcript) {
 
   const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo', 'samsung internet'];
   const os = ['mac', 'macos', 'windows', 'ubuntu', 'fedora', 'debian', 'linux', 'android', 'ios', 'iphone', 'ipad'];
+  const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei'];
 
   for (const b of browsers) {
     if (new RegExp(`\\b${b}\\b`, 'i').test(s)) {
@@ -271,6 +272,11 @@ function extractEnvironment(transcript) {
       if (o === 'macos') hits.push('macOS');
       else if (o === 'ios' || o === 'iphone' || o === 'ipad') hits.push('iOS');
       else hits.push(o.charAt(0).toUpperCase() + o.slice(1));
+    }
+  }
+  for (const d of devices) {
+    if (new RegExp(`\\b${d}\\b`, 'i').test(s)) {
+      hits.push(d.charAt(0).toUpperCase() + d.slice(1));
     }
   }
 
