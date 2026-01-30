@@ -10,7 +10,10 @@ import { normalizeUrlLike } from './brief.js';
 export function readStdin() {
   // If the user runs `fathom2action --stdin` interactively without piping input,
   // stdin is a TTY and the process would otherwise hang waiting for EOF.
-  if (process.stdin.isTTY) return Promise.resolve('');
+  if (process.stdin.isTTY) {
+    console.error('Warning: --stdin flag used but no input piped (stdin is a TTY).');
+    return Promise.resolve('');
+  }
 
   return new Promise((resolve) => {
     let data = '';
