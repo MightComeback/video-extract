@@ -477,6 +477,21 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check rate limits');
   }
 
+  // i18n / Translation
+  if (
+    actualHints.some(h => /translation|missing key|wrong language|incorrect language|still in english|not translated|language.*set to|i18n|locale|localization|shows.*key|displays.*key/i.test(h)) ||
+    /translation|missing key|wrong language|incorrect language|still in english|not translated|language.*set to|i18n|locale|localization|shows.*key|displays.*key/i.test(lowerT)
+  ) {
+    actions.add('Check translations / i18n keys');
+  }
+
+  // Variable interpolation
+  if (
+    lowerT.includes('{{') || lowerT.includes('}}') || /interpolation|placeholder/i.test(lowerT)
+  ) {
+    actions.add('Check variable interpolation');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
