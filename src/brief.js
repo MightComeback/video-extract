@@ -255,7 +255,7 @@ function extractEnvironment(transcript) {
   const hits = [];
 
   const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo'];
-  const os = ['mac', 'macos', 'windows', 'linux', 'android', 'ios', 'iphone', 'ipad'];
+  const os = ['mac', 'macos', 'windows', 'ubuntu', 'fedora', 'debian', 'linux', 'android', 'ios', 'iphone', 'ipad'];
 
   for (const b of browsers) {
     if (new RegExp(`\\b${b}\\b`, 'i').test(s)) {

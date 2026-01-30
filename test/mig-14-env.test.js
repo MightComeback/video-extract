@@ -19,3 +19,9 @@ test('MIG-14: extractEnvironment detects DuckDuckGo', (t) => {
   const output = renderBrief({ transcript });
   assert.ok(output.includes('Browser / OS: DuckDuckGo'));
 });
+
+test('MIG-14: extractEnvironment detects Ubuntu', (t) => {
+  const transcript = "I am running this on Ubuntu Linux.";
+  const output = renderBrief({ transcript });
+  assert.match(output, /Browser \/ OS: .*Ubuntu/);
+});
