@@ -35,3 +35,8 @@ test('resolveAuthor handles metadata with mixed quotes', () => {
   const html = '<html><head><meta name="author" content="Liam O\'Connor"></head><body></body></html>';
   assert.strictEqual(resolveAuthor(html), "Liam O'Connor");
 });
+
+test('resolveAuthor handles reversed attributes', () => {
+  const html = '<html><head><meta content="Reverse" name="author"></head><body></body></html>';
+  assert.strictEqual(resolveAuthor(html), 'Reverse');
+});
