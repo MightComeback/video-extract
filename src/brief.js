@@ -372,7 +372,7 @@ function generateNextActions(transcript, actualHints = []) {
 
   // Regression
   if (
-    /regression|used to work|worked before|worked yesterday|broken since|last update/i.test(lowerT)
+    /regression|used to work|worked before|worked yesterday|broken since|last update|stopped working/i.test(lowerT)
   ) {
     actions.add('Check recent changes');
   }
