@@ -543,3 +543,26 @@ test('brief normalizes data: URLs in Source (useful for tests/local repros)', ()
 
   assert.match(out, new RegExp(`^Source: ${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
 });
+
+test('brief renders gracefully with minimal/undefined inputs (MIG-14 resilience)', () => {
+  const out = renderBrief({
+    source: undefined,
+    title: undefined,
+    date: undefined,
+    transcript: undefined,
+    fetchError: undefined,
+  });
+
+  assert.match(out, /^# Bug report brief/m);
+  assert.match(out, /^Source: \(unknown\)/m);
+  assert.match(out, /^Title: \(unknown\)/m);
+  assert.match(out, /^- \(add Fathom link\)$/m);
+  assert.match(out, /^## Next actions/m);
+});
+
+test('brief renders fetch error when present', () => {
+  const out = renderBrief({
+    fetchError: '404 Not Found',
+  });
+  assert.match(out, /^Fetch error: 404 Not Found/m);
+});
