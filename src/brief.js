@@ -418,6 +418,14 @@ function generateNextActions(transcript, actualHints = []) {
     actions.add('Clear cache / cookies');
   }
 
+  // API / Validation
+  if (
+    actualHints.some(h => /400|bad request|validation|invalid param|invalid input/i.test(h)) ||
+    /400|bad request|validation|invalid param|invalid input/i.test(lowerT)
+  ) {
+    actions.add('Check API payloads / Validation');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
