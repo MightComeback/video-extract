@@ -39,7 +39,9 @@ function resolveUserAgent(override = null) {
   const env = String(process.env.FATHOM_USER_AGENT || '').trim();
   if (env) return env;
 
-  return `fathom-extract/${getVersion()} (+https://github.com/MightComeback/fathom-extract)`;
+  const platform = process.platform || 'unknown';
+  const arch = process.arch || 'unknown';
+  return `fathom-extract/${getVersion()} (${platform}; ${arch}) (+https://github.com/MightComeback/fathom-extract)`;
 }
 
 function decodeHtmlEntities(s) {
