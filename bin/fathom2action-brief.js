@@ -355,6 +355,7 @@ async function main() {
     cmd: cmdName,
     source: cleanSource(sourceOverride) || cleanSource(extracted.source) || extracted.source,
     title: titleOverride || extracted.title,
+    date: extracted.date,
     transcript: extracted.text,
     fetchError: extracted.fetchError,
     teaserMax: maxTeaser,

@@ -496,19 +496,48 @@ function tryExtractTranscriptFromEmbeddedJson(html) {
   return '';
 }
 
+function extractDateFromHtml(html) {
+  const s = String(html);
+
+  // Common OpenGraph / Schema.org fields.
+  const metaDate =
+    extractMetaContent(s, { property: 'og:video:release_date' }) ||
+    extractMetaContent(s, { property: 'video:release_date' }) ||
+    extractMetaContent(s, { property: 'og:published_time' }) ||
+    extractMetaContent(s, { property: 'article:published_time' }) ||
+    extractMetaContent(s, { name: 'date' }) ||
+    extractMetaContent(s, { itemprop: 'datePublished' }) ||
+    extractMetaContent(s, { itemprop: 'uploadDate' }) ||
+    '';
+
+  if (metaDate) return metaDate;
+
+  // JSON-LD is common on video share pages.
+  // Look for "uploadDate": "2024-..." or "datePublished": "..."
+  const jsonDate = s.match(/"(?:uploadDate|datePublished|dateCreated)"\s*:\s*"([^"]+)"/i);
+  if (jsonDate && jsonDate[1]) return jsonDate[1];
+
+  // Fathom specific: sometimes in a data attribute or script.
+  // But often Fathom puts the date in the title or a subtitle like "Recorded on Jan 1, 2024".
+  // We'll stick to standard metadata for now to avoid fragility.
+
+  return '';
+}
+
 export function normalizeFetchedContent(content, baseUrl = null) {
   const s = String(content || '').trim();
-  if (!s) return { text: '', suggestedTitle: '', mediaUrl: '' };
+  if (!s) return { text: '', suggestedTitle: '', mediaUrl: '', date: '' };
   const looksHtml = /<\s*html[\s>]/i.test(s) || /<\s*title[\s>]/i.test(s);
-  if (!looksHtml) return { text: s, suggestedTitle: '', mediaUrl: '' };
+  if (!looksHtml) return { text: s, suggestedTitle: '', mediaUrl: '', date: '' };
 
   let mediaUrl = extractVideoUrlFromHtml(s);
   mediaUrl = resolveMaybeRelativeUrl(mediaUrl, baseUrl);
+  const date = extractDateFromHtml(s);
 
   // If a share page embeds a transcript/notes in JSON, prefer that over tag-stripping.
   const embeddedTranscript = tryExtractTranscriptFromEmbeddedJson(s);
   if (embeddedTranscript) {
-    return { text: embeddedTranscript, suggestedTitle: extractTitleFromHtml(s), mediaUrl };
+    return { text: embeddedTranscript, suggestedTitle: extractTitleFromHtml(s), mediaUrl, date };
   }
 
   const stripped = stripHtmlToText(s);
@@ -516,7 +545,8 @@ export function normalizeFetchedContent(content, baseUrl = null) {
   return {
     text: slicedTranscript || stripped,
     suggestedTitle: extractTitleFromHtml(s),
-    mediaUrl
+    mediaUrl,
+    date
   };
 }
 
@@ -973,6 +1003,7 @@ export async function extractFromUrl(
       text: transcriptText,
       mediaUrl: resolvedMediaUrl || '',
       title: norm.suggestedTitle || '',
+      date: norm.date || '',
       suggestedTitle: norm.suggestedTitle,
       fetchError: null,
 
@@ -1064,6 +1095,7 @@ export async function extractFromUrl(
     text: 'Unable to fetch this link (likely auth/cookies). If you already have transcript/notes, pipe them into: fathom2action --stdin',
     mediaUrl: '',
     title: '',
+    date: '',
     suggestedTitle: '',
     fetchError: fetched.error,
     artifactsDir: null,
