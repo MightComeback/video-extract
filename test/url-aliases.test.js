@@ -22,6 +22,10 @@ test('normalizeUrlLike: extended aliases', () => {
   strictEqual(normalizeUrlLike(`Meeting - ${u}`), u);
   strictEqual(normalizeUrlLike(`Zoom link - ${u}`), u);
   
+  // Specific platforms (Slack)
+  strictEqual(normalizeUrlLike(`Slack huddle: ${u}`), u);
+  strictEqual(normalizeUrlLike(`Huddle: ${u}`), u);
+  
   // Stacking (prefix + wrapper)
   strictEqual(normalizeUrlLike(`Meeting: <${u}>`), u);
 });
