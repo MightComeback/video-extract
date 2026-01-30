@@ -302,7 +302,13 @@ function extractEnvironment(transcript) {
 function extractBuildNumber(transcript) {
   // Look for patterns like "v1.2.3", "Build 123", "Version 1.2"
   const s = String(transcript || '');
-  const version = s.match(/(?:version|v)\s*(\d+\.\d+(?:\.\d+)?)/i);
+
+  // Look for Git SHA/commit
+  const sha = s.match(/(?:sha|commit)\s*(?:[:#]\s*)?([0-9a-f]{7,40})\b/i);
+  if (sha) return sha[1];
+
+  // Relaxed version matching to include -rc.1, -beta, etc.
+  const version = s.match(/(?:version|v)\s*(\d+\.\d+(?:\.\d+)?(?:-[\w.]+)?)/i);
   if (version) return version[1];
 
   const build = s.match(/build\s*(\d+)/i);
