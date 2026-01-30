@@ -23,6 +23,13 @@ test('renderBrief suggests checking permissions for auth issues', (t) => {
   assert.match(brief, /- \[ \] Check permissions \/ user roles/);
 });
 
+test('renderBrief suggests checking database for migration issues', (t) => {
+  const brief = renderBrief({
+    transcript: "Since the last migration, the user data is corrupt."
+  });
+  assert.match(brief, /- \[ \] Check database state \/ migrations/);
+});
+
 test('renderBrief always suggests reproducing locally', (t) => {
   const brief = renderBrief({ transcript: "Something happened." });
   assert.match(brief, /- \[ \] Reproduce locally/);
