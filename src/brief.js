@@ -336,6 +336,37 @@ function extractBugHints(transcript) {
   };
 }
 
+function generateNextActions(transcript, actualHints = []) {
+  const actions = new Set();
+  const lowerT = String(transcript || '').toLowerCase();
+  
+  // Base action
+  actions.add('Reproduce locally');
+
+  // Crash / Error analysis
+  if (
+    actualHints.some(h => /crash|error|exception|stack|trace/i.test(h)) ||
+    /crash|error|exception|stack|trace/i.test(lowerT)
+  ) {
+    actions.add('Check server logs / Sentry');
+  }
+
+  // Performance
+  if (
+    actualHints.some(h => /slow|lag|timeout|latency|loading/i.test(h)) ||
+    /slow|lag|timeout|latency|loading/i.test(lowerT)
+  ) {
+    actions.add('Check network traces');
+  }
+
+  // If mobile mentioned
+  if (/ios|android|mobile|iphone|ipad/i.test(lowerT)) {
+    actions.add('Test on physical device');
+  }
+
+  return [...actions].map(a => `- [ ] ${a}`);
+}
+
 export function renderBrief({
   cmd = 'fathom2action',
   source,
@@ -365,6 +396,7 @@ export function renderBrief({
   const envLikely = extractEnvironment(transcript);
   const speakers = extractSpeakers(transcript);
   const hints = extractBugHints(transcript);
+  const nextActions = generateNextActions(transcript, hints.actual);
 
   const header = [
     '# Bug report brief',
@@ -435,7 +467,7 @@ export function renderBrief({
       : []),
 
     '## Next actions',
-    '- [ ] ',
+    ...(nextActions.length ? nextActions : ['- [ ] ']),
     '',
 
     ...(teaserLimit > 0
