@@ -1300,3 +1300,14 @@ export function extractFromStdin({ content, source }) {
     mediaDownloadError: null,
   };
 }
+
+export function formatCsv(data) {
+  const fields = ['date', 'title', 'source', 'mediaUrl', 'description', 'text'];
+  return fields.map((k) => {
+    let val = String(data[k] || '');
+    if (val.includes('"') || val.includes(',') || val.includes('\n') || val.includes('\r')) {
+      val = '"' + val.replace(/"/g, '""') + '"';
+    }
+    return val;
+  }).join(',');
+}

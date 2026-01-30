@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import { readStdin, extractFromStdin, extractFromUrl } from '../src/extractor.js';
+import { readStdin, extractFromStdin, extractFromUrl, formatCsv } from '../src/extractor.js';
 
 function maybeWarnDeprecatedAlias() {
   const cmd = process.argv[1]?.split('/').pop() || '';
@@ -17,13 +17,13 @@ function usage(code = 0) {
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <url> [--pretty] [--out-dir <dir>] [--split-seconds 300] [--no-download] [--no-split] [--cookie <header-or-pairs>] [--cookie-file <path>] [--referer <url>] [--user-agent <ua>] [--download-media <path>]
-  ${cmd} --stdin [--source <url-or-label>] [--pretty]
-  ${cmd} - [--source <url-or-label>] [--pretty]
+  ${cmd} <url> [--pretty] [--csv] [--out-dir <dir>] [--split-seconds 300] [--no-download] [--no-split] [--cookie <header-or-pairs>] [--cookie-file <path>] [--referer <url>] [--user-agent <ua>] [--download-media <path>]
+  ${cmd} --stdin [--source <url-or-label>] [--pretty] [--csv]
+  ${cmd} - [--source <url-or-label>] [--pretty] [--csv]
   ${cmd} --version
 
 Output:
-  Prints JSON with transcript + media artifacts (best-effort):
+  Prints JSON (default) or CSV with transcript + media artifacts (best-effort):
     { ok, source, text, title, suggestedTitle, mediaUrl, artifactsDir, transcriptPath, extractedJsonPath, mediaPath, mediaSegmentsDir, mediaSegments, mediaSegmentsListPath, segmentSeconds, fetchError, mediaDownloadError }
 
 Notes:
@@ -170,6 +170,10 @@ async function main() {
   args = prettyFlag.args;
   const pretty = prettyFlag.present;
 
+  const csvFlag = popFlag(args, '--csv');
+  args = csvFlag.args;
+  const asCsv = csvFlag.present;
+
   const noDownloadFlag = popFlag(args, '--no-download');
   args = noDownloadFlag.args;
   const noDownload = noDownloadFlag.present;
@@ -232,7 +236,7 @@ async function main() {
       }
       const content = await readStdin();
       const extracted = extractFromStdin({ content, source: stdinSourceOverride || 'stdin' });
-      console.log(JSON.stringify(extracted, null, pretty ? 2 : 0));
+      console.log(asCsv ? formatCsv(extracted) : JSON.stringify(extracted, null, pretty ? 2 : 0));
       return;
     }
     usage(0);
@@ -247,7 +251,7 @@ async function main() {
     const content = await readStdin();
     try {
       const extracted = extractFromStdin({ content, source: stdinSourceOverride || 'stdin' });
-      console.log(JSON.stringify(extracted, null, pretty ? 2 : 0));
+      console.log(asCsv ? formatCsv(extracted) : JSON.stringify(extracted, null, pretty ? 2 : 0));
       return;
     } catch (e) {
       if (e?.code === 2) {
@@ -324,7 +328,7 @@ async function main() {
     mediaOutPath: downloadMediaPath,
   });
 
-  console.log(JSON.stringify(extracted, null, pretty ? 2 : 0));
+  console.log(asCsv ? formatCsv(extracted) : JSON.stringify(extracted, null, pretty ? 2 : 0));
 }
 
 main().catch((e) => {
