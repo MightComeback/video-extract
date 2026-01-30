@@ -1352,7 +1352,18 @@ export function formatCsv(data) {
 }
 
 export function resolveAuthor(html) {
+  const s = String(html || '');
   // Try <meta name="author" content="...">
-  const match = html.match(/<meta\s+name=["']author["']\s+content=["'](.*?)["']/i);
-  return match ? match[1] : null;
+  let match = s.match(/<meta\s+name=["']author["']\s+content=["'](.*?)["']/i);
+  if (match) return decodeHtmlEntities(match[1]).trim();
+
+  // Try <meta property="article:author" content="...">
+  match = s.match(/<meta\s+property=["']article:author["']\s+content=["'](.*?)["']/i);
+  if (match) return decodeHtmlEntities(match[1]).trim();
+
+  // Try <meta name="twitter:creator" content="...">
+  match = s.match(/<meta\s+name=["']twitter:creator["']\s+content=["'](.*?)["']/i);
+  if (match) return decodeHtmlEntities(match[1]).trim();
+
+  return null;
 }
