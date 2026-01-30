@@ -14,6 +14,10 @@ export function normalizeUrlLike(s) {
   let v0 = oneLine(s);
   if (!v0) return '';
 
+  // Strip common quote prefixes from email/chat copy/paste (e.g., "> ") early.
+  // We do this before checking for "Source:" prefixes so that "> Source: ..." is handled correctly.
+  v0 = v0.replace(/^>+\s*/g, '').trim();
+
   // Accept copy/paste-friendly prefixes (common in notes/envelopes):
   //   Source: https://...
   //   Link: <https://...>
@@ -29,8 +33,7 @@ export function normalizeUrlLike(s) {
   //   [https://...]
   // Don't strip leading '[' when the string is a markdown link like: [label](url)
   if (!/^\[[^\]]*\]\(/.test(v0)) {
-    // Also strip common quote prefixes from email/chat copy/paste (e.g., "> ").
-    v0 = v0.replace(/^>+\s*/g, '').trim();
+    // Strip other common leading wrappers (parentheses, quotes, etc.).
     v0 = v0.replace(/^[(`\{"'“”‘’«»‹›]+\s*/g, '').trim();
   }
 
