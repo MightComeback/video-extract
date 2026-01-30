@@ -30,3 +30,8 @@ Transcipt...
   const res = extractFromStdin({ content: input });
   assert.strictEqual(res.author, 'Bob');
 });
+
+test('resolveAuthor handles metadata with mixed quotes', () => {
+  const html = '<html><head><meta name="author" content="Liam O\'Connor"></head><body></body></html>';
+  assert.strictEqual(resolveAuthor(html), "Liam O'Connor");
+});

@@ -1354,16 +1354,16 @@ export function formatCsv(data) {
 export function resolveAuthor(html) {
   const s = String(html || '');
   // Try <meta name="author" content="...">
-  let match = s.match(/<meta\s+name=["']author["']\s+content=["'](.*?)["']/i);
-  if (match) return decodeHtmlEntities(match[1]).trim();
+  let match = s.match(/<meta\s+name=["']author["']\s+content=(["'])(.*?)\1/i);
+  if (match) return decodeHtmlEntities(match[2]).trim();
 
   // Try <meta property="article:author" content="...">
-  match = s.match(/<meta\s+property=["']article:author["']\s+content=["'](.*?)["']/i);
-  if (match) return decodeHtmlEntities(match[1]).trim();
+  match = s.match(/<meta\s+property=["']article:author["']\s+content=(["'])(.*?)\1/i);
+  if (match) return decodeHtmlEntities(match[2]).trim();
 
   // Try <meta name="twitter:creator" content="...">
-  match = s.match(/<meta\s+name=["']twitter:creator["']\s+content=["'](.*?)["']/i);
-  if (match) return decodeHtmlEntities(match[1]).trim();
+  match = s.match(/<meta\s+name=["']twitter:creator["']\s+content=(["'])(.*?)\1/i);
+  if (match) return decodeHtmlEntities(match[2]).trim();
 
   return null;
 }
