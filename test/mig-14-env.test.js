@@ -7,3 +7,9 @@ test('MIG-14: extractEnvironment detects Vivaldi', (t) => {
   const output = renderBrief({ transcript });
   assert.ok(output.includes('Browser / OS: Vivaldi'));
 });
+
+test('MIG-14: extractEnvironment detects Chromium', (t) => {
+  const transcript = "Is this reproducible on Chromium?";
+  const output = renderBrief({ transcript });
+  assert.ok(output.includes('Browser / OS: Chromium'));
+});
