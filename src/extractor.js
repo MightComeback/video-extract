@@ -211,6 +211,16 @@ function extractTitleFromHtml(html) {
   return '';
 }
 
+function extractDescriptionFromHtml(html) {
+  const s = String(html);
+  return (
+    extractMetaContent(s, { property: 'og:description' }) ||
+    extractMetaContent(s, { name: 'twitter:description' }) ||
+    extractMetaContent(s, { name: 'description' }) ||
+    ''
+  );
+}
+
 function stripHtmlToText(html) {
   let s = String(html);
   s = s.replace(/<script[\s\S]*?<\/script>/gi, ' ');
@@ -533,11 +543,12 @@ export function normalizeFetchedContent(content, baseUrl = null) {
   let mediaUrl = extractVideoUrlFromHtml(s);
   mediaUrl = resolveMaybeRelativeUrl(mediaUrl, baseUrl);
   const date = extractDateFromHtml(s);
+  const description = extractDescriptionFromHtml(s);
 
   // If a share page embeds a transcript/notes in JSON, prefer that over tag-stripping.
   const embeddedTranscript = tryExtractTranscriptFromEmbeddedJson(s);
   if (embeddedTranscript) {
-    return { text: embeddedTranscript, suggestedTitle: extractTitleFromHtml(s), mediaUrl, date };
+    return { text: embeddedTranscript, suggestedTitle: extractTitleFromHtml(s), mediaUrl, date, description };
   }
 
   const stripped = stripHtmlToText(s);
@@ -546,7 +557,8 @@ export function normalizeFetchedContent(content, baseUrl = null) {
     text: slicedTranscript || stripped,
     suggestedTitle: extractTitleFromHtml(s),
     mediaUrl,
-    date
+    date,
+    description
   };
 }
 
@@ -1004,6 +1016,7 @@ export async function extractFromUrl(
       mediaUrl: resolvedMediaUrl || '',
       title: norm.suggestedTitle || '',
       date: norm.date || '',
+      description: norm.description || '',
       suggestedTitle: norm.suggestedTitle,
       fetchError: null,
 
@@ -1096,6 +1109,7 @@ export async function extractFromUrl(
     mediaUrl: '',
     title: '',
     date: '',
+    description: '',
     suggestedTitle: '',
     fetchError: fetched.error,
     artifactsDir: null,
@@ -1272,6 +1286,7 @@ export function extractFromStdin({ content, source }) {
     mediaUrl: '',
     title,
     date,
+    description: '',
     suggestedTitle: '',
     fetchError: null,
     artifactsDir: null,
