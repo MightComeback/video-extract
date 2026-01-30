@@ -359,6 +359,13 @@ function generateNextActions(transcript, actualHints = []) {
     actions.add('Check network traces');
   }
 
+  // Regression
+  if (
+    /regression|used to work|worked before|worked yesterday|broken since|last update/i.test(lowerT)
+  ) {
+    actions.add('Check recent changes');
+  }
+
   // If mobile mentioned
   if (/ios|android|mobile|iphone|ipad/i.test(lowerT)) {
     actions.add('Test on physical device');
