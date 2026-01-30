@@ -522,6 +522,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check timezone conversions / formatting');
   }
 
+  // Email / Notifications
+  if (
+    actualHints.some(h => /email|mail|inbox|spam|bounce|did not receive|didn't receive|notification|deliverability/i.test(h)) ||
+    /email|mail|inbox|spam|bounce|did not receive|didn't receive|notification|deliverability/i.test(lowerT)
+  ) {
+    actions.add('Check email service / spam');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
