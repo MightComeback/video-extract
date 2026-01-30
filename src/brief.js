@@ -278,6 +278,51 @@ function extractEnvironment(transcript) {
   return unique.join(', ');
 }
 
+function extractBugHints(transcript) {
+  const expected = [];
+  const actual = [];
+
+  // Simple sentence splitting (approximate).
+  // Clean up newlines to process flowing text.
+  const clean = String(transcript || '').replace(/\r?\n/g, ' ');
+  const sentences = clean.split(/(?<=[.!?])\s+/);
+
+  for (const raw of sentences) {
+    const s = raw.trim();
+    if (s.length < 10 || s.length > 200) continue;
+    const lower = s.toLowerCase();
+
+    // Heuristics for "Expected"
+    if (
+      lower.includes('expect') ||
+      lower.includes('should be') ||
+      lower.includes('should have') ||
+      lower.includes('supposed to')
+    ) {
+      // Avoid questions? Maybe. For now, keep it simple.
+      expected.push(s);
+    }
+
+    // Heuristics for "Actual"
+    if (
+      lower.includes('actual') ||
+      lower.includes('instead') ||
+      lower.includes('current behavior') ||
+      lower.includes('happened') ||
+      lower.includes('got an error') ||
+      lower.includes('error occurred')
+    ) {
+      actual.push(s);
+    }
+  }
+
+  // Dedupe
+  return {
+    expected: [...new Set(expected)].slice(0, 3),
+    actual: [...new Set(actual)].slice(0, 3),
+  };
+}
+
 export function renderBrief({
   cmd = 'fathom2action',
   source,
@@ -301,6 +346,7 @@ export function renderBrief({
   const timestamps = extractTimestamps(transcript, { max: Number.isFinite(timestampsLimit) ? timestampsLimit : 6 });
   const envLikely = extractEnvironment(transcript);
   const speakers = extractSpeakers(transcript);
+  const hints = extractBugHints(transcript);
 
   const header = [
     '# Bug report brief',
@@ -348,8 +394,8 @@ export function renderBrief({
     '3. ',
     '',
     '## Expected vs actual',
-    '- Expected: ',
-    '- Actual: ',
+    `- Expected: ${hints.expected.length ? hints.expected.join(' / ') : ''}`,
+    `- Actual: ${hints.actual.length ? hints.actual.join(' / ') : ''}`,
     '',
     '## Environment / context',
     `- Who: ${speakers.join(', ')}`,
