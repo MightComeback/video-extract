@@ -348,8 +348,8 @@ function generateNextActions(transcript, actualHints = []) {
 
   // Crash / Error analysis
   if (
-    actualHints.some(h => /crash|error|exception|stack|trace/i.test(h)) ||
-    /crash|error|exception|stack|trace/i.test(lowerT)
+    actualHints.some(h => /crash|error|exception|stack|trace|bad gateway|internal server error|status code 5/i.test(h)) ||
+    /crash|error|exception|stack|trace|bad gateway|internal server error|status code 5/i.test(lowerT)
   ) {
     actions.add('Check server logs / Sentry');
   }
