@@ -48,3 +48,11 @@ test('renderBrief handles various bullet styles', () => {
   assert.ok(output.includes('- Item 2'));
   assert.ok(output.includes('- Item 3'));
 });
+
+test('renderBrief uses description for 1-sentence summary', () => {
+  const output = renderBrief({
+    description: 'This is the summary.'
+  });
+  assert.ok(output.includes('## 1-sentence summary'));
+  assert.ok(output.includes('- This is the summary.'));
+});
