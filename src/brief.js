@@ -530,6 +530,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check email service / spam');
   }
 
+  // Extensions / Ad blockers
+  if (
+    actualHints.some(h => /extension|ad\s*block|ublock|ghostery|privacy badger|script blocker|popup blocker/i.test(h)) ||
+    /extension|ad\s*block|ublock|ghostery|privacy badger|script blocker|popup blocker/i.test(lowerT)
+  ) {
+    actions.add('Check browser extensions / ad blockers');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
