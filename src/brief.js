@@ -238,8 +238,10 @@ export function renderBrief({
   const src = normalizeUrlLike(source);
   const t = oneLine(title);
   const d = oneLine(date);
-  const teaserLimit = teaserMax == null ? 6 : Number(teaserMax);
-  const timestampsLimit = timestampsMax == null ? 6 : Number(timestampsMax);
+  let teaserLimit = teaserMax == null ? 6 : Number(teaserMax);
+  if (Number.isNaN(teaserLimit)) teaserLimit = 6;
+  let timestampsLimit = timestampsMax == null ? 6 : Number(timestampsMax);
+  if (Number.isNaN(timestampsLimit)) timestampsLimit = 6;
 
   const teaser = normalizeBullets(transcript, { max: Number.isFinite(teaserLimit) ? teaserLimit : 6 });
   const timestamps = extractTimestamps(transcript, { max: Number.isFinite(timestampsLimit) ? timestampsLimit : 6 });
