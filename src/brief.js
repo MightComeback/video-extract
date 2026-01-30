@@ -215,7 +215,7 @@ function normalizeBullets(lines, { max = 6 } = {}) {
   return out;
 }
 
-function extractTimestamps(transcript, { max = 6 } = {}) {
+export function extractTimestamps(transcript, { max = 6 } = {}) {
   const limit = Number(max);
   if (!Number.isFinite(limit) || limit <= 0) return [];
 
