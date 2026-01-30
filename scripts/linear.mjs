@@ -37,7 +37,7 @@ if (!cmd || cmd === '--help' || cmd === '-h' || cmd === 'help') {
   process.exit(0);
 }
 
-if (cmd !== 'issue-state-type' && cmd !== 'comment') die(`Unknown command: ${cmd}`);
+if (cmd !== 'issue-state-type' && cmd !== 'comment' && cmd !== 'dump') die(`Unknown command: ${cmd}`);
 if (!issueKey) die('Missing issue key (e.g. MIG-14)');
 
 async function linearGraphQL(query, variables) {
@@ -103,6 +103,14 @@ async function main() {
   if (cmd === 'issue-state-type') {
     const issue = await getIssueByIdentifier(issueKey);
     process.stdout.write(String(issue.state?.type ?? '') + '\n');
+    return;
+  }
+
+  if (cmd === 'dump') {
+    const issue = await getIssueByIdentifier(issueKey);
+    console.log(`Title: ${issue.title}`);
+    console.log(`State: ${issue.state?.name} (${issue.state?.type})`);
+    console.log(`\n${issue.description || '(no description)'}`);
     return;
   }
 
