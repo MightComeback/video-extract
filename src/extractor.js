@@ -514,7 +514,7 @@ function extractDateFromHtml(html) {
 
   // JSON-LD is common on video share pages.
   // Look for "uploadDate": "2024-..." or "datePublished": "..."
-  const jsonDate = s.match(/"(?:uploadDate|datePublished|dateCreated)"\s*:\s*"([^"]+)"/i);
+  const jsonDate = s.match(/"(?:uploadDate|datePublished|dateCreated|dateModified)"\s*:\s*"([^"]+)"/i);
   if (jsonDate && jsonDate[1]) return jsonDate[1];
 
   // Fathom specific: sometimes in a data attribute or script.
