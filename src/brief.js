@@ -256,8 +256,8 @@ function extractEnvironment(transcript) {
   const hits = [];
 
   const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo', 'samsung internet', 'orion'];
-  const os = ['mac', 'macos', 'windows', 'ubuntu', 'fedora', 'debian', 'linux', 'android', 'ios', 'iphone', 'ipad'];
-  const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei'];
+  const os = ['mac', 'macos', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'linux', 'android', 'ios', 'iphone', 'ipad'];
+  const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface'];
   const environments = ['staging', 'production', 'prod', 'localhost'];
 
   for (const b of browsers) {
@@ -272,6 +272,9 @@ function extractEnvironment(transcript) {
       // Normalize macos -> macOS, ios -> iOS
       if (o === 'macos') hits.push('macOS');
       else if (o === 'ios' || o === 'iphone' || o === 'ipad') hits.push('iOS');
+      else if (o === 'centos') hits.push('CentOS');
+      else if (o === 'rhel') hits.push('RHEL');
+      else if (o === 'arch linux') hits.push('Arch Linux');
       else hits.push(o.charAt(0).toUpperCase() + o.slice(1));
     }
   }
