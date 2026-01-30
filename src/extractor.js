@@ -1311,3 +1311,9 @@ export function formatCsv(data) {
     return val;
   }).join(',');
 }
+
+export function resolveAuthor(html) {
+  // Try <meta name="author" content="...">
+  const match = html.match(/<meta\s+name=["']author["']\s+content=["'](.*?)["']/i);
+  return match ? match[1] : null;
+}
