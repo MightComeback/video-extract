@@ -314,7 +314,9 @@ function extractBugHints(transcript) {
       lower.includes('error occurred') ||
       lower.includes('result was') ||
       lower.includes('output was') ||
-      lower.includes('nothing happened')
+      lower.includes('nothing happened') ||
+      lower.includes('fails') ||
+      lower.includes('crashes')
     ) {
       actual.push(s);
     }
