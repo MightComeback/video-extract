@@ -354,3 +354,15 @@ test('extractFromStdin accepts "Webex link:" as a Source alias', () => {
   assert.equal(out.source, 'https://fathom.video/share/abc');
   assert.equal(out.title, 'Webex link label');
 });
+
+test('extractFromStdin accepts "Loom link:" as a Source alias', () => {
+  const input = [
+    'Loom link: https://loom.com/share/abc',
+    'Title: Loom link label',
+    '00:01 Alice: it crashes',
+  ].join('\n');
+
+  const out = extractFromStdin({ content: input, source: 'stdin' });
+  assert.equal(out.source, 'https://loom.com/share/abc');
+  assert.equal(out.title, 'Loom link label');
+});
