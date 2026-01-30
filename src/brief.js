@@ -297,7 +297,8 @@ function extractBugHints(transcript) {
       lower.includes('expect') ||
       lower.includes('should be') ||
       lower.includes('should have') ||
-      lower.includes('supposed to')
+      lower.includes('supposed to') ||
+      lower.includes('goal was')
     ) {
       // Avoid questions? Maybe. For now, keep it simple.
       expected.push(s);
@@ -310,7 +311,10 @@ function extractBugHints(transcript) {
       lower.includes('current behavior') ||
       lower.includes('happened') ||
       lower.includes('got an error') ||
-      lower.includes('error occurred')
+      lower.includes('error occurred') ||
+      lower.includes('result was') ||
+      lower.includes('output was') ||
+      lower.includes('nothing happened')
     ) {
       actual.push(s);
     }

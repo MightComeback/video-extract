@@ -16,3 +16,16 @@ test('renderBrief extracts bug hints', () => {
   assert.match(output, /Actual: .*instead it crashed/);
   assert.match(output, /Actual: .*actual behavior is a 500 error/);
 });
+
+test('renderBrief extracts extended bug hints', () => {
+  const transcript = `
+    Ivan: My goal was to see the dashboard.
+    Ivan: But nothing happened when I clicked.
+    Ivan: The result was a blank screen.
+  `;
+  const output = renderBrief({ transcript });
+
+  assert.match(output, /Expected: .*goal was to see the dashboard/);
+  assert.match(output, /Actual: .*nothing happened when I clicked/);
+  assert.match(output, /Actual: .*result was a blank screen/);
+});
