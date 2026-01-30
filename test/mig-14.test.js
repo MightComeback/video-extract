@@ -25,7 +25,9 @@ test('MIG-14: renderBrief includes fetch error when provided', (t) => {
   assert.ok(output.includes('Source: (unknown)'));
 });
 
-test('MIG-14: renderBrief includes suggested issue title', (t) => {
-  const output = renderBrief({ title: 'My Bug' });
-  assert.ok(output.includes('Suggested issue title: My Bug'));
+test('MIG-14: renderBrief includes fetch error but preserves title if known', (t) => {
+  const output = renderBrief({ title: 'Known Title', fetchError: 'Some error' });
+  assert.ok(output.includes('Title: Known Title'));
+  assert.ok(output.includes('Fetch error: Some error'));
 });
+
