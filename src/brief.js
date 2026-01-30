@@ -437,7 +437,7 @@ export function renderBrief({
     ...howToUpdate,
     '',
     '## 1-sentence summary',
-    `- ${desc || ''}`,
+    `- ${desc || '(add summary)'}`,
     '',
     '## Repro steps',
     '1. ',
