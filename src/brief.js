@@ -414,6 +414,34 @@ function generateNextActions(transcript, actualHints = []) {
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
+export function extractPaths(transcript) {
+  const out = new Set();
+  const raw = String(transcript || '');
+  // Heuristic: identify strings starting with / that look like URL paths.
+  // Must start with / and have at least 2 chars.
+  // Must be preceded by whitespace or start of string.
+  // Use lookahead for trailing boundary to avoid consuming the separator
+  // (which might be the leading separator for the NEXT match).
+  const tokens = raw.split(/\s+/);
+  
+  for (const t of tokens) {
+    if (!t.startsWith('/')) continue;
+    
+    // Clean trailing punctuation including ) ] } which regex missed
+    const clean = t.replace(/[.,;:!?\)\]\}]+$/, '');
+
+    // Heuristic: must look like a path
+    // - start with / (checked)
+    // - contain only valid path chars (alphanumeric, -, _, ., /)
+    // - length >= 2 (avoid isolated /)
+    // - contain at least one letter (avoid 1/2, dates, etc.)
+    if (/^\/[\w\-\.\/]+$/.test(clean) && clean.length >= 2 && /[a-zA-Z]/.test(clean)) {
+      out.add(clean);
+    }
+  }
+  return [...out];
+}
+
 export function renderBrief({
   cmd = 'fathom2action',
   source,
@@ -442,6 +470,7 @@ export function renderBrief({
   const timestamps = extractTimestamps(transcript, { max: Number.isFinite(timestampsLimit) ? timestampsLimit : 6 });
   const envLikely = extractEnvironment(transcript);
   const speakers = extractSpeakers(transcript);
+  const paths = extractPaths(transcript);
   const hints = extractBugHints(transcript);
   const nextActions = generateNextActions(transcript, hints.actual);
 
@@ -497,7 +526,7 @@ export function renderBrief({
     '',
     '## Environment / context',
     `- Who: ${speakers.length ? speakers.join(', ') : (auth || '(unknown)')}`,
-    '- Where (page/URL): ',
+    `- Where (page/URL): ${paths.length ? paths.join(', ') : ''}`,
     `- Browser / OS: ${envLikely || '(unknown)'}`,
     '- Build / SHA: ',
     `- When: ${d || '(unknown)'}`,
