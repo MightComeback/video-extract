@@ -34,3 +34,10 @@ test('renderBrief always suggests reproducing locally', (t) => {
   const brief = renderBrief({ transcript: "Something happened." });
   assert.match(brief, /- \[ \] Reproduce locally/);
 });
+
+test('renderBrief suggests testing on device/simulator for mobile issues', (t) => {
+  const brief = renderBrief({
+    transcript: "The layout is broken on iOS Safari."
+  });
+  assert.match(brief, /- \[ \] Test on physical device \/ simulator/);
+});

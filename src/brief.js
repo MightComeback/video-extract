@@ -410,7 +410,7 @@ export function generateNextActions(transcript, actualHints = []) {
 
   // If mobile mentioned
   if (/ios|android|mobile|iphone|ipad/i.test(lowerT)) {
-    actions.add('Test on physical device');
+    actions.add('Test on physical device / simulator');
   }
 
   // Database / Data

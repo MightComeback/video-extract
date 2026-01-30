@@ -202,18 +202,21 @@ async function main() {
 
     async function tryCommand(cmd, args) {
       return await new Promise((resolve) => {
-        const child = spawn(cmd, args);
-        child.on('error', (err) => {
-          // Not installed? try the next candidate.
-          if (err?.code === 'ENOENT') return resolve(false);
-          process.stderr.write(`NOTE: --copy failed (${cmd}): ${String(err?.message || err)}\n`);
-          // Clipboard command exists but failed; keep trying other candidates.
+        const child = spawn(cmd, args, { stdio: ['pipe', 'ignore', 'ignore'] });
+        child.on('error', () => {
+          // Command not found or failed to spawn
           resolve(false);
         });
-        child.on('close', (code) => resolve(code === 0));
+        child.on('close', (code) => {
+          resolve(code === 0);
+        });
         try {
-          child.stdin.write(String(text));
-          child.stdin.end();
+          if (child.stdin) {
+            child.stdin.write(String(text));
+            child.stdin.end();
+          } else {
+             resolve(false);
+          }
         } catch {
           resolve(false);
         }
