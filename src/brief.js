@@ -296,6 +296,18 @@ function extractEnvironment(transcript) {
   return unique.join(', ');
 }
 
+function extractBuildNumber(transcript) {
+  // Look for patterns like "v1.2.3", "Build 123", "Version 1.2"
+  const s = String(transcript || '');
+  const version = s.match(/(?:version|v)\s*(\d+\.\d+(?:\.\d+)?)/i);
+  if (version) return version[1];
+
+  const build = s.match(/build\s*(\d+)/i);
+  if (build) return `Build ${build[1]}`;
+  
+  return '';
+}
+
 function extractBugHints(transcript) {
   const expected = [];
   const actual = [];
@@ -533,6 +545,7 @@ export function renderBrief({
   const teaser = normalizeBullets(transcript, { max: Number.isFinite(teaserLimit) ? teaserLimit : 6 });
   const timestamps = extractTimestamps(transcript, { max: Number.isFinite(timestampsLimit) ? timestampsLimit : 6 });
   const envLikely = extractEnvironment(transcript);
+  const buildNum = extractBuildNumber(transcript);
   const speakers = extractSpeakers(transcript);
   const paths = extractPaths(transcript);
   const hints = extractBugHints(transcript);
@@ -592,7 +605,7 @@ export function renderBrief({
     `- Who: ${speakers.length ? speakers.join(', ') : (auth || '(unknown)')}`,
     `- Where (page/URL): ${paths.length ? paths.join(', ') : ''}`,
     `- Browser / OS: ${envLikely || '(unknown)'}`,
-    '- Build / SHA: ',
+    `- Build / SHA: ${buildNum || ''}`,
     `- When: ${d || '(unknown)'}`,
     '',
     '## Attachments / evidence',

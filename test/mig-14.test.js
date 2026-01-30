@@ -36,3 +36,8 @@ test('MIG-14: renderBrief accepts url as an alias for source', (t) => {
   assert.ok(output.includes('Source: https://example.com'));
 });
 
+
+test('MIG-14: renderBrief extracts version/build numbers', (t) => {
+  const output = renderBrief({ transcript: 'Found in v1.2.3 on staging' });
+  assert.ok(output.includes('Build / SHA: 1.2.3'));
+});
