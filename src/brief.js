@@ -359,6 +359,14 @@ function generateNextActions(transcript, actualHints = []) {
     actions.add('Check network traces');
   }
 
+  // Auth / Permissions
+  if (
+    actualHints.some(h => /401|403|permission|access|denied|forbidden|login|sign in|auth/i.test(h)) ||
+    /401|403|permission|access|denied|forbidden|login|sign in|auth/i.test(lowerT)
+  ) {
+    actions.add('Check permissions / user roles');
+  }
+
   // Regression
   if (
     /regression|used to work|worked before|worked yesterday|broken since|last update/i.test(lowerT)

@@ -16,6 +16,13 @@ test('renderBrief suggests checking network for slow/timeout issues', (t) => {
   assert.match(brief, /- \[ \] Check network traces/);
 });
 
+test('renderBrief suggests checking permissions for auth issues', (t) => {
+  const brief = renderBrief({
+    transcript: "I got a 403 error when trying to save."
+  });
+  assert.match(brief, /- \[ \] Check permissions \/ user roles/);
+});
+
 test('renderBrief always suggests reproducing locally', (t) => {
   const brief = renderBrief({ transcript: "Something happened." });
   assert.match(brief, /- \[ \] Reproduce locally/);
