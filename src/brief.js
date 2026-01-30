@@ -435,6 +435,20 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check API payloads / Validation');
   }
 
+  // API Rates / CORS
+  if (
+    actualHints.some(h => /cors|access-control-allow-origin|cross-origin|blocked by cors/i.test(h)) ||
+    /cors|access-control-allow-origin|cross-origin|blocked by cors/i.test(lowerT)
+  ) {
+    actions.add('Check CORS configuration');
+  }
+  if (
+    actualHints.some(h => /429|too many requests|rate limit|quota exceeded/i.test(h)) ||
+    /429|too many requests|rate limit|quota exceeded/i.test(lowerT)
+  ) {
+    actions.add('Check rate limits');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
