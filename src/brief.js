@@ -125,6 +125,7 @@ function stripLeadingSpeakerLabel(s) {
 
   // Avoid stripping URLs like "http://...".
   if (/^https?:\/\//i.test(line)) return line;
+  if (/^data:/i.test(line)) return line;
 
   // Common transcript forms:
   //  - Alice: hello
