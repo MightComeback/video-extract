@@ -48,5 +48,11 @@ test('normalizeUrlLike handles trailing punctuation on bare URLs', () => {
 
 test('normalizeUrlLike handles copy-paste quotes', () => {
   assert.equal(normalizeUrlLike('> https://example.com'), 'https://example.com');
-  assert.equal(normalizeUrlLike('> Source: https://example.com'), 'https://example.com');
+  assert.equal(normalizeUrlLike('>> https://example.com'), 'https://example.com');
+  assert.equal(normalizeUrlLike('>>> Source: https://example.com'), 'https://example.com');
+});
+
+test('normalizeUrlLike handles unusual brackets', () => {
+  assert.equal(normalizeUrlLike('{https://example.com}'), 'https://example.com');
+  assert.equal(normalizeUrlLike('{{https://example.com}}'), 'https://example.com');
 });
