@@ -1,31 +1,38 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { renderBrief } from '../src/brief.js';
+import { extractPaths, renderBrief } from '../src/brief.js';
 
-test('renderBrief extracts bug hints', () => {
+test('extractPaths finds URL paths in transcript', (t) => {
   const transcript = `
-    Alice: I clicked the button and expected it to save.
-    Bob: But instead it crashed.
-    Alice: Yeah, the actual behavior is a 500 error.
-    Bob: It works on Staging though.
+    I was looking at /dashboard/settings and it was broken.
+    Also checked /api/v1/users.
+    However, 1/2 is not a path.
+    Neither is / alone.
+    We saw this on /users/123/profile.
   `;
-
-  const output = renderBrief({ transcript });
-
-  assert.match(output, /Expected: .*expected it to save/);
-  assert.match(output, /Actual: .*instead it crashed/);
-  assert.match(output, /Actual: .*actual behavior is a 500 error/);
+  const paths = extractPaths(transcript);
+  assert.deepStrictEqual(paths.sort(), [
+    '/api/v1/users',
+    '/dashboard/settings',
+    '/users/123/profile'
+  ].sort());
 });
 
-test('renderBrief extracts extended bug hints', () => {
-  const transcript = `
-    Ivan: My goal was to see the dashboard.
-    Ivan: But nothing happened when I clicked.
-    Ivan: The result was a blank screen.
-  `;
-  const output = renderBrief({ transcript });
+test('renderBrief handles missing optional fields', (t) => {
+  const brief = renderBrief({
+    transcript: 'Some transcript',
+    cmd: 'f2a'
+  });
+  
+  assert.match(brief, /Source: \(unknown\)/);
+  assert.match(brief, /Title: \(unknown\)/);
+  assert.match(brief, /When: \(unknown\)/);
+  assert.match(brief, /Who: \(unknown\)/);
+});
 
-  assert.match(output, /Expected: .*goal was to see the dashboard/);
-  assert.match(output, /Actual: .*nothing happened when I clicked/);
-  assert.match(output, /Actual: .*result was a blank screen/);
+test('renderBrief includes extracted paths', (t) => {
+  const brief = renderBrief({
+    transcript: 'I saw a bug on /pricing page',
+  });
+  assert.match(brief, /- Where \(page\/URL\): \/pricing/);
 });
