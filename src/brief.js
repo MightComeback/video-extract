@@ -116,6 +116,9 @@ function stripLeadingTimestamp(s) {
     .trim();
 }
 
+const SPEAKER_NAME_PATTERN = /[\p{L}\p{N}][\p{L}\p{N} ._\-'’]{0,40}/u.source;
+const SPEAKER_ROLE_PATTERN = String.raw`(?:\s*(?:\([^)]{1,30}\)|\[[^\]]{1,30}\]))?`;
+
 function stripLeadingSpeakerLabel(s) {
   const line = String(s || '').trim();
   if (!line) return '';
@@ -133,20 +136,40 @@ function stripLeadingSpeakerLabel(s) {
   // Allow a bit of punctuation that appears in names (., ', -, underscores).
   // Support non-ASCII speaker names (e.g., Cyrillic/accents) seen in real transcripts.
   // Keep it conservative to avoid eating real content.
-  const speaker = /[\p{L}\p{N}][\p{L}\p{N} ._\-'’]{0,40}/u;
+  const speaker = SPEAKER_NAME_PATTERN;
 
   // Optional role/metadata that often appears in exports:
   //  - Alice (Host): hello
   //  - Alice [Host]: hello
   // Keep it short to avoid eating real content.
-  const role = String.raw`(?:\s*(?:\([^)]{1,30}\)|\[[^\]]{1,30}\]))?`;
+  const role = SPEAKER_ROLE_PATTERN;
 
   // Also handle fullwidth colon (common in some transcript exports / IMEs): "Alice： hello".
   return line
-    .replace(new RegExp(`^${speaker.source}${role}[:：]\\s*(?!\\/\\/)`, 'u'), '')
+    .replace(new RegExp(`^${speaker}${role}[:：]\\s*(?!\\/\\/)`, 'u'), '')
     // Allow "Alice - hello", "Alice—hello", etc. Some exporters omit spaces around dash separators.
-    .replace(new RegExp(`^${speaker.source}${role}\\s*[\\-–—]\\s*`, 'u'), '')
+    .replace(new RegExp(`^${speaker}${role}\\s*[\\-–—]\\s*`, 'u'), '')
     .trim();
+}
+
+function extractSpeakers(transcript) {
+  const out = new Set();
+  const reColon = new RegExp(`^(${SPEAKER_NAME_PATTERN}${SPEAKER_ROLE_PATTERN})[:：]\\s*(?!\\/\\/)`, 'u');
+  const reDash = new RegExp(`^(${SPEAKER_NAME_PATTERN}${SPEAKER_ROLE_PATTERN})\\s*[\\-–—]\\s*`, 'u');
+
+  for (const raw of String(transcript || '').split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (/^https?:\/\//i.test(line)) continue;
+
+    let m = reColon.exec(line);
+    if (!m) m = reDash.exec(line);
+
+    if (m) {
+      out.add(m[1].trim());
+    }
+  }
+  return [...out];
 }
 
 function normalizeBullets(lines, { max = 6 } = {}) {
@@ -277,6 +300,7 @@ export function renderBrief({
   const teaser = normalizeBullets(transcript, { max: Number.isFinite(teaserLimit) ? teaserLimit : 6 });
   const timestamps = extractTimestamps(transcript, { max: Number.isFinite(timestampsLimit) ? timestampsLimit : 6 });
   const envLikely = extractEnvironment(transcript);
+  const speakers = extractSpeakers(transcript);
 
   const header = [
     '# Bug report brief',
@@ -328,7 +352,7 @@ export function renderBrief({
     '- Actual: ',
     '',
     '## Environment / context',
-    '- Who: ',
+    `- Who: ${speakers.join(', ')}`,
     '- Where (page/URL): ',
     `- Browser / OS: ${envLikely || ''}`,
     '- Build / SHA: ',
