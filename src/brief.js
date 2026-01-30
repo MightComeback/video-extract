@@ -495,6 +495,22 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check variable interpolation');
   }
 
+  // Search / Filtration
+  if (
+    actualHints.some(h => /search|filter|sort|query|no results|found nothing/i.test(h)) ||
+    /search|filter|sort|query|no results|found nothing/i.test(lowerT)
+  ) {
+    actions.add('Check search indexing / query logic');
+  }
+
+  // Timezone / Date
+  if (
+    actualHints.some(h => /timezone|utc|pst|est|gmt|wrong time|date format|invalid date/i.test(h)) ||
+    /timezone|wrong time|date format|invalid date|utc|pst|est|gmt/i.test(lowerT)
+  ) {
+    actions.add('Check timezone conversions / formatting');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
