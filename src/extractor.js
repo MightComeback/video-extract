@@ -1161,7 +1161,7 @@ export function extractFromStdin({ content, source }) {
     // Strip a single leading quote marker for robustness.
     const s = String(line || '').trim().replace(/^>+\s*/, '');
     if (!s) return null;
-    const m = s.match(/^(?:title|subject|topic|description|summary)\s*(?:[:=\-–—])\s*(.+)$/i);
+    const m = s.match(/^(?:title|subject|topic|description|summary)\s*(?:[:=\-–—])\s*(.*)$/i);
     if (m) return String(m[1] || '').trim();
 
     // Markdown headings are common in copy/paste “envelopes”.
@@ -1190,11 +1190,14 @@ export function extractFromStdin({ content, source }) {
     //   Source - https://...
     //   Link — https://...
     const sourcePrefixed = s0.match(
-      /^(?:source|fathom(?:\s*link)?|share(?:\s*link)?|link|url|recording|video(?:\s*link)?|meeting|call|(?:google\s*meet|meet)(?:\s*link)?|(?:(?:microsoft|ms)\s*)?teams(?:\s*link)?|zoom(?:\s*link)?|webex(?:\s*link)?)\s*(?:[:=\-–—])\s*(.+)\s*$/i
+      /^(?:source|fathom(?:\s*link)?|share(?:\s*link)?|link|url|recording|video(?:\s*link)?|meeting|call|(?:google\s*meet|meet)(?:\s*link)?|(?:(?:microsoft|ms)\s*)?teams(?:\s*link)?|zoom(?:\s*link)?|webex(?:\s*link)?)\s*(?:[:=\-–—])\s*(.*)\s*$/i
     );
     if (sourcePrefixed) {
       const u = cleanUrl(sourcePrefixed[1]);
       if (/^https?:\/\//i.test(u)) return u;
+      // Matched the prefix but no valid URL found?
+      // Consume the line (return empty string) so we don't leak "Source: " into the transcript.
+      return '';
     }
 
     const bare = cleanUrl(s0);
@@ -1208,7 +1211,7 @@ export function extractFromStdin({ content, source }) {
     if (!s) return null;
 
     // Date: 2025-01-30
-    const m = s.match(/^(?:date|time|when)\s*[:=\-–—]\s*(.+)$/i);
+    const m = s.match(/^(?:date|time|when)\s*[:=\-–—]\s*(.*)$/i);
     if (m) return String(m[1] || '').trim();
 
     // Bare YYYY-MM-DD
@@ -1233,7 +1236,7 @@ export function extractFromStdin({ content, source }) {
 
     // 1. Source (URL or Source: ...)
     const s = takeSource(line);
-    if (s) {
+    if (s !== null) {
       src = s;
       date = date; // keep existing if any
       idx++;
@@ -1242,7 +1245,7 @@ export function extractFromStdin({ content, source }) {
 
     // 2. Title (Title: ... or # ...)
     const t = takeTitle(line);
-    if (t) {
+    if (t !== null) {
       title = t;
       idx++;
       continue;
@@ -1250,7 +1253,7 @@ export function extractFromStdin({ content, source }) {
 
     // 3. Date (Date: ... or YYYY-MM-DD)
     const d = takeDate(line);
-    if (d) {
+    if (d !== null) {
       date = d;
       idx++;
       continue;
