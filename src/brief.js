@@ -456,6 +456,11 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check API payloads / Validation');
   }
 
+  // API Tools
+  if (/postman|insomnia|curl|httpie/i.test(lowerT)) {
+    actions.add('Reproduce via API client (Postman/curl)');
+  }
+
   // Redis / Connection
   if (
     actualHints.some(h => /redis|connection refused|econnrefused|socket hang up/i.test(h)) ||
