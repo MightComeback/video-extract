@@ -36,3 +36,15 @@ test('renderBrief respects timestamp limit', () => {
   const output = renderBrief({ transcript, timestampsMax: 0 });
   assert.ok(!output.includes('## Timestamps'));
 });
+
+test('renderBrief handles various bullet styles', () => {
+  const transcript = `
+    + Item 1
+    * Item 2
+    - Item 3
+  `;
+  const output = renderBrief({ transcript });
+  assert.ok(output.includes('- Item 1'));
+  assert.ok(output.includes('- Item 2'));
+  assert.ok(output.includes('- Item 3'));
+});
