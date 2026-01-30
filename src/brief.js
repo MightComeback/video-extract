@@ -338,6 +338,7 @@ export function renderBrief({
   url,
   title,
   date,
+  description,
   transcript,
   fetchError,
   teaserMax = 6,
@@ -347,6 +348,7 @@ export function renderBrief({
   const src = normalizeUrlLike(source || url);
   const t = oneLine(title);
   const d = oneLine(date);
+  const desc = oneLine(description);
   let teaserLimit = teaserMax == null ? 6 : Number(teaserMax);
   if (Number.isNaN(teaserLimit)) teaserLimit = 6;
   let timestampsLimit = timestampsMax == null ? 6 : Number(timestampsMax);
@@ -397,7 +399,7 @@ export function renderBrief({
     ...howToUpdate,
     '',
     '## 1-sentence summary',
-    '- ',
+    `- ${desc || ''}`,
     '',
     '## Repro steps',
     '1. ',
