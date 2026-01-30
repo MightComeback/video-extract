@@ -137,7 +137,7 @@ test('extractFromStdin treats "Topic:" as a Title alias', () => {
   assert.equal(out.title, 'Login breaks on Safari');
 });
 
-test('extractFromStdin treats "Description:" as a Title alias', () => {
+test('extractFromStdin treats "Description:" as a Description', () => {
   const input = [
     'Source: https://fathom.video/share/abc',
     'Description: Login breaks on Safari',
@@ -146,11 +146,11 @@ test('extractFromStdin treats "Description:" as a Title alias', () => {
 
   const out = extractFromStdin({ content: input, source: 'stdin' });
   assert.equal(out.source, 'https://fathom.video/share/abc');
-  assert.equal(out.title, 'Login breaks on Safari');
+  assert.equal(out.description, 'Login breaks on Safari');
   assert.match(out.text, /00:01/);
 });
 
-test('extractFromStdin treats "Summary:" as a Title alias', () => {
+test('extractFromStdin treats "Summary:" as a Description', () => {
   const input = [
     'Source: https://fathom.video/share/abc',
     'Summary: Login breaks on Safari',
@@ -159,7 +159,7 @@ test('extractFromStdin treats "Summary:" as a Title alias', () => {
 
   const out = extractFromStdin({ content: input, source: 'stdin' });
   assert.equal(out.source, 'https://fathom.video/share/abc');
-  assert.equal(out.title, 'Login breaks on Safari');
+  assert.equal(out.description, 'Login breaks on Safari');
   assert.match(out.text, /00:01/);
 });
 

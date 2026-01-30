@@ -1180,7 +1180,7 @@ export function extractFromStdin({ content, source }) {
     // Strip a single leading quote marker for robustness.
     const s = String(line || '').trim().replace(/^>+\s*/, '');
     if (!s) return null;
-    const m = s.match(/^(?:title|subject|topic|description|summary)\s*(?:[:=\-–—])\s*(.*)$/i);
+    const m = s.match(/^(?:title|subject|topic)\s*(?:[:=\-–—])\s*(.*)$/i);
     if (m) return String(m[1] || '').trim();
 
     // Markdown headings are common in copy/paste “envelopes”.
@@ -1188,6 +1188,14 @@ export function extractFromStdin({ content, source }) {
     const h = s.match(/^#+\s+(.+)$/);
     if (h) return String(h[1] || '').trim();
 
+    return null;
+  }
+
+  function takeDescription(line) {
+    const s = String(line || '').trim().replace(/^>+\s*/, '');
+    if (!s) return null;
+    const m = s.match(/^(?:description|summary)\s*(?:[:=\-–—])\s*(.*)$/i);
+    if (m) return String(m[1] || '').trim();
     return null;
   }
 
@@ -1249,6 +1257,7 @@ export function extractFromStdin({ content, source }) {
 
   let date = '';
   let author = '';
+  let description = '';
 
   // Consume metadata headers until we hit content.
   // We stop if we encounter a line that isn't a recognized header and isn't empty.
@@ -1275,6 +1284,14 @@ export function extractFromStdin({ content, source }) {
     const t = takeTitle(line);
     if (t !== null) {
       title = t;
+      idx++;
+      continue;
+    }
+
+    // 2.5 Description
+    const desc = takeDescription(line);
+    if (desc !== null) {
+      description = desc;
       idx++;
       continue;
     }
@@ -1308,7 +1325,7 @@ export function extractFromStdin({ content, source }) {
     mediaUrl: '',
     title,
     date,
-    description: '',
+    description,
     author,
     suggestedTitle: '',
     fetchError: null,
