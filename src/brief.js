@@ -357,6 +357,7 @@ export function renderBrief({
     '',
     `Source: ${src || '(unknown)'}`,
     `Title: ${t || '(unknown)'}`,
+    `Suggested issue title: ${t || '(unknown)'}`,
   ];
 
   if (fetchError) {
