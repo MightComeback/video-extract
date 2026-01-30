@@ -354,7 +354,7 @@ function extractBugHints(transcript) {
   };
 }
 
-function generateNextActions(transcript, actualHints = []) {
+export function generateNextActions(transcript, actualHints = []) {
   const actions = new Set();
   const lowerT = String(transcript || '').toLowerCase();
   
@@ -363,8 +363,8 @@ function generateNextActions(transcript, actualHints = []) {
 
   // Crash / Error analysis
   if (
-    actualHints.some(h => /crash|error|exception|stack|trace|bad gateway|internal server error|status code 5/i.test(h)) ||
-    /crash|error|exception|stack|trace|bad gateway|internal server error|status code 5/i.test(lowerT)
+    actualHints.some(h => /crash|error|exception|stack|trace|bad gateway|internal server error|status code 5|HTTP 5\d{2}/i.test(h)) ||
+    /crash|error|exception|stack|trace|bad gateway|internal server error|status code 5|HTTP 5\d{2}|502|503|504/i.test(lowerT)
   ) {
     actions.add('Check server logs / Sentry');
   }
