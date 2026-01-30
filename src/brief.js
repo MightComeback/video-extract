@@ -449,6 +449,16 @@ export function extractPaths(transcript) {
   const tokens = raw.split(/\s+/);
   
   for (const t of tokens) {
+    if (/^https?:\/\//.test(t)) {
+      try {
+        const u = new URL(t);
+        if (u.pathname && u.pathname !== '/') out.add(u.pathname);
+      } catch (e) {
+        // ignore
+      }
+      continue;
+    }
+
     if (!t.startsWith('/')) continue;
     
     // Clean trailing punctuation including ) ] } which regex missed
