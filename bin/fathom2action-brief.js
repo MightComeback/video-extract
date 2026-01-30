@@ -255,6 +255,7 @@ async function main() {
         cmd: cmdName,
         source,
         title,
+        date: extracted.date,
         transcript: extracted.text,
         teaserMax: maxTeaser,
         timestampsMax: maxTimestamps,

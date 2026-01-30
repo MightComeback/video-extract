@@ -228,6 +228,7 @@ export function renderBrief({
   cmd = 'fathom2action',
   source,
   title,
+  date,
   transcript,
   fetchError,
   teaserMax = 6,
@@ -236,6 +237,7 @@ export function renderBrief({
   const cmdName = oneLine(cmd) || 'fathom2action';
   const src = normalizeUrlLike(source);
   const t = oneLine(title);
+  const d = oneLine(date);
   const teaserLimit = teaserMax == null ? 6 : Number(teaserMax);
   const timestampsLimit = timestampsMax == null ? 6 : Number(timestampsMax);
 
@@ -296,7 +298,7 @@ export function renderBrief({
     '- Where (page/URL): ',
     '- Browser / OS: ',
     '- Build / SHA: ',
-    '- When: ',
+    `- When: ${d || ''}`,
     '',
     '## Attachments / evidence',
     '- Screenshot(s): ',

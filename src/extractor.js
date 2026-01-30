@@ -1171,39 +1171,61 @@ export function extractFromStdin({ content, source }) {
     return null;
   }
 
-  // Support both orders for copy/paste convenience:
-  //   1) Source first, then Title
-  //   2) Title first, then Source
-  while (idx < lines.length && !String(lines[idx] || '').trim()) idx++;
+  function takeDate(line) {
+    const s = String(line || '').trim().replace(/^>+\s*/, '');
+    if (!s) return null;
 
-  const firstNonEmpty = String(lines[idx] || '').trim();
-  const maybeFirstTitle = takeTitle(firstNonEmpty);
-  const maybeFirstSource = takeSource(firstNonEmpty);
+    // Date: 2025-01-30
+    const m = s.match(/^(?:date|time|when)\s*[:=\-–—]\s*(.+)$/i);
+    if (m) return String(m[1] || '').trim();
 
-  if (maybeFirstSource) {
-    src = maybeFirstSource;
-    idx++;
-  } else if (maybeFirstTitle) {
-    title = maybeFirstTitle;
-    idx++;
+    // Bare YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
 
-    while (idx < lines.length && !String(lines[idx] || '').trim()) idx++;
-
-    const nextLine = String(lines[idx] || '').trim();
-    const maybeNextSource = takeSource(nextLine);
-    if (maybeNextSource) {
-      src = maybeNextSource;
-      idx++;
-    }
+    return null;
   }
 
-  // Optional title line after Source (or as the first line if Source isn't a URL).
-  while (idx < lines.length && !String(lines[idx] || '').trim()) idx++;
+  let date = '';
 
-  const maybeTitle = takeTitle(String(lines[idx] || '').trim());
-  if (maybeTitle) {
-    title = maybeTitle;
-    idx++;
+  // Consume metadata headers until we hit content.
+  // We stop if we encounter a line that isn't a recognized header and isn't empty.
+  // (Empty lines are skipped).
+  while (idx < lines.length) {
+    const line = String(lines[idx] || '').trim();
+    if (!line) {
+      idx++;
+      continue;
+    }
+
+    let matched = false;
+
+    // 1. Source (URL or Source: ...)
+    const s = takeSource(line);
+    if (s) {
+      src = s;
+      date = date; // keep existing if any
+      idx++;
+      continue;
+    }
+
+    // 2. Title (Title: ... or # ...)
+    const t = takeTitle(line);
+    if (t) {
+      title = t;
+      idx++;
+      continue;
+    }
+
+    // 3. Date (Date: ... or YYYY-MM-DD)
+    const d = takeDate(line);
+    if (d) {
+      date = d;
+      idx++;
+      continue;
+    }
+
+    // If nothing matched, we assume it's the start of the transcript/notes.
+    break;
   }
 
   const text = lines.slice(idx).join('\n').trim();
@@ -1214,6 +1236,7 @@ export function extractFromStdin({ content, source }) {
     text,
     mediaUrl: '',
     title,
+    date,
     suggestedTitle: '',
     fetchError: null,
     artifactsDir: null,
