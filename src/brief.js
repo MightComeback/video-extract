@@ -404,6 +404,13 @@ function generateNextActions(transcript, actualHints = []) {
     actions.add('Test on physical device');
   }
 
+  // Database / Data
+  if (
+    /database|sql|postgres|mongo|migration|seed|corrupt data|data integrity/i.test(lowerT)
+  ) {
+    actions.add('Check database state / migrations');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
