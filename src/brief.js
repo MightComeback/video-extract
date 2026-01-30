@@ -411,6 +411,13 @@ function generateNextActions(transcript, actualHints = []) {
     actions.add('Check database state / migrations');
   }
 
+  // Cache / Cookies
+  if (
+    /cache|cookies|clear storage|local storage|session storage|stale data/i.test(lowerT)
+  ) {
+    actions.add('Clear cache / cookies');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
