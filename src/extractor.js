@@ -544,11 +544,12 @@ export function normalizeFetchedContent(content, baseUrl = null) {
   mediaUrl = resolveMaybeRelativeUrl(mediaUrl, baseUrl);
   const date = extractDateFromHtml(s);
   const description = extractDescriptionFromHtml(s);
+  const author = resolveAuthor(s);
 
   // If a share page embeds a transcript/notes in JSON, prefer that over tag-stripping.
   const embeddedTranscript = tryExtractTranscriptFromEmbeddedJson(s);
   if (embeddedTranscript) {
-    return { text: embeddedTranscript, suggestedTitle: extractTitleFromHtml(s), mediaUrl, date, description };
+    return { text: embeddedTranscript, suggestedTitle: extractTitleFromHtml(s), mediaUrl, date, description, author };
   }
 
   const stripped = stripHtmlToText(s);
@@ -558,7 +559,8 @@ export function normalizeFetchedContent(content, baseUrl = null) {
     suggestedTitle: extractTitleFromHtml(s),
     mediaUrl,
     date,
-    description
+    description,
+    author
   };
 }
 
@@ -1018,6 +1020,7 @@ export async function extractFromUrl(
       title: norm.suggestedTitle || '',
       date: norm.date || '',
       description: norm.description || '',
+      author: norm.author || '',
       suggestedTitle: norm.suggestedTitle,
       fetchError: null,
 
@@ -1111,6 +1114,7 @@ export async function extractFromUrl(
     title: '',
     date: '',
     description: '',
+    author: '',
     suggestedTitle: '',
     fetchError: fetched.error,
     artifactsDir: null,
@@ -1235,7 +1239,16 @@ export function extractFromStdin({ content, source }) {
     return null;
   }
 
+  function takeAuthor(line) {
+    const s = String(line || '').trim().replace(/^>+\s*/, '');
+    if (!s) return null;
+    const m = s.match(/^(?:author|who|by)\s*[:=\-–—]\s*(.*)$/i);
+    if (m) return String(m[1] || '').trim();
+    return null;
+  }
+
   let date = '';
+  let author = '';
 
   // Consume metadata headers until we hit content.
   // We stop if we encounter a line that isn't a recognized header and isn't empty.
@@ -1274,6 +1287,14 @@ export function extractFromStdin({ content, source }) {
       continue;
     }
 
+    // 4. Author
+    const a = takeAuthor(line);
+    if (a !== null) {
+      author = a;
+      idx++;
+      continue;
+    }
+
     // If nothing matched, we assume it's the start of the transcript/notes.
     break;
   }
@@ -1288,6 +1309,7 @@ export function extractFromStdin({ content, source }) {
     title,
     date,
     description: '',
+    author,
     suggestedTitle: '',
     fetchError: null,
     artifactsDir: null,

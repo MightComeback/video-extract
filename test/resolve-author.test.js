@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { resolveAuthor } from '../src/extractor.js';
+import { resolveAuthor, extractFromStdin } from '../src/extractor.js';
 
 test('resolveAuthor extracts author from meta tag', () => {
   const html = '<html><head><meta name="author" content="Ivan"></head><body></body></html>';
@@ -10,4 +10,23 @@ test('resolveAuthor extracts author from meta tag', () => {
 test('resolveAuthor returns null when missing', () => {
   const html = '<html><head></head><body></body></html>';
   assert.strictEqual(resolveAuthor(html), null);
+});
+
+test('extractFromStdin extracts Author header', () => {
+  const input = `
+Author: Alice
+https://fathom.video/...
+Transcipt...
+  `.trim();
+  const res = extractFromStdin({ content: input });
+  assert.strictEqual(res.author, 'Alice');
+});
+
+test('extractFromStdin extracts By header', () => {
+  const input = `
+By: Bob
+Transcipt...
+  `.trim();
+  const res = extractFromStdin({ content: input });
+  assert.strictEqual(res.author, 'Bob');
 });
