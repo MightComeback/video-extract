@@ -23,7 +23,7 @@ npm run lint
 ## Project Structure
 
 - `bin/`: CLI entry points.
-- `src/`: Core logic (`brief.js` generatemardown, `extractor.js` handles Fathom extraction).
+- `src/`: Core logic (`brief.js` generates markdown, `extractor.js` handles Fathom extraction).
 - `test/`: Unit tests.
 - `scripts/`: Helper scripts (release, linear check).
 
