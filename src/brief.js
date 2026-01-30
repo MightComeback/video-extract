@@ -339,6 +339,7 @@ export function renderBrief({
   title,
   date,
   description,
+  author,
   transcript,
   fetchError,
   teaserMax = 6,
@@ -348,6 +349,7 @@ export function renderBrief({
   const src = normalizeUrlLike(source || url);
   const t = oneLine(title);
   const d = oneLine(date);
+  const auth = oneLine(author);
   const desc = oneLine(description);
   let teaserLimit = teaserMax == null ? 6 : Number(teaserMax);
   if (Number.isNaN(teaserLimit)) teaserLimit = 6;
@@ -411,7 +413,7 @@ export function renderBrief({
     `- Actual: ${hints.actual.length ? hints.actual.join(' / ') : ''}`,
     '',
     '## Environment / context',
-    `- Who: ${speakers.join(', ')}`,
+    `- Who: ${speakers.length ? speakers.join(', ') : (auth || '(unknown)')}`,
     '- Where (page/URL): ',
     `- Browser / OS: ${envLikely || '(unknown)'}`,
     '- Build / SHA: ',

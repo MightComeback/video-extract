@@ -40,5 +40,5 @@ Alice: Cool.
 test('handles empty transcript', () => {
   const brief = renderBrief({ source: 'http://example.com', transcript: '' });
   const whoLine = brief.split('\n').find(line => line.startsWith('- Who: '));
-  assert.equal(whoLine, '- Who: ');
+  assert.equal(whoLine, '- Who: (unknown)');
 });
