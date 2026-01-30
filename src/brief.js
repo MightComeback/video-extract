@@ -308,7 +308,7 @@ export function renderBrief({
     '## Attachments / evidence',
     '- Screenshot(s): ',
     '- Console/logs: ',
-    '- Video: ',
+    `- Video: ${src || ''}`,
     '',
 
     // Optional sections: allow callers to hide them entirely by passing 0.
