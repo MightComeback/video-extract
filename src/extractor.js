@@ -21,11 +21,14 @@ export function findTranscriptInObject(obj) {
     const time = (item.startTime !== undefined) ? item.startTime : (item.start || 0);
     const text = item.text || '';
     
-    // Format time mm:ss
+    // Format time hh:mm:ss or mm:ss
     const s = Math.floor(time);
-    const mm = Math.floor(s / 60);
-    const ss = s % 60;
-    const ts = `${mm}:${String(ss).padStart(2, '0')}`;
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sc = s % 60;
+    const ts = h > 0 
+      ? `${h}:${String(m).padStart(2, '0')}:${String(sc).padStart(2, '0')}` 
+      : `${m}:${String(sc).padStart(2, '0')}`;
     
     return `${ts}: ${text}`;
   }).join('\n');

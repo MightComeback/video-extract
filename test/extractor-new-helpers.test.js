@@ -48,3 +48,9 @@ test('extractTranscriptUrlFromHtml handles query params', () => {
   const result = extractTranscriptUrlFromHtml(html);
   assert.strictEqual(result, 'https://cdn.loom.com/sub.vtt?token=123');
 });
+
+test('findTranscriptInObject formats hours correctly', () => {
+  const input = [{ startTime: 3665, text: 'Long video' }];
+  const expected = '1:01:05: Long video';
+  assert.strictEqual(findTranscriptInObject(input), expected);
+});
