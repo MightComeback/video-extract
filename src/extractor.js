@@ -39,7 +39,7 @@ function resolveUserAgent(override = null) {
   const o = String(override || '').trim();
   if (o) return o;
 
-  const env = String(process.env.FATHOM_USER_AGENT || '').trim();
+  const env = String(process.env.VIDEO_EXTRACT_USER_AGENT || process.env.FATHOM_USER_AGENT || '').trim();
   if (env) return env;
 
   const platform = process.platform || 'unknown';
@@ -295,6 +295,24 @@ function sliceLikelyTranscript(text) {
   const hasTimestamps = /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(candidate);
   const lineCount = candidate.split('\n').filter((l) => l.trim()).length;
   if (hasTimestamps || lineCount >= 3) return candidate;
+
+  return '';
+}
+
+function tryExtractLoomTranscript(html) {
+  // Loom often embeds state in a script tag (application/json or similar).
+  const s = String(html);
+  
+  // Look for VTT link in standard metadata
+  const vtt = s.match(/"([^"]+\.vtt[^"]*)"/);
+  if (vtt && vtt[1]) {
+    // We would need to fetch this VTT.
+    // For now, let's just return the URL if we can't fetch it here easily (requires async).
+    // The current flow expects text.
+    // If we return a specific marker, the caller could handle it?
+    // Actually, `extractFromUrl` does a secondary fetch for copyTranscriptUrl.
+    // We should probably rely on the generic JSON scanner which I see handles "captions" keys.
+  }
 
   return '';
 }
