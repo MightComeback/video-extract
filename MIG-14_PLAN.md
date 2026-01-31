@@ -10,9 +10,9 @@
 - Loom support: Implemented in `src/providers/loom.js`. Verified by tests.
 - Youtube support: Helper file exists. Needs verification.
 - Vimeo support: Helper file exists. Needs verification.
+- Cleanup: Root directory debris removed.
 
 ## Next Steps
 1. Verify Loom tests pass.
-2. Clean up root directory debris.
-3. Verify Youtube support.
-4. Verify Vimeo support.
+2. Verify Youtube support.
+3. Verify Vimeo support.
