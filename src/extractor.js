@@ -5,7 +5,7 @@ import { resolve, join } from 'path';
 import { exec } from 'child_process';
 import util from 'util';
 import { extractLoomMetadataFromHtml, isLoomUrl, parseLoomTranscript, fetchLoomOembed } from './providers/loom.js';
-import { isYoutubeUrl, extractYoutubeMetadataFromHtml, fetchYoutubeOembed } from './providers/youtube.js';
+import { isYoutubeUrl, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
 import { isVimeoUrl, extractVimeoMetadataFromHtml } from './providers/vimeo.js';
 import { parseSimpleVtt, downloadMedia } from './utils.js';
 
@@ -267,11 +267,18 @@ async function extractYoutube(url, page) {
         }
     }
 
+    let directVideoUrl = null;
+    try {
+        directVideoUrl = await fetchYoutubeMediaUrl(url);
+    } catch (e) {
+        console.warn('Failed to resolve YouTube media stream:', e);
+    }
+
     return {
         title: meta?.title || 'YouTube Video',
         date: new Date().toISOString(), 
         transcript: transcript || '(No transcript found)',
-        videoUrl: url, 
+        videoUrl: directVideoUrl, 
         sourceUrl: url,
         author: meta?.author
     };

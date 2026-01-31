@@ -1,4 +1,5 @@
 import { extractJsonBlock } from '../utils.js';
+import ytdl from 'ytdl-core';
 
 export function isYoutubeUrl(url) {
   const u = String(url || '').trim();
@@ -108,6 +109,24 @@ export function extractYoutubeMetadataFromHtml(html) {
 
     return result;
   } catch {
+    return null;
+  }
+}
+
+export async function fetchYoutubeMediaUrl(url) {
+  try {
+    const info = await ytdl.getInfo(url);
+    // Prefer mp4 with audio+video (fmt 22, 18 etc for progressive download)
+    // 'audioandvideo' filter + 'highest' quality
+    let format = ytdl.chooseFormat(info.formats, { quality: 'highest', filter: 'audioandvideo' });
+    if (format && format.url) return format.url;
+    
+    // Fallback: simple video
+    format = ytdl.chooseFormat(info.formats, { quality: 'highest', filter: 'videoandaudio' });
+    return format?.url || null;
+  } catch (e) {
+    // Suppress errors (could be age restricted etc)
+    console.warn('ytdl warning:', e.message);
     return null;
   }
 }
