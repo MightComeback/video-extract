@@ -36,3 +36,10 @@ test('MIG-14: extractEnvironment detects Pico', () => {
   });
   assert.match(brief, /Pico/);
 });
+
+test('MIG-14: extractEnvironment detects HTC Vive', () => {
+  const brief = renderBrief({
+    transcript: 'I tested this on my HTC Vive and the audio is distorted.',
+  });
+  assert.match(brief, /HTC Vive/);
+});

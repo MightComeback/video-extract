@@ -309,7 +309,7 @@ function extractEnvironment(transcript) {
   const hits = [];
 
   const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo', 'samsung internet', 'orion', 'tor browser', 'zen', 'librewolf', 'ladybird', 'floorp', 'waterfox', 'opera gx'];
-  const os = ['mac', 'macos', 'sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina', 'mojave', 'high sierra', 'sierra', 'el capitan', 'yosemite', 'mavericks', 'windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'nixos', 'alpine', 'manjaro', 'gentoo', 'opensuse', 'kali', 'linux', 'android', 'ios', 'iphone', 'ipad', 'chromeos', 'chromebook', 'cros', 'visionos', 'vision pro', 'oculus', 'quest', 'meta quest', 'psvr', 'psvr2', 'playstation vr', 'playstation 5', 'playstation 4', 'playstation', 'ps5', 'ps4', 'xbox series x', 'xbox series s', 'xbox', 'steam deck', 'steamos', 'pico'];
+  const os = ['mac', 'macos', 'sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina', 'mojave', 'high sierra', 'sierra', 'el capitan', 'yosemite', 'mavericks', 'windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'nixos', 'alpine', 'manjaro', 'gentoo', 'opensuse', 'kali', 'linux', 'android', 'ios', 'iphone', 'ipad', 'chromeos', 'chromebook', 'cros', 'visionos', 'vision pro', 'oculus', 'quest', 'meta quest', 'psvr', 'psvr2', 'playstation vr', 'playstation 5', 'playstation 4', 'playstation', 'ps5', 'ps4', 'xbox series x', 'xbox series s', 'xbox', 'steam deck', 'steamos', 'pico', 'vive', 'htc vive'];
   const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface', 'motorola', 'oppo', 'vivo', 'realme'];
   const environments = ['staging', 'production', 'prod', 'localhost'];
   const privacy = ['incognito', 'private window', 'private browsing', 'guest mode'];
@@ -340,6 +340,7 @@ function extractEnvironment(transcript) {
       else if (o === 'xbox') hits.push('Xbox');
       else if (o === 'steam deck' || o === 'steamos') hits.push('Steam Deck');
       else if (o === 'pico') hits.push('Pico');
+      else if (o === 'vive' || o === 'htc vive') hits.push('HTC Vive');
       else if(['sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina', 'mojave', 'high sierra', 'sierra', 'el capitan', 'yosemite', 'mavericks'].includes(o)) {
         if (o === 'high sierra') hits.push('macOS High Sierra');
         else if (o === 'el capitan') hits.push('macOS El Capitan');
