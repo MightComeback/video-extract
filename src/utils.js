@@ -1,3 +1,7 @@
+import { createWriteStream } from 'fs';
+import { pipeline } from 'stream/promises';
+import { Readable } from 'stream';
+
 export function extractJsonBlock(html, prefixRegex) {
   const match = html.match(prefixRegex);
   if (!match) return null;
@@ -41,3 +45,15 @@ export function extractJsonBlock(html, prefixRegex) {
   }
   return null;
 }
+
+export async function downloadMedia(url, destPath) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Unexpected response ${response.statusText}`);
+  
+  if (response.body) {
+      await pipeline(Readable.fromWeb(response.body), createWriteStream(destPath));
+  } else {
+      throw new Error('No response body');
+  }
+}
+
