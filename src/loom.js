@@ -1,7 +1,8 @@
 export function isLoomUrl(url) {
-  const u = String(url || '').toLowerCase();
+  const u = String(url || '').trim();
   // Loom share URLs: loom.com/share/ID, loom.com/v/ID
-  return /loom\.com\/(?:share|v|embed)\/[a-z0-9-]+/i.test(u);
+  // Be stricter to avoid false positives (e.g. google search results)
+  return /^(?:https?:\/\/)?(?:www\.)?loom\.com\/(?:share|v|embed)\/[a-z0-9-]+/i.test(u);
 }
 
 export function extractLoomId(url) {

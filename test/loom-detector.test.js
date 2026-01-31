@@ -11,6 +11,7 @@ test('isLoomUrl identifies valid Loom URLs', (t) => {
 
 test('isLoomUrl rejects invalid URLs', (t) => {
   assert.strictEqual(isLoomUrl('https://google.com/share/123'), false);
+  assert.strictEqual(isLoomUrl('https://google.com/?q=loom.com/share/123'), false);
   assert.strictEqual(isLoomUrl('https://www.loom.com/'), false);
   assert.strictEqual(isLoomUrl(''), false);
   assert.strictEqual(isLoomUrl(null), false);
