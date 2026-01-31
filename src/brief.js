@@ -308,7 +308,7 @@ function extractEnvironment(transcript) {
   const s = String(transcript || '').toLowerCase();
   const hits = [];
 
-  const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo', 'samsung internet', 'orion', 'tor browser', 'zen', 'librewolf', 'ladybird', 'floorp', 'waterfox'];
+  const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo', 'samsung internet', 'orion', 'tor browser', 'zen', 'librewolf', 'ladybird', 'floorp', 'waterfox', 'opera gx'];
   const os = ['mac', 'macos', 'sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina', 'mojave', 'high sierra', 'sierra', 'el capitan', 'yosemite', 'mavericks', 'windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'nixos', 'alpine', 'manjaro', 'gentoo', 'opensuse', 'kali', 'linux', 'android', 'ios', 'iphone', 'ipad', 'chromeos', 'chromebook', 'cros', 'visionos', 'vision pro', 'oculus', 'quest', 'meta quest', 'playstation 5', 'playstation 4', 'playstation', 'ps5', 'ps4', 'xbox series x', 'xbox series s', 'xbox', 'steam deck', 'steamos'];
   const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface', 'motorola', 'oppo', 'vivo', 'realme'];
   const environments = ['staging', 'production', 'prod', 'localhost'];
@@ -320,6 +320,7 @@ function extractEnvironment(transcript) {
       if (b === 'duckduckgo') hits.push('DuckDuckGo');
       else if (b === 'samsung internet') hits.push('Samsung Internet');
       else if (b === 'librewolf') hits.push('LibreWolf');
+      else if (b === 'opera gx') hits.push('Opera GX');
       else hits.push(b.charAt(0).toUpperCase() + b.slice(1));
     }
   }
@@ -388,6 +389,10 @@ function extractEnvironment(transcript) {
   const unique = [...new Set(hits)];
   if (unique.includes('Mac') && unique.includes('macOS')) {
     unique.splice(unique.indexOf('Mac'), 1);
+  }
+  // Dedupe Opera if Opera GX is present
+  if (unique.includes('Opera GX') && unique.includes('Opera')) {
+    unique.splice(unique.indexOf('Opera'), 1);
   }
   // Dedupe generic macOS if specific version exists
   const hasSpecificMac = unique.some(k => /^macOS [A-Z]/.test(k));
