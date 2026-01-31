@@ -299,7 +299,7 @@ function extractEnvironment(transcript) {
   const hits = [];
 
   const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo', 'samsung internet', 'orion', 'tor browser', 'zen'];
-  const os = ['mac', 'macos', 'sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina', 'windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'nixos', 'alpine', 'manjaro', 'linux', 'android', 'ios', 'iphone', 'ipad'];
+  const os = ['mac', 'macos', 'sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina', 'mojave', 'high sierra', 'sierra', 'el capitan', 'yosemite', 'mavericks', 'windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'nixos', 'alpine', 'manjaro', 'linux', 'android', 'ios', 'iphone', 'ipad'];
   const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface', 'motorola', 'oppo', 'vivo', 'realme'];
   const environments = ['staging', 'production', 'prod', 'localhost'];
 
@@ -315,7 +315,12 @@ function extractEnvironment(transcript) {
       // Normalize macos -> macOS, ios -> iOS
       if (o === 'macos') hits.push('macOS');
       else if (o === 'ios' || o === 'iphone' || o === 'ipad') hits.push('iOS');
-      else if(['sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina'].includes(o)) hits.push(`macOS ${o.charAt(0).toUpperCase() + o.slice(1)}`);
+      else if(['sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina', 'mojave', 'high sierra', 'sierra', 'el capitan', 'yosemite', 'mavericks'].includes(o)) {
+        if (o === 'high sierra') hits.push('macOS High Sierra');
+        else if (o === 'el capitan') hits.push('macOS El Capitan');
+        else if (o === 'big sur') hits.push('macOS Big Sur');
+        else hits.push(`macOS ${o.charAt(0).toUpperCase() + o.slice(1)}`);
+      }
       else if (o === 'centos') hits.push('CentOS');
       else if (o === 'rhel') hits.push('RHEL');
       else if (o === 'arch linux') hits.push('Arch Linux');
@@ -348,6 +353,10 @@ function extractEnvironment(transcript) {
   const hasSpecificMac = unique.some(k => /^macOS [A-Z]/.test(k));
   if (hasSpecificMac && unique.includes('macOS')) {
     unique.splice(unique.indexOf('macOS'), 1);
+  }
+  // Dedupe High Sierra vs Sierra
+  if (unique.includes('macOS High Sierra') && unique.includes('macOS Sierra')) {
+    unique.splice(unique.indexOf('macOS Sierra'), 1);
   }
   // Dedupe generic Windows if specific version exists
   const hasSpecificWin = unique.some(k => /^Windows \d/.test(k));
