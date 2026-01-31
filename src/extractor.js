@@ -99,10 +99,10 @@ function extractMetaContent(html, { name, property }) {
   for (const tag of metas) {
     const attrs = {};
 
-    // Best-effort attribute parse: key="value" and key='value'
-    for (const m of tag.matchAll(/([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*("([\s\S]*?)"|'([\s\S]*?)')/g)) {
+    // Best-effort attribute parse: key="value", key='value', and key=value
+    for (const m of tag.matchAll(/([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*(?:"([\s\S]*?)"|'([\s\S]*?)'|([^"'\s>]+))/g)) {
       const key = (m[1] || '').toLowerCase();
-      const val = m[3] ?? m[4] ?? '';
+      const val = m[2] ?? m[3] ?? m[4] ?? '';
       attrs[key] = val;
     }
 
