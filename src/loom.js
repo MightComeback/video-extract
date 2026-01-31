@@ -90,9 +90,9 @@ export function extractLoomMetadataFromHtml(html) {
 
   // Find Transcript
   // Strategy: Look for VideoTranscriptDetails
-  const transcriptKey = Object.keys(state).find(k => k.startsWith('VideoTranscriptDetails:'));
-  if (transcriptKey) {
-    const t = state[transcriptKey];
+  const transcriptDetailsKey = Object.keys(state).find(k => k.startsWith('VideoTranscriptDetails:'));
+  if (transcriptDetailsKey) {
+    const t = state[transcriptDetailsKey];
     if (t) {
       if (t.captions_source_url) {
         result.transcriptUrl = t.captions_source_url;
@@ -101,6 +101,33 @@ export function extractLoomMetadataFromHtml(html) {
         // For now, our extractor supports VTT strings and "copy_transcript" JSON. 
         // Loom JSON source_url might need a parser, but let's expose it if it ends in .json
         result.transcriptUrl = t.source_url;
+      }
+    }
+  }
+
+  // Strategy: Look for in-memory Transcript object (avoid fetching if possible)
+  // Usually has structure: Transcript:XYZ -> paragraphs -> [ {__ref: 'TranscriptParagraph:ABC'}, ... ]
+  const transcriptKey = Object.keys(state).find(k => k.startsWith('Transcript:') && state[k].paragraphs);
+  if (transcriptKey) {
+    const tObj = state[transcriptKey];
+    if (Array.isArray(tObj.paragraphs)) {
+      const parts = [];
+      for (const ref of tObj.paragraphs) {
+        const p = ref && ref.__ref ? state[ref.__ref] : null;
+        if (p && p.text) {
+          // Attempt to format timestamp if available (seconds)
+          let prefix = '';
+          if (typeof p.startTime === 'number') {
+            const s = Math.floor(p.startTime);
+            const mm = Math.floor(s / 60);
+            const ss = s % 60;
+            prefix = `${mm}:${String(ss).padStart(2, '0')} `;
+          }
+          parts.push(prefix + p.text.trim());
+        }
+      }
+      if (parts.length > 0) {
+        result.transcriptText = parts.join('\n');
       }
     }
   }
