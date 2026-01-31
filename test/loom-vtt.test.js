@@ -37,3 +37,39 @@ test('extractTranscriptUrlFromHtml returns empty if no VTT', (t) => {
     const url = extractTranscriptUrlFromHtml(html, 'https://example.com');
     assert.equal(url, '');
 });
+
+test('extractTranscriptUrlFromHtml prioritizes English VTT', (t) => {
+  const html = `
+    <html>
+      <script>
+        const data = {
+          captions: [
+            { "url": "https://cdn.loom.com/sessions/123/transcription_fr.vtt" },
+            { "url": "https://cdn.loom.com/sessions/123/transcription_en.vtt" },
+            { "url": "https://cdn.loom.com/sessions/123/transcription_es.vtt" }
+          ]
+        }
+      </script>
+    </html>
+  `;
+  
+  const url = extractTranscriptUrlFromHtml(html, 'https://www.loom.com/share/123');
+  // Should pick _en over _fr (which comes first)
+  assert.equal(url, 'https://cdn.loom.com/sessions/123/transcription_en.vtt');
+});
+
+test('extractTranscriptUrlFromHtml falls back to first if no English', (t) => {
+    const html = `
+      <script>
+        const data = {
+          captions: [
+            { "url": "https://cdn.loom.com/sessions/123/transcription_fr.vtt" },
+            { "url": "https://cdn.loom.com/sessions/123/transcription_es.vtt" }
+          ]
+        }
+      </script>
+    `;
+    
+    const url = extractTranscriptUrlFromHtml(html, 'https://www.loom.com/share/123');
+    assert.equal(url, 'https://cdn.loom.com/sessions/123/transcription_fr.vtt');
+});
