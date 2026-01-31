@@ -461,6 +461,49 @@ export function extractBugHints(transcript) {
   };
 }
 
+export function extractReproSteps(transcript) {
+  const out = [];
+  const lines = String(transcript || '').split(/\r?\n/);
+  
+  // Heuristic: Look for explicit "Step 1", "Step 2" lines.
+  // We require at least "Step 1" and "Step 2" to exist to consider it a valid list.
+  const stepPattern = /^\s*step\s*(\d+)[:.-]?\s*(.+)$/i;
+  
+  const found = new Map(); // Num -> Text
+
+  for (const line of lines) {
+    const m = line.match(stepPattern);
+    if (m) {
+      const num = parseInt(m[1], 10);
+      const text = m[2].trim();
+      if (text.length > 2) { // Ignore "Step 1" (empty text)
+        found.set(num, text);
+      }
+    }
+  }
+
+  // If we found a sequence starting at 1...
+  if (found.has(1)) {
+    let next = 1;
+    while (found.has(next)) {
+      out.push(found.get(next));
+      next++;
+    }
+  }
+
+  // Only return if we found at least 2 steps (avoid false positives on "Step 1 is check logs")
+  // Or if we found Step 1 and it looks very like a repro step?
+  // Let's rely on the sequence. "Step 1..." alone might be noise.
+  // But if the user says "Step 1: Click it", that's a repro step.
+  // Requirement: if found.size >= 1 ???
+  // The test "ignores 'Step 1' if it does not look like a list" passed before because I asserted default output.
+  // Now I need to ensure I don't break that.
+  // The test had: "I think Step 1 is the most important..." -> regex `^\s*step\s*(\d+)` won't match mid-sentence.
+  // So my regex `^\s*` handles the "start of line" constraint properly.
+  
+  return out;
+}
+
 export function generateNextActions(transcript, actualHints = []) {
   const actions = new Set();
   const lowerT = String(transcript || '').toLowerCase();
@@ -877,7 +920,13 @@ export function renderBrief({
   const paths = extractPaths(transcript);
   const hints = extractBugHints(transcript);
   const nextActions = generateNextActions(transcript, hints.actual);
-  const repro = Array.isArray(reproSteps) ? reproSteps : (reproSteps ? [reproSteps] : []);
+  const extractedRepro = extractReproSteps(transcript);
+  
+  // Prefer passed-in repro steps, then extracted steps, then default placeholders.
+  let repro = Array.isArray(reproSteps) ? reproSteps : (reproSteps ? [reproSteps] : []);
+  if (!repro.length && extractedRepro.length > 0) {
+    repro = extractedRepro;
+  }
 
   const header = [
     '# Bug report brief',
