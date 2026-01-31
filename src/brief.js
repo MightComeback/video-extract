@@ -471,6 +471,20 @@ export function extractBugHints(transcript) {
   };
 }
 
+export function extractStackTraces(transcript) {
+  const s = String(transcript || '');
+  const out = [];
+  // Basic heuristic: Line starting with ErrorName: ... followed by indented 'at ...' lines.
+  // We require at least one 'at ' line indentation.
+  const re = /(?:^|\n)((?:[a-zA-Z0-9_$]+Error|[a-zA-Z0-9_$]+Exception|SyntaxError|TypeError|ReferenceError|RangeError|URIError|EvalError|AggregateError):[^\n]*\n(?:\s+at [^\n]+\n)+)/g;
+  
+  let m;
+  while ((m = re.exec(s))) {
+    out.push(m[1].trim());
+  }
+  return out;
+}
+
 export function extractReproSteps(transcript) {
   const out = [];
   const lines = String(transcript || '').split(/\r?\n/);
@@ -931,6 +945,7 @@ export function renderBrief({
   const hints = extractBugHints(transcript);
   const nextActions = generateNextActions(transcript, hints.actual);
   const extractedRepro = extractReproSteps(transcript);
+  const stackTraces = extractStackTraces(transcript);
   
   // Prefer passed-in repro steps, then extracted steps, then default placeholders.
   let repro = Array.isArray(reproSteps) ? reproSteps : (reproSteps ? [reproSteps] : []);
@@ -997,6 +1012,7 @@ export function renderBrief({
     '## Attachments / evidence',
     '- Screenshot(s): ',
     '- Console/logs: ',
+    ...(stackTraces.length ? ['```', ...stackTraces, '```'] : []),
     `- Video: ${src || ''}`,
     '',
 
