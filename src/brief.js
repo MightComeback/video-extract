@@ -276,7 +276,7 @@ function extractEnvironment(transcript) {
   const hits = [];
 
   const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo', 'samsung internet', 'orion'];
-  const os = ['mac', 'macos', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'linux', 'android', 'ios', 'iphone', 'ipad'];
+  const os = ['mac', 'macos', 'windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'linux', 'android', 'ios', 'iphone', 'ipad'];
   const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface', 'motorola'];
   const environments = ['staging', 'production', 'prod', 'localhost'];
 
@@ -288,13 +288,17 @@ function extractEnvironment(transcript) {
     }
   }
   for (const o of os) {
-    if (new RegExp(`\\b${o}\\b`, 'i').test(s)) {
+    if (new RegExp(`\\b${o.replace('.', '\\.')}\\b`, 'i').test(s)) {
       // Normalize macos -> macOS, ios -> iOS
       if (o === 'macos') hits.push('macOS');
       else if (o === 'ios' || o === 'iphone' || o === 'ipad') hits.push('iOS');
       else if (o === 'centos') hits.push('CentOS');
       else if (o === 'rhel') hits.push('RHEL');
       else if (o === 'arch linux') hits.push('Arch Linux');
+      else if (o.startsWith('windows ')) {
+        // Specific Windows version
+        hits.push(o.charAt(0).toUpperCase() + o.slice(1));
+      }
       else hits.push(o.charAt(0).toUpperCase() + o.slice(1));
     }
   }
@@ -315,6 +319,17 @@ function extractEnvironment(transcript) {
   if (unique.includes('Mac') && unique.includes('macOS')) {
     unique.splice(unique.indexOf('Mac'), 1);
   }
+  // Dedupe generic Windows if specific version exists
+  const hasSpecificWin = unique.some(k => /^Windows \d/.test(k));
+  if (hasSpecificWin && unique.includes('Windows')) {
+    unique.splice(unique.indexOf('Windows'), 1);
+  }
+  // Dedupe Windows 8 if 8.1 is present
+  if (unique.includes('Windows 8.1') && unique.includes('Windows 8')) {
+    unique.splice(unique.indexOf('Windows 8'), 1);
+  }
+
+  return unique.join(', ');
 
   return unique.join(', ');
 }
