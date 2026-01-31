@@ -20,4 +20,13 @@ test('MIG-14: generateNextActions detects feature flags extended providers', asy
       '- [ ] Check feature flags / rollout status'
     ]);
   });
+
+  await t.test('detects Flagsmith related feature flag issues', () => {
+    const transcript = 'Flagsmith shows this feature is toggled off.';
+    const actions = generateNextActions(transcript);
+    assert.deepStrictEqual(actions, [
+      '- [ ] Reproduce locally',
+      '- [ ] Check feature flags / rollout status'
+    ]);
+  });
 });
