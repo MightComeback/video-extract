@@ -650,6 +650,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check search indexing / query logic');
   }
 
+  // Accessibility / Keyboard
+  if (
+    actualHints.some(h => /accessibility|a11y|screen reader|voiceover|talkback|keyboard|tab order|focus|contrast/i.test(h)) ||
+    /accessibility|a11y|screen reader|voiceover|talkback|keyboard|tab order|focus|contrast/i.test(lowerT)
+  ) {
+    actions.add('Check accessibility / keyboard navigation');
+  }
+
   // Pagination
   if (
     actualHints.some(h => /pagination|page \d|next page|load more|infinite scroll/i.test(h)) ||
