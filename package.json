@@ -1,27 +1,35 @@
 {
-  "name": "fathom-extract",
-  "private": true,
+  "name": "video-extract",
   "version": "0.1.0",
-  "description": "Turn a Fathom share link into an actionable bug report brief (fathom2action), and optionally extract the transcript + video (fathom-extract).",
+  "description": "Turn a Fathom or Loom share link into an actionable bug report brief, and extract transcript + video.",
   "type": "module",
-  "engines": {
-    "node": ">=20"
+  "bin": {
+    "video-brief": "./bin/fathom2action-brief.js",
+    "video-extract": "./bin/fathom2action-extract.js"
   },
   "scripts": {
     "test": "node --test",
-    "lint": "node --check bin/fathom2action-brief.js bin/fathom2action-extract.js bin/fathom2action.js src/brief.js src/extractor.js scripts/linear.mjs",
-    "test:ci": "node --test",
     "test:unit": "node --test",
-    "release": "./scripts/release.sh",
-    "check-status": "node scripts/linear.mjs issue-state-type MIG-14"
+    "test:ci": "node --test",
+    "lint": "node --check bin/fathom2action-brief.js bin/fathom2action-extract.js bin/fathom2action.js src/brief.js src/extractor.js scripts/linear.mjs",
+    "check-status": "node scripts/linear.mjs issue-state-type MIG-14",
+    "release": "./scripts/release.sh"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MightComeback/fathom-extract.git"
   },
+  "keywords": [],
+  "author": "",
   "license": "ISC",
-  "bin": {
-    "fathom-extract": "./bin/fathom2action-extract.js",
-    "fathom2action": "./bin/fathom2action-brief.js"
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "cheerio": "^1.0.0-rc.12"
+  },
+  "dependencies": {
+    "jsdom": "^24.1.0",
+    "puppeteer": "^22.12.1"
   }
 }

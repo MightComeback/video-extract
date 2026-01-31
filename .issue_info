@@ -1,0 +1,33 @@
+CONTINUE
+TITLE:Tool: Fathom link → actionable bug report brief (CLI + copy/paste)
+DESCRIPTION_START
+## Outcome
+
+Turn a Fathom recording/link into an *engineering-actionable* brief so you don’t watch the whole video.
+
+## Inputs (MVP)
+
+* A Fathom share link (or transcript/notes pasted if link is not fetchable).
+
+## Output format (MVP)
+
+* 1-sentence summary of the bug
+* Repro steps (numbered)
+* Expected vs actual
+* Environment/context (who/where/when)
+* Exact timestamp(s) from the call (if available)
+* “Next actions” checklist
+* Optional: suggested Linear/GitHub issue title
+
+## Acceptance Criteria
+
+* CLI command: `fathom2action <url>` OR `fathom2action --stdin`
+* Produces deterministic markdown output (ready to paste into Linear/GitHub)
+* Handles “cannot fetch link” gracefully (asks for transcript paste)
+
+## Definition of Done
+
+* Repo exists on [github.com/MightComeback](<http://github.com/MightComeback>) with README + examples
+* First release tagged v0.1
+* You use it on 3 real Fathom links and it saves you time
+DESCRIPTION_END
