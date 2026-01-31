@@ -313,6 +313,7 @@ function extractEnvironment(transcript) {
   const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface', 'motorola', 'oppo', 'vivo', 'realme'];
   const environments = ['staging', 'production', 'prod', 'localhost'];
   const privacy = ['incognito', 'private window', 'private browsing', 'guest mode'];
+  const extensions = ['ublock', 'adblock', 'ghostery', 'privacy badger', 'grammarly', 'lastpass', '1password', 'bitwarden', 'react devtools', 'vue devtools', 'redux devtools', 'metamask', 'tampermonkey', 'greasemonkey'];
 
   for (const b of browsers) {
     if (new RegExp(`\\b${b}\\b`, 'i').test(s)) {
@@ -373,6 +374,12 @@ function extractEnvironment(transcript) {
       else if (p === 'private window') hits.push('Private Window');
       else if (p === 'private browsing') hits.push('Private Browsing');
       else hits.push(p.charAt(0).toUpperCase() + p.slice(1));
+    }
+  }
+
+  for (const x of extensions) {
+    if (new RegExp(`\\b${x}\\b`, 'i').test(s)) {
+      hits.push(x.charAt(0).toUpperCase() + x.slice(1));
     }
   }
 
