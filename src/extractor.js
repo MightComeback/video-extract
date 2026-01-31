@@ -1115,6 +1115,7 @@ export async function extractFromUrl(
           if (meta.description && !norm.description) norm.description = meta.description;
           if (meta.mediaUrl) norm.mediaUrl = meta.mediaUrl;
           if (meta.transcriptUrl) norm._loomTranscriptUrl = meta.transcriptUrl;
+          if (meta.author && !norm.author) norm.author = meta.author;
         }
       } catch {
         // ignore
@@ -1133,6 +1134,7 @@ export async function extractFromUrl(
               if (sessionMeta.title && !norm.suggestedTitle) norm.suggestedTitle = sessionMeta.title;
               if (sessionMeta.description && !norm.description) norm.description = sessionMeta.description;
               if (sessionMeta.mediaUrl && !norm.mediaUrl) norm.mediaUrl = sessionMeta.mediaUrl;
+              if (sessionMeta.author && !norm.author) norm.author = sessionMeta.author;
             }
           }
         }
@@ -1159,6 +1161,7 @@ export async function extractFromUrl(
           if (meta.title && !norm.suggestedTitle) norm.suggestedTitle = meta.title;
           if (meta.description && !norm.description) norm.description = meta.description;
           if (meta.author && !norm.author) norm.author = meta.author;
+          if (meta.transcriptUrl) norm._youtubeTranscriptUrl = meta.transcriptUrl;
         }
       } catch {
         // ignore
@@ -1171,6 +1174,7 @@ export async function extractFromUrl(
 
     let transcriptUrl = extractTranscriptUrlFromHtml(fetched.text, url);
     if (norm._loomTranscriptUrl) transcriptUrl = norm._loomTranscriptUrl;
+    if (norm._youtubeTranscriptUrl) transcriptUrl = norm._youtubeTranscriptUrl;
 
     const hasTimestamps = /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(String(transcriptText || ''));
     

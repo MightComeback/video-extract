@@ -94,6 +94,13 @@ export function extractLoomMetadataFromHtml(html) {
       };
 
       result.mediaUrl = findUrl('M3U8') || findUrl('DASH') || findUrl('MP4');
+
+      // Extract Author via normalized reference
+      if (video.owner && video.owner.__ref) {
+        const user = state[video.owner.__ref];
+        if (user && user.fullName) result.author = user.fullName;
+        else if (user && user.firstName && user.lastName) result.author = `${user.firstName} ${user.lastName}`.trim();
+      }
     }
   }
 
@@ -131,6 +138,13 @@ export function extractLoomMetadataFromSession(session) {
   if (session.name) result.title = session.name;
   if (session.description) result.description = session.description;
   if (typeof session.duration === 'number') result.duration = session.duration;
+
+  // Author
+  if (session.created_by) {
+    const cb = session.created_by;
+    if (cb.first_name && cb.last_name) result.author = `${cb.first_name} ${cb.last_name}`.trim();
+    else if (cb.name) result.author = cb.name;
+  }
 
   // Media URLs
   // Strategy: check for direct stream fields common in Loom APIs (streams.m3u8, streams.mp4)
