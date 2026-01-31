@@ -299,23 +299,8 @@ function sliceLikelyTranscript(text) {
   return '';
 }
 
-function tryExtractLoomTranscript(html) {
-  // Loom often embeds state in a script tag (application/json or similar).
-  const s = String(html);
-  
-  // Look for VTT link in standard metadata
-  const vtt = s.match(/"([^"]+\.vtt[^"]*)"/);
-  if (vtt && vtt[1]) {
-    // We would need to fetch this VTT.
-    // For now, let's just return the URL if we can't fetch it here easily (requires async).
-    // The current flow expects text.
-    // If we return a specific marker, the caller could handle it?
-    // Actually, `extractFromUrl` does a secondary fetch for copyTranscriptUrl.
-    // We should probably rely on the generic JSON scanner which I see handles "captions" keys.
-  }
+// Superseded by extractTranscriptUrlFromHtml
 
-  return '';
-}
 
 function tryExtractTranscriptFromEmbeddedJson(html) {
   const s = String(html);
@@ -961,30 +946,39 @@ async function splitVideoIntoSegments({ inputPath, segmentsDir, segmentSeconds =
   return files;
 }
 
-function extractCopyTranscriptUrlFromHtml(html, pageUrl) {
+function extractTranscriptUrlFromHtml(html, pageUrl) {
   const s = decodeHtmlEntities(String(html || '')).replaceAll('\\/', '/');
 
-  // Typical on fathom.video call/share pages.
+  // Fathom: copyTranscriptUrl in JSON state
   const m = s.match(/copyTranscriptUrl"\s*:\s*"([^"\s]+\/copy_transcript[^"\s]*)"/i);
   if (m && m[1]) return resolveMaybeRelativeUrl(m[1], pageUrl);
 
-  // Fallback: direct URL match.
+  // Fathom: direct copy_transcript URL match
   const m2 = s.match(/https?:\/\/[^\s"'<>]+\/copy_transcript\b[^\s"'<>]*/i);
   if (m2 && m2[0]) return m2[0];
+
+  // Loom: VTT captions in JSON state (often "url": "....vtt")
+  // Look for .vtt url inside quotes.
+  // We prefer english captions if possible, but any VTT is better than nothing.
+  const vttMatches = s.matchAll(/"([^"]+\.vtt[^"]*)"/gi);
+  for (const match of vttMatches) {
+    const candidate = match[1];
+    if (candidate) {
+      return resolveMaybeRelativeUrl(candidate, pageUrl);
+    }
+  }
 
   return '';
 }
 
-async function fetchTranscriptViaCopyEndpoint(copyTranscriptUrl, { cookie = null, referer = null, userAgent = null } = {}) {
-  const u = String(copyTranscriptUrl || '').trim();
+async function fetchTranscriptContent(transcriptUrl, { cookie = null, referer = null, userAgent = null } = {}) {
+  const u = String(transcriptUrl || '').trim();
   if (!u) return '';
 
   const headers = {
     'user-agent': resolveUserAgent(userAgent),
   };
 
-  // Keep cookie handling consistent across all fetches:
-  // accept either raw cookie pairs or a full `Cookie: ...` header line.
   const c0 = normalizeCookie(cookie);
   if (c0) headers.cookie = c0;
   if (referer) headers.referer = String(referer);
@@ -993,16 +987,36 @@ async function fetchTranscriptViaCopyEndpoint(copyTranscriptUrl, { cookie = null
     const res = await fetch(u, { method: 'GET', redirect: 'follow', headers });
     if (!res.ok) return '';
 
-    // Endpoint returns JSON like: { html: "<h1>..." }
     const txt = await res.text();
-    let json;
-    try { json = JSON.parse(txt); } catch { return ''; }
 
-    const html = String(json?.html || '').trim();
-    if (!html) return '';
+    // Strategy A: Fathom "copy_transcript" endpoint returns JSON { html: "..." }
+    if (u.includes('copy_transcript')) {
+      let json;
+      try { json = JSON.parse(txt); } catch { return ''; }
+      const html = String(json?.html || '').trim();
+      if (!html) return '';
+      return stripHtmlToText(html);
+    }
 
-    const text = stripHtmlToText(html);
-    return text;
+    // Strategy B: VTT file (Loom, etc.)
+    // WEBVTT
+    // 00:00:00.000 --> 00:00:02.000
+    // Hello world
+    if (txt.includes('WEBVTT') || u.endsWith('.vtt')) {
+      // Simple VTT to Text converter
+      return txt
+        .replace(/^WEBVTT[^\n]*\n/g, '') // Remove header
+        .replace(/(\d{2}:)?\d{2}:\d{2}\.\d{3}\s+-->\s+(\d{2}:)?\d{2}:\d{2}\.\d{3}[^\n]*/g, '') // Remove timestamps
+        .replace(/^\d+\s*$/gm, '') // Remove sequence numbers
+        .replace(/<[^>]+>/g, '') // Remove style tags
+        .split('\n')
+        .map(x => x.trim())
+        .filter(x => x)
+        .join(' '); // Join lines (VTT often breaks sentences)
+    }
+
+    // Fallback: assume plain text
+    return txt.trim();
   } catch {
     return '';
   }
@@ -1027,11 +1041,13 @@ export async function extractFromUrl(
 
     // If the page doesn't embed a transcript, prefer the real transcript endpoint when available.
     let transcriptText = norm.text;
-    const copyTranscriptUrl = extractCopyTranscriptUrlFromHtml(fetched.text, url);
+    const transcriptUrl = extractTranscriptUrlFromHtml(fetched.text, url);
     const hasTimestamps = /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(String(transcriptText || ''));
-    if ((!transcriptText || transcriptText.length < 300 || !hasTimestamps) && copyTranscriptUrl) {
-      const viaCopy = await fetchTranscriptViaCopyEndpoint(copyTranscriptUrl, { cookie, referer: referer || url, userAgent });
-      if (viaCopy) transcriptText = viaCopy;
+    
+    // Fetch if we have a URL and (no text OR text sucks).
+    if ((!transcriptText || transcriptText.length < 300 || !hasTimestamps) && transcriptUrl) {
+      const fetchedText = await fetchTranscriptContent(transcriptUrl, { cookie, referer: referer || url, userAgent });
+      if (fetchedText) transcriptText = fetchedText;
     }
 
     const resolvedMediaUrl = await resolveMediaUrl(norm.mediaUrl || '', { cookie, referer: referer || url, userAgent, maxDepth: 3 });
