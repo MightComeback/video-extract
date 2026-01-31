@@ -666,6 +666,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check timezone conversions / formatting');
   }
 
+  // PDF / Document Generation
+  if (
+    actualHints.some(h => /pdf|export|download report|generate document|corrupted file/i.test(h)) ||
+    /pdf|export|download report|generate document|corrupted file/i.test(lowerT)
+  ) {
+    actions.add('Check PDF generation / Export service');
+  }
+
   // Email / Notifications
   if (
     actualHints.some(h => /email|mail|inbox|spam|bounce|did not receive|didn't receive|notification|deliverability/i.test(h)) ||
