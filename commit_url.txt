@@ -1,1 +1,1 @@
-COMMIT_URL=https://github.com/MightComeback/fathom-extract/commit/554ab8ce5ca7872f778f75860c7311a8a3abdbc0
+COMMIT_URL=https://github.com/MightComeback/fathom-extract/commit/61a1a1ef1a880699f06c8142c3f9cd3921683942
