@@ -538,6 +538,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check browser extensions / ad blockers');
   }
 
+  // Feature Flags / Rollouts
+  if (
+    actualHints.some(h => /feature flag|feature toggle|rollout|experiment|launchdarkly|split\.io|statsig/i.test(h)) ||
+    /feature flag|feature toggle|rollout|experiment|launchdarkly|split\.io|statsig/i.test(lowerT)
+  ) {
+    actions.add('Check feature flags / rollout status');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
