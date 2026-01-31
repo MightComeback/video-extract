@@ -587,6 +587,22 @@ export function extractPaths(transcript) {
   return [...out];
 }
 
+function formatSeconds(s) {
+  const sec = parseInt(s, 10);
+  if (isNaN(sec)) return null;
+  const m = Math.floor(sec / 60);
+  const r = sec % 60;
+  return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+}
+
+function extractTimestampFromUrl(url) {
+  const match = String(url || '').match(/[?&]t=(\d+)/);
+  if (match) {
+    return formatSeconds(match[1]);
+  }
+  return null;
+}
+
 export function renderBrief({
   cmd = 'fathom2action',
   source,
@@ -613,6 +629,13 @@ export function renderBrief({
 
   const teaser = normalizeBullets(transcript, { max: Number.isFinite(teaserLimit) ? teaserLimit : 6 });
   const timestamps = extractTimestamps(transcript, { max: Number.isFinite(timestampsLimit) ? timestampsLimit : 6 });
+
+  // If the source URL has a timestamp (e.g. ?t=65), promote it to the top.
+  const urlTs = extractTimestampFromUrl(src);
+  if (urlTs) {
+    timestamps.unshift(`${urlTs} (from URL)`);
+  }
+
   const envLikely = extractEnvironment(transcript);
   const buildNum = extractBuildNumber(transcript);
   const speakers = extractSpeakers(transcript);
