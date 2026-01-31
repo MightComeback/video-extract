@@ -599,6 +599,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check external status page');
   }
 
+  // Intermittent / Flaky
+  if (
+    actualHints.some(h => /intermittent|flaky|sometimes|randomly|sporadic|only once in a while|race condition|inconsistent/i.test(h)) ||
+    /intermittent|flaky|sometimes|randomly|sporadic|only once in a while|race condition|inconsistent/i.test(lowerT)
+  ) {
+    actions.add('Investigate race conditions / flaky behavior');
+  }
+
   // Crash / Error analysis
   if (
     actualHints.some(h => /crash|error|exception|stack|trace|bad gateway|internal server error|status code 5|HTTP 5\d{2}/i.test(h)) ||
