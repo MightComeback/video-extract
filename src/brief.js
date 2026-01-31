@@ -691,6 +691,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check touch events / gestures');
   }
 
+  // SSR / Hydration (React/Next.js)
+  if (
+    actualHints.some(h => /hydration|minified react error|text content did not match|prop.*did not match/i.test(h)) ||
+    /hydration|minified react error|text content did not match|prop.*did not match|react error #418|react error #423/i.test(lowerT)
+  ) {
+    actions.add('Check SSR/Hydration logic');
+  }
+
   // Database / Data
   if (
     actualHints.some(h => /duplicate key|foreign key|deadlock|unique constraint|serialization failure/i.test(h)) ||
