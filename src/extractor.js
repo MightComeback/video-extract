@@ -9,7 +9,7 @@ import { normalizeUrlLike } from './brief.js';
 import { isLoomUrl, fetchLoomOembed, extractLoomId, extractLoomMetadataFromHtml } from './loom.js';
 import { isYoutubeUrl, fetchYoutubeOembed, extractYoutubeMetadataFromHtml } from './youtube.js';
 import { isVimeoUrl, fetchVimeoOembed, extractVimeoMetadataFromHtml } from './vimeo.js';
-import { extractFathomTranscriptUrl } from './fathom.js';
+import { extractFathomTranscriptUrl, isFathomUrl } from './fathom.js';
 
 export function readStdin() {
   // If the user runs `fathom2action --stdin` interactively without piping input,
@@ -1131,6 +1131,10 @@ export async function extractFromUrl(
     let providerId = null;
 
     // Context-specific enrichment
+    if (isFathomUrl(url)) {
+      provider = 'fathom';
+    }
+
     if (isLoomUrl(url)) {
       provider = 'loom';
       providerId = extractLoomId(url);
