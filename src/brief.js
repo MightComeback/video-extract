@@ -457,6 +457,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check server logs / Sentry');
   }
 
+  // Console / Client-side errors
+  if (
+    actualHints.some(h => /console|devtools|dev tools/i.test(h)) ||
+    /console|devtools|dev tools|red text in console/i.test(lowerT)
+  ) {
+    actions.add('Check browser console logs');
+  }
+
   // Performance
   if (
     actualHints.some(h => /slow|lag|timeout|latency|loading/i.test(h)) ||
