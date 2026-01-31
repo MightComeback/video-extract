@@ -29,6 +29,7 @@
     "cheerio": "^1.0.0-rc.12"
   },
   "dependencies": {
+    "@linear/sdk": "^73.0.0",
     "jsdom": "^24.1.0",
     "puppeteer": "^22.12.1"
   }
