@@ -35,45 +35,77 @@ export async function fetchVimeoOembed(url, { timeoutMs = 5000 } = {}) {
   }
 }
 
+function extractMetaContent(html, property) {
+  const s = String(html || '');
+  // Simple regex for <meta property="..." content="..."> or <meta name="..." content="...">
+  // Handles quotes and basic attribute ordering differences
+  const re = new RegExp(`<meta\\s+[^>]*?(?:property|name)=["']${property}["'][^>]*?content=["']([^"']+)["']`, 'i');
+  const m = s.match(re);
+  return m ? m[1] : null;
+}
+
 export function extractVimeoMetadataFromHtml(html) {
   const s = String(html || '');
+  
+  // Try to parse basic metadata regardless of config
+  // This allows us to get description even if the main config object is partial
+  const metaDescription = 
+    extractMetaContent(s, 'og:description') || 
+    extractMetaContent(s, 'description') || 
+    extractMetaContent(s, 'twitter:description');
+
+  let result = {
+    title: null,
+    description: metaDescription,
+    duration: null,
+    author: null,
+    thumbnailUrl: null,
+    mediaUrl: null,
+    transcriptUrl: null,
+  };
+
   // Look for window.vimeo.clip_page_config = { ... }
   const m = s.match(/window\.vimeo\.clip_page_config\s*=\s*(\{[\s\S]*?\});/);
-  if (!m) return null;
+  if (m) {
+    try {
+      const config = JSON.parse(m[1]);
+      if (config && config.clip) {
+        result.title = config.clip.name || null;
+        result.duration = config.clip.duration?.raw || null;
+        result.author = config.owner?.display_name || null;
+        result.thumbnailUrl = config.clip.poster?.display_src || null;
 
-  try {
-    const config = JSON.parse(m[1]);
-    if (!config || !config.clip) return null;
+        // Media: files.progressive is usually the best for direct MP4
+        if (config.request?.files?.progressive?.length) {
+          // Sort by width/quality desc
+          const sorted = config.request.files.progressive.sort((a, b) => (b.width || 0) - (a.width || 0));
+          result.mediaUrl = sorted[0].url;
+        } else if (config.request?.files?.hls?.cdns?.fastly_skyfire?.url) {
+            result.mediaUrl = config.request.files.hls.cdns.fastly_skyfire.url;
+        }
 
-    const result = {
-      title: config.clip.name || null,
-      description: null, // Often not in clip object, sometimes in schema
-      duration: config.clip.duration?.raw || null,
-      author: config.owner?.display_name || null,
-      thumbnailUrl: config.clip.poster?.display_src || null,
-      mediaUrl: null,
-      transcriptUrl: null,
-    };
-
-    // Media: files.progressive is usually the best for direct MP4
-    if (config.request?.files?.progressive?.length) {
-      // Sort by width/quality desc
-      const sorted = config.request.files.progressive.sort((a, b) => (b.width || 0) - (a.width || 0));
-      result.mediaUrl = sorted[0].url;
-    } else if (config.request?.files?.hls?.cdns?.fastly_skyfire?.url) {
-        result.mediaUrl = config.request.files.hls.cdns.fastly_skyfire.url;
+        // Transcript: text_tracks
+        if (config.request?.text_tracks?.length) {
+          const tracks = config.request.text_tracks;
+          // Prefer English
+          const en = tracks.find(t => String(t.lang).startsWith('en'));
+          result.transcriptUrl = en ? en.url : tracks[0].url;
+        }
+      }
+    } catch {
+      // ignore config parse errors, fallback to meta
     }
-
-    // Transcript: text_tracks
-    if (config.request?.text_tracks?.length) {
-      const tracks = config.request.text_tracks;
-      // Prefer English
-      const en = tracks.find(t => String(t.lang).startsWith('en'));
-      result.transcriptUrl = en ? en.url : tracks[0].url;
-    }
-
-    return result;
-  } catch {
-    return null;
   }
+
+  // Fallbacks if config didn't provide them
+  if (!result.title) {
+    result.title = extractMetaContent(s, 'og:title') || extractMetaContent(s, 'twitter:title');
+  }
+  if (!result.thumbnailUrl) {
+    result.thumbnailUrl = extractMetaContent(s, 'og:image') || extractMetaContent(s, 'twitter:image');
+  }
+
+  // Return null only if we found NOTHING useful
+  const hasAny = result.title || result.description || result.mediaUrl || result.transcriptUrl;
+  return hasAny ? result : null;
 }
