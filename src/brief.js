@@ -730,7 +730,7 @@ export function extractPaths(transcript) {
     // - contain only valid path chars (alphanumeric, -, _, ., /)
     // - length >= 2 (avoid isolated /)
     // - contain at least one letter (avoid 1/2, dates, etc.)
-    if (/^\/[\w\-\.\/]+$/.test(clean) && clean.length >= 2 && /[a-zA-Z]/.test(clean)) {
+    if (/^\/[\w\-\.\/?=&%]+$/.test(clean) && clean.length >= 2 && /[a-zA-Z]/.test(clean)) {
       out.add(clean);
     }
   }
