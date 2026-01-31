@@ -333,7 +333,8 @@ export async function extractFromUrl(url, options = {}) {
 
     if (options.downloadMedia && data.videoUrl) {
         const outDir = options.outDir || '.';
-        const filename = 'video.mp4';
+        const safeTitle = (data.title || 'video').replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-+|-+$/g, '');
+        const filename = `${safeTitle}.mp4`;
         const destPath = join(outDir, filename);
         console.log(`Downloading video from ${data.videoUrl} to ${destPath}...`);
         await downloadMedia(data.videoUrl, destPath);
