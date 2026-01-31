@@ -629,6 +629,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check disk space / cleanup');
   }
 
+  // Integrations (Slack / Salesforce / HubSpot / etc)
+  if (
+    actualHints.some(h => /slack|salesforce|hubspot|zapier|zoom|google calendar|outlook/i.test(h)) ||
+    /slack|salesforce|hubspot|zapier|zoom|google calendar|outlook/i.test(lowerT)
+  ) {
+    actions.add('Check third-party integrations (Slack/Salesforce/etc)');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
