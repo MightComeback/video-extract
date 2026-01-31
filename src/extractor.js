@@ -1100,7 +1100,7 @@ export async function extractFromUrl(
     // Context-specific enrichment
     if (isLoomUrl(url)) {
       try {
-        const oembed = await fetchLoomOembed(url);
+        const oembed = await fetchLoomOembed(url, { userAgent });
         if (oembed) {
           if (oembed.title && !norm.suggestedTitle) norm.suggestedTitle = oembed.title;
           if (oembed.author_name && !norm.author) norm.author = oembed.author_name;

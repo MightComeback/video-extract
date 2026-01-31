@@ -9,7 +9,7 @@ export function extractLoomId(url) {
   return m ? m[1] : null;
 }
 
-export async function fetchLoomOembed(url, { timeoutMs = 5000 } = {}) {
+export async function fetchLoomOembed(url, { timeoutMs = 5000, userAgent = null } = {}) {
   const u = String(url || '').trim();
   if (!u) return null;
 
@@ -21,7 +21,7 @@ export async function fetchLoomOembed(url, { timeoutMs = 5000 } = {}) {
     // Note: OEmbed seems to accept generic UAs fine (unlike share pages).
     const res = await fetch(oembedUrl, { 
       signal: controller.signal,
-      headers: { 'User-Agent': 'video-extract/0.1.0' }
+      headers: { 'User-Agent': userAgent || 'video-extract/0.1.0' }
     });
     clearTimeout(t);
 
