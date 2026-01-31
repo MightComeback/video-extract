@@ -287,7 +287,7 @@ export function extractSeverity(transcript) {
   }
 
   // High
-  if (/urgent|asap|high priority|important|deadline/i.test(s)) {
+  if (/urgent|asap|high priority|important|deadline|sev[- ]?2|p1/i.test(s)) {
     return 'High';
   }
 
@@ -299,7 +299,7 @@ function extractEnvironment(transcript) {
   const hits = [];
 
   const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo', 'samsung internet', 'orion', 'tor browser', 'zen'];
-  const os = ['mac', 'macos', 'sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina', 'mojave', 'high sierra', 'sierra', 'el capitan', 'yosemite', 'mavericks', 'windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'nixos', 'alpine', 'manjaro', 'linux', 'android', 'ios', 'iphone', 'ipad'];
+  const os = ['mac', 'macos', 'sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina', 'mojave', 'high sierra', 'sierra', 'el capitan', 'yosemite', 'mavericks', 'windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'nixos', 'alpine', 'manjaro', 'gentoo', 'opensuse', 'linux', 'android', 'ios', 'iphone', 'ipad'];
   const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface', 'motorola', 'oppo', 'vivo', 'realme'];
   const environments = ['staging', 'production', 'prod', 'localhost'];
 
@@ -324,6 +324,8 @@ function extractEnvironment(transcript) {
       else if (o === 'centos') hits.push('CentOS');
       else if (o === 'rhel') hits.push('RHEL');
       else if (o === 'arch linux') hits.push('Arch Linux');
+      else if (o === 'gentoo') hits.push('Gentoo');
+      else if (o === 'opensuse') hits.push('openSUSE');
       else if (o === 'nixos') hits.push('NixOS');
       else if (o.startsWith('windows ')) {
         // Specific Windows version
