@@ -7,7 +7,7 @@ import { Readable } from 'node:stream';
 
 import { normalizeUrlLike } from './brief.js';
 import { isLoomUrl, fetchLoomOembed, extractLoomId, extractLoomMetadataFromHtml, fetchLoomSession, extractLoomMetadataFromSession } from './loom.js';
-import { isYoutubeUrl, fetchYoutubeOembed } from './youtube.js';
+import { isYoutubeUrl, fetchYoutubeOembed, extractYoutubeMetadataFromHtml } from './youtube.js';
 
 export function readStdin() {
   // If the user runs `fathom2action --stdin` interactively without piping input,
@@ -1148,6 +1148,17 @@ export async function extractFromUrl(
           if (oembed.title && !norm.suggestedTitle) norm.suggestedTitle = oembed.title;
           if (oembed.author_name && !norm.author) norm.author = oembed.author_name;
           if (oembed.thumbnail_url && !norm.screenshot) norm.screenshot = oembed.thumbnail_url;
+        }
+      } catch {
+        // ignore
+      }
+
+      try {
+        const meta = extractYoutubeMetadataFromHtml(fetched.text);
+        if (meta) {
+          if (meta.title && !norm.suggestedTitle) norm.suggestedTitle = meta.title;
+          if (meta.description && !norm.description) norm.description = meta.description;
+          if (meta.author && !norm.author) norm.author = meta.author;
         }
       } catch {
         // ignore

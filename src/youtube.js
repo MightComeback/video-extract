@@ -36,3 +36,28 @@ export async function fetchYoutubeOembed(url, { timeoutMs = 5000 } = {}) {
     return null;
   }
 }
+
+export function extractYoutubeMetadataFromHtml(html) {
+  const s = String(html || '');
+  // Look for ytInitialPlayerResponse (variable assignment)
+  const m = s.match(/ytInitialPlayerResponse\s*=\s*(\{[\s\S]*?\});/);
+  if (!m) return null;
+
+  try {
+    const data = JSON.parse(m[1]);
+    if (!data || !data.videoDetails) return null;
+
+    const d = data.videoDetails;
+    return {
+      title: d.title || null,
+      description: d.shortDescription || null,
+      duration: d.lengthSeconds ? Number(d.lengthSeconds) : null,
+      author: d.author || null,
+      viewCount: d.viewCount ? Number(d.viewCount) : null,
+      isLive: d.isLiveContent || false,
+      mediaUrl: null
+    };
+  } catch {
+    return null;
+  }
+}
