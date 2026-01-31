@@ -9,11 +9,11 @@ import { readStdin, extractFromStdin, extractFromUrl, getVersion } from '../src/
 import { renderBrief, normalizeUrlLike } from '../src/brief.js';
 
 function usage(code = 0) {
-  const cmd = process.argv[1]?.split('/').pop() || 'fathom2action';
+  const cmd = process.argv[1]?.split('/').pop() || 'video-brief';
   console.log(`${cmd}
 
 Usage:
-  ${cmd} <fathom-share-url> [--copy] [--copy-brief] [--out <path>] [--json] [--compact-json] [--no-note] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
+  ${cmd} <share-url> [--copy] [--copy-brief] [--out <path>] [--json] [--compact-json] [--no-note] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
   ${cmd} --stdin [--copy] [--copy-brief] [--out <path>] [--json] [--compact-json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
   ${cmd} - [--copy] [--copy-brief] [--out <path>] [--json] [--compact-json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
   ${cmd} --template [--copy] [--copy-brief] [--out <path>] [--json] [--compact-json] [--source <url>] [--title <text>] [--max-teaser <n>] [--max-timestamps <n>] [--cmd <name>]
@@ -53,7 +53,7 @@ Notes:
 }
 
 async function main() {
-  const cmd = process.argv[1]?.split('/').pop() || 'fathom2action';
+  const cmd = process.argv[1]?.split('/').pop() || 'video-brief';
   const args = process.argv.slice(2);
   if (args.includes('-h') || args.includes('--help')) usage(0);
   if (args.includes('-v') || args.includes('--version')) {
