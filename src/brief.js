@@ -312,6 +312,7 @@ function extractEnvironment(transcript) {
   const os = ['mac', 'macos', 'sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina', 'mojave', 'high sierra', 'sierra', 'el capitan', 'yosemite', 'mavericks', 'windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'nixos', 'alpine', 'manjaro', 'gentoo', 'opensuse', 'linux', 'android', 'ios', 'iphone', 'ipad', 'chromeos', 'chromebook', 'cros', 'visionos', 'vision pro', 'oculus', 'quest', 'meta quest', 'playstation 5', 'playstation 4', 'playstation', 'ps5', 'ps4', 'xbox series x', 'xbox series s', 'xbox', 'steam deck', 'steamos'];
   const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface', 'motorola', 'oppo', 'vivo', 'realme'];
   const environments = ['staging', 'production', 'prod', 'localhost'];
+  const privacy = ['incognito', 'private window', 'private browsing', 'guest mode'];
 
   for (const b of browsers) {
     if (new RegExp(`\\b${b}\\b`, 'i').test(s)) {
@@ -363,6 +364,15 @@ function extractEnvironment(transcript) {
     if (new RegExp(`\\b${e}\\b`, 'i').test(s)) {
       if (e === 'prod') hits.push('Production');
       else hits.push(e.charAt(0).toUpperCase() + e.slice(1));
+    }
+  }
+
+  for (const p of privacy) {
+    if (new RegExp(`\\b${p}\\b`, 'i').test(s)) {
+      if (p === 'incognito') hits.push('Incognito');
+      else if (p === 'private window') hits.push('Private Window');
+      else if (p === 'private browsing') hits.push('Private Browsing');
+      else hits.push(p.charAt(0).toUpperCase() + p.slice(1));
     }
   }
 
