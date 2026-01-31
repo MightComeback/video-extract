@@ -18,29 +18,8 @@ export async function fetchLoomOembed(url, { timeoutMs = 5000 } = {}) {
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), timeoutMs);
     
+    // Note: OEmbed seems to accept generic UAs fine (unlike share pages).
     const res = await fetch(oembedUrl, { 
-      signal: controller.signal,
-      headers: { 'User-Agent': 'video-extract/0.1.0' }
-    });
-    clearTimeout(t);
-
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
-
-export async function fetchLoomSession(id, { timeoutMs = 5000 } = {}) {
-  const i = String(id || '').trim();
-  if (!i) return null;
-
-  try {
-    const apiUrl = `https://www.loom.com/api/campaigns/sessions/${encodeURIComponent(i)}`;
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), timeoutMs);
-
-    const res = await fetch(apiUrl, {
       signal: controller.signal,
       headers: { 'User-Agent': 'video-extract/0.1.0' }
     });
@@ -122,38 +101,6 @@ export function extractLoomMetadataFromHtml(html) {
         result.transcriptUrl = t.source_url;
       }
     }
-  }
-
-  return result;
-}
-
-export function extractLoomMetadataFromSession(session) {
-  if (!session || typeof session !== 'object') return null;
-
-  const result = {
-    title: null,
-    description: null,
-    duration: null,
-    mediaUrl: null,
-    transcriptUrl: null, // API usually gives transcripts as objects, not URLs, handled by findTranscriptInObject
-  };
-
-  if (session.name) result.title = session.name;
-  if (session.description) result.description = session.description;
-  if (typeof session.duration === 'number') result.duration = session.duration;
-
-  // Author
-  if (session.created_by) {
-    const cb = session.created_by;
-    if (cb.first_name && cb.last_name) result.author = `${cb.first_name} ${cb.last_name}`.trim();
-    else if (cb.name) result.author = cb.name;
-  }
-
-  // Media URLs
-  // Strategy: check for direct stream fields common in Loom APIs (streams.m3u8, streams.mp4)
-  if (session.streams) {
-    if (session.streams.m3u8) result.mediaUrl = session.streams.m3u8;
-    else if (session.streams.mp4) result.mediaUrl = session.streams.mp4;
   }
 
   return result;
