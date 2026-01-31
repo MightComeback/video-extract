@@ -467,8 +467,8 @@ export function generateNextActions(transcript, actualHints = []) {
 
   // Auth / Permissions
   if (
-    actualHints.some(h => /401|403|permission|access|denied|forbidden|login|sign in|auth/i.test(h)) ||
-    /401|403|permission|access|denied|forbidden|login|sign in|auth|unauthorized|log in|signin|signup/i.test(lowerT)
+    actualHints.some(h => /401|403|permission|access|denied|forbidden|login|sign in|auth|session expir|invalid session|invalid token|csrf|xsrf|jwt/i.test(h)) ||
+    /401|403|permission|access|denied|forbidden|login|sign in|auth|unauthorized|log in|signin|signup|session expir|invalid session|invalid token|csrf|xsrf|jwt/i.test(lowerT)
   ) {
     actions.add('Check permissions / user roles');
   }
