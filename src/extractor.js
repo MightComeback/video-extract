@@ -1119,6 +1119,7 @@ export async function extractFromUrl(
           if (meta.transcriptUrl) norm._loomTranscriptUrl = meta.transcriptUrl;
           if (meta.author && !norm.author) norm.author = meta.author;
           if (meta.thumbnailUrl && !norm.screenshot) norm.screenshot = meta.thumbnailUrl;
+          if (meta.date && !norm.date) norm.date = meta.date;
         }
       } catch {
         // ignore
