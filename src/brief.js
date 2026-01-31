@@ -1059,7 +1059,7 @@ export function renderBrief({
     ...howToUpdate,
     '',
     '## 1-sentence summary',
-    `- ${desc || '(add summary)'}`,
+    `- ${desc || t || '(add summary)'}`,
     '',
     '## Repro steps',
     ...(repro.length ? repro.map((step, i) => `${i+1}. ${step}`) : ['1. ', '2. ', '3. ']),
