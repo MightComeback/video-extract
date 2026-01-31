@@ -342,25 +342,165 @@ function sliceLikelyTranscript(text) {
 
 // Superseded by extractTranscriptUrlFromHtml
 
+function formatTimestamp(secondsLike) {
+  const n = Number(secondsLike);
+  if (!Number.isFinite(n) || n < 0) return '';
+
+  // Heuristic: treat very large values as milliseconds.
+  const sec = n > 1e6 ? n / 1000 : n;
+
+  const total = Math.floor(sec);
+  const hh = Math.floor(total / 3600);
+  const mm = Math.floor((total % 3600) / 60);
+  const ss = total % 60;
+
+  const two = (x) => String(x).padStart(2, '0');
+  return hh > 0 ? `${hh}:${two(mm)}:${two(ss)}` : `${mm}:${two(ss)}`;
+}
+
+export function findTranscriptInObject(parsed) {
+  if (!parsed) return '';
+
+  // Prefer structured transcript arrays when present (keeps ordering + speaker/timestamps).
+  function tryStructuredTranscript(x) {
+    const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+
+    function findTranscriptArrays(node) {
+      const out = [];
+      const seen = new Set();
+      const visited = new Set();
+
+      function walk(n) {
+        if (n == null) return;
+        if (typeof n !== 'object') return;
+        if (visited.has(n)) return;
+        visited.add(n);
+
+        if (Array.isArray(n)) {
+          for (const v of n) walk(v);
+          return;
+        }
+
+        for (const [k, v] of Object.entries(n)) {
+          const lk = String(k).toLowerCase();
+          if (
+            lk.includes('transcript') ||
+            lk === 'utterances' ||
+            lk === 'sentences' ||
+            lk === 'segments' ||
+            lk === 'captions'
+          ) {
+            if (Array.isArray(v) && !seen.has(v)) {
+              seen.add(v);
+              out.push(v);
+            }
+          }
+          walk(v);
+        }
+      }
+
+      walk(x);
+      return out;
+    }
+
+    const candidates = findTranscriptArrays(x);
+    for (const arr of candidates) {
+      if (!arr.length) continue;
+      // Require at least a couple objects with text-ish content.
+      const objs = arr.filter(isObj);
+      if (objs.length < 2) continue;
+
+      const lines = [];
+      for (const o of objs) {
+        const text = decodeHtmlEntities(o.text ?? o.content ?? o.caption ?? '').trim();
+        if (!text) continue;
+
+        const who = decodeHtmlEntities(o.speaker ?? o.speakerName ?? o.speaker_name ?? o.name ?? '').trim();
+        const t =
+          o.startTime ??
+          o.start_time ??
+          o.start ??
+          o.time ??
+          o.timestamp ??
+          (o.startMs != null ? Number(o.startMs) / 1000 : null) ??
+          null;
+        const ts = t != null ? formatTimestamp(t) : '';
+
+        const prefix = [ts, who].filter(Boolean).join(' ');
+        lines.push(prefix ? `${prefix}: ${text}` : text);
+      }
+
+      const joined = lines.join('\n').trim();
+      if (joined.length >= 20) return joined;
+    }
+
+    return '';
+  }
+
+  const structured = tryStructuredTranscript(parsed);
+  if (structured) return structured;
+
+  const parts = [];
+  const seen = new Set();
+  const visited = new Set();
+
+  function walk(x) {
+    if (x == null) return;
+    if (typeof x === 'string') {
+      // Keep only likely transcript-y strings (avoid huge minified blobs).
+      const t = decodeHtmlEntities(x).trim();
+      if (t.length >= 3 && t.length <= 5000 && /\s/.test(t)) {
+        if (!seen.has(t)) {
+          seen.add(t);
+          parts.push(t);
+        }
+      }
+      return;
+    }
+    if (typeof x !== 'object') return;
+    if (visited.has(x)) return;
+    visited.add(x);
+
+    if (Array.isArray(x)) {
+      for (const v of x) walk(v);
+      return;
+    }
+
+    const keys = Object.keys(x);
+
+    // Prefer explicit transcript fields if present.
+    for (const k of keys) {
+      const lk = k.toLowerCase();
+      const v = x[k];
+      if (lk.includes('transcript') || lk === 'utterances' || lk === 'sentences' || lk === 'segments') {
+        walk(v);
+      }
+    }
+
+    // Scan a few common text keys.
+    for (const k of keys) {
+      const lk = k.toLowerCase();
+      if (lk === 'text' || lk === 'content' || lk === 'caption') {
+        walk(x[k]);
+      }
+    }
+
+    // Finally, recurse through the rest (best-effort), so nested transcript fields are reachable.
+    for (const k of keys) {
+      walk(x[k]);
+    }
+  }
+
+  walk(parsed);
+
+  const joined = parts.join('\n').replace(/\n\s*\n\s*\n+/g, '\n\n').trim();
+  if (joined.length >= 20) return joined;
+  
+  return '';
+}
 
 function tryExtractTranscriptFromEmbeddedJson(html) {
   const s = String(html);
-
-  function formatTimestamp(secondsLike) {
-    const n = Number(secondsLike);
-    if (!Number.isFinite(n) || n < 0) return '';
-
-    // Heuristic: treat very large values as milliseconds.
-    const sec = n > 1e6 ? n / 1000 : n;
-
-    const total = Math.floor(sec);
-    const hh = Math.floor(total / 3600);
-    const mm = Math.floor((total % 3600) / 60);
-    const ss = total % 60;
-
-    const two = (x) => String(x).padStart(2, '0');
-    return hh > 0 ? `${hh}:${two(mm)}:${two(ss)}` : `${mm}:${two(ss)}`;
-  }
 
   // Common patterns on modern share pages / app shells.
   const scriptJson = [];
@@ -415,141 +555,9 @@ function tryExtractTranscriptFromEmbeddedJson(html) {
     }
 
     if (!parsed) continue;
-
-    // Prefer structured transcript arrays when present (keeps ordering + speaker/timestamps).
-    function tryStructuredTranscript(x) {
-      const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
-
-      function findTranscriptArrays(node) {
-        const out = [];
-        const seen = new Set();
-        const visited = new Set();
-
-        function walk(n) {
-          if (n == null) return;
-          if (typeof n !== 'object') return;
-          if (visited.has(n)) return;
-          visited.add(n);
-
-          if (Array.isArray(n)) {
-            for (const v of n) walk(v);
-            return;
-          }
-
-          for (const [k, v] of Object.entries(n)) {
-            const lk = String(k).toLowerCase();
-            if (
-              lk.includes('transcript') ||
-              lk === 'utterances' ||
-              lk === 'sentences' ||
-              lk === 'segments' ||
-              lk === 'captions'
-            ) {
-              if (Array.isArray(v) && !seen.has(v)) {
-                seen.add(v);
-                out.push(v);
-              }
-            }
-            walk(v);
-          }
-        }
-
-        walk(x);
-        return out;
-      }
-
-      const candidates = findTranscriptArrays(x);
-      for (const arr of candidates) {
-        if (!arr.length) continue;
-        // Require at least a couple objects with text-ish content.
-        const objs = arr.filter(isObj);
-        if (objs.length < 2) continue;
-
-        const lines = [];
-        for (const o of objs) {
-          const text = decodeHtmlEntities(o.text ?? o.content ?? o.caption ?? '').trim();
-          if (!text) continue;
-
-          const who = decodeHtmlEntities(o.speaker ?? o.speakerName ?? o.speaker_name ?? o.name ?? '').trim();
-          const t =
-            o.startTime ??
-            o.start_time ??
-            o.start ??
-            o.time ??
-            o.timestamp ??
-            (o.startMs != null ? Number(o.startMs) / 1000 : null) ??
-            null;
-          const ts = t != null ? formatTimestamp(t) : '';
-
-          const prefix = [ts, who].filter(Boolean).join(' ');
-          lines.push(prefix ? `${prefix}: ${text}` : text);
-        }
-
-        const joined = lines.join('\n').trim();
-        if (joined.length >= 20) return joined;
-      }
-
-      return '';
-    }
-
-    const structured = tryStructuredTranscript(parsed);
-    if (structured) return structured;
-
-    const parts = [];
-    const seen = new Set();
-    const visited = new Set();
-
-    function walk(x) {
-      if (x == null) return;
-      if (typeof x === 'string') {
-        // Keep only likely transcript-y strings (avoid huge minified blobs).
-        const t = decodeHtmlEntities(x).trim();
-        if (t.length >= 3 && t.length <= 5000 && /\s/.test(t)) {
-          if (!seen.has(t)) {
-            seen.add(t);
-            parts.push(t);
-          }
-        }
-        return;
-      }
-      if (typeof x !== 'object') return;
-      if (visited.has(x)) return;
-      visited.add(x);
-
-      if (Array.isArray(x)) {
-        for (const v of x) walk(v);
-        return;
-      }
-
-      const keys = Object.keys(x);
-
-      // Prefer explicit transcript fields if present.
-      for (const k of keys) {
-        const lk = k.toLowerCase();
-        const v = x[k];
-        if (lk.includes('transcript') || lk === 'utterances' || lk === 'sentences' || lk === 'segments') {
-          walk(v);
-        }
-      }
-
-      // Scan a few common text keys.
-      for (const k of keys) {
-        const lk = k.toLowerCase();
-        if (lk === 'text' || lk === 'content' || lk === 'caption') {
-          walk(x[k]);
-        }
-      }
-
-      // Finally, recurse through the rest (best-effort), so nested transcript fields are reachable.
-      for (const k of keys) {
-        walk(x[k]);
-      }
-    }
-
-    walk(parsed);
-
-    const joined = parts.join('\n').replace(/\n\s*\n\s*\n+/g, '\n\n').trim();
-    if (joined.length >= 20) return joined;
+    
+    const found = findTranscriptInObject(parsed);
+    if (found) return found;
   }
 
   return '';
@@ -1106,6 +1114,14 @@ export async function extractFromUrl(
           if (session) {
             if (session.name && !norm.suggestedTitle) norm.suggestedTitle = session.name;
             if (session.description && !norm.description) norm.description = session.description;
+            
+            // New: try to extract transcript from session API (using refactored helper)
+            if (!norm.text || norm.text.length < 50) {
+              const apiTranscript = findTranscriptInObject(session);
+              if (apiTranscript && apiTranscript.length > 50) {
+                norm.text = apiTranscript;
+              }
+            }
           }
         }
       } catch {
