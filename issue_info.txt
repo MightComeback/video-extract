@@ -1,4 +1,0 @@
-Title: Tool: Fathom link → actionable bug report brief (CLI + copy/paste)
-State: In Progress (started)
-
-(no description)
