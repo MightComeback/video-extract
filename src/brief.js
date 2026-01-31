@@ -674,8 +674,8 @@ export function generateNextActions(transcript, actualHints = []) {
 
   // Integrations (Slack / Salesforce / HubSpot / etc)
   if (
-    actualHints.some(h => /slack|salesforce|hubspot|zapier|zoom|google calendar|outlook/i.test(h)) ||
-    /slack|salesforce|hubspot|zapier|zoom|google calendar|outlook/i.test(lowerT)
+    actualHints.some(h => /slack|salesforce|hubspot|zapier|zoom|google calendar|outlook|linear|jira|github|gitlab|trello|asana|notion|monday|clickup/i.test(h)) ||
+    /slack|salesforce|hubspot|zapier|zoom|google calendar|outlook|linear|jira|github|gitlab|trello|asana|notion|monday|clickup/i.test(lowerT)
   ) {
     actions.add('Check third-party integrations (Slack/Salesforce/etc)');
   }
