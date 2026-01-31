@@ -7,3 +7,8 @@ test('MIG-14: renderBrief provides placeholder for missing description', (t) => 
   // Previously it might have been empty, now we want a placeholder
   assert.match(output, /## 1-sentence summary\n- \(add summary\)/);
 });
+
+test('Handles whitespace-only description', () => {
+    const output = renderBrief({ description: '   ' });
+    assert.match(output, /## 1-sentence summary\n- \(add summary\)/);
+});
