@@ -75,7 +75,7 @@ async function getIssueByIdentifier(identifier) {
     const data = await linearGraphQL(
       `query IssueByTeamAndNumber($teamKey: String!, $number: Float!) {
         issues(filter: { team: { key: { eq: $teamKey } }, number: { eq: $number } }, first: 1) {
-          nodes { id identifier title state { type name } }
+          nodes { id identifier title description state { type name } }
         }
       }`,
       { teamKey, number }
@@ -89,7 +89,7 @@ async function getIssueByIdentifier(identifier) {
   // Otherwise treat as a UUID.
   const data = await linearGraphQL(
     `query IssueById($id: String!) {
-      issue(id: $id) { id identifier title state { type name } }
+      issue(id: $id) { id identifier title description state { type name } }
     }`,
     { id: key }
   );
