@@ -56,3 +56,11 @@ test('renderBrief uses description for 1-sentence summary', () => {
   assert.ok(output.includes('## 1-sentence summary'));
   assert.ok(output.includes('- This is the summary.'));
 });
+
+test('renderBrief supports custom repro steps', () => {
+  const output = renderBrief({
+    reproSteps: ['Click button', 'Verify modal opens']
+  });
+  assert.ok(output.includes('1. Click button'));
+  assert.ok(output.includes('2. Verify modal opens'));
+});

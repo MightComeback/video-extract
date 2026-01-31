@@ -687,6 +687,7 @@ export function renderBrief({
   description,
   author,
   transcript,
+  reproSteps,
   fetchError,
   teaserMax = 6,
   timestampsMax = 6,
@@ -718,6 +719,7 @@ export function renderBrief({
   const paths = extractPaths(transcript);
   const hints = extractBugHints(transcript);
   const nextActions = generateNextActions(transcript, hints.actual);
+  const repro = Array.isArray(reproSteps) ? reproSteps : (reproSteps ? [reproSteps] : []);
 
   const header = [
     '# Bug report brief',
@@ -761,9 +763,7 @@ export function renderBrief({
     `- ${desc || '(add summary)'}`,
     '',
     '## Repro steps',
-    '1. ',
-    '2. ',
-    '3. ',
+    ...(repro.length ? repro.map((step, i) => `${i+1}. ${step}`) : ['1. ', '2. ', '3. ']),
     '',
     '## Expected vs actual',
     `- Expected: ${hints.expected.length ? hints.expected.join(' / ') : ''}`,
