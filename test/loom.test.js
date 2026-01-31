@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { isLoomUrl, extractLoomId, extractLoomMetadataFromHtml } from '../src/loom.js';
+import { isLoomUrl, extractLoomId, extractLoomMetadataFromHtml } from '../src/providers/loom.js';
 
 describe('Loom Support', () => {
   it('detects valid loom URLs', () => {
