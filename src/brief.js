@@ -950,6 +950,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check analytics / telemetry logs');
   }
 
+  // CSP / Content Security Policy
+  if (
+    actualHints.some(h => /content security policy|csp|connect-src|script-src|blocked by client|refused to load/i.test(h)) ||
+    /content security policy|csp|connect-src|script-src|blocked by client|refused to load/i.test(lowerT)
+  ) {
+    actions.add('Check Content Security Policy (connect-src/script-src)');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
