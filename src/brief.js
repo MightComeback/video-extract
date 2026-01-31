@@ -767,6 +767,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check Websocket / Realtime logs');
   }
 
+  // Clipboard
+  if (
+    actualHints.some(h => /clipboard|copy[- ]paste|can't paste|cannot paste|unable to paste|paste failed|navigator\.clipboard|can't copy|cannot copy|unable to copy/i.test(h)) ||
+    /clipboard|copy[- ]paste|can't paste|cannot paste|unable to paste|paste failed|navigator\.clipboard|can't copy|cannot copy|unable to copy/i.test(lowerT)
+  ) {
+    actions.add('Check clipboard API / permissions');
+  }
+
   // File Upload / Storage
   if (
     actualHints.some(h => /s3|r2|minio|blob storage|gcs|azure blob|upload|attachment|file too large|payload too large|entity too large/i.test(h)) ||
