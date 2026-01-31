@@ -325,6 +325,8 @@ export async function extractFromUrl(url, options = {}) {
   
   try {
     const page = await browser.newPage();
+    // Set a realistic User-Agent to avoid detection/blocking by some providers
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     await page.setViewport({ width: 1280, height: 800 });
 
     let data;
