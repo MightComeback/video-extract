@@ -7,6 +7,12 @@ segments/
 *.mp4
 *.json
 
+# logs and temp scripts
+*.log
+check_status.*
+get_issue_desc.*
+commit_url.txt
+
 # local env
 .env
 .env.*
