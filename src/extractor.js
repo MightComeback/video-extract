@@ -8,6 +8,57 @@ import { extractLoomMetadataFromHtml } from './loom.js';
 
 const execAsync = util.promisify(exec);
 
+export function findTranscriptInObject(obj) {
+  if (!obj) return '';
+  let items = [];
+  if (Array.isArray(obj)) items = obj;
+  else if (obj.transcript && Array.isArray(obj.transcript)) items = obj.transcript;
+  else if (obj.captions && Array.isArray(obj.captions)) items = obj.captions;
+  
+  if (!items.length) return '';
+
+  return items.map(item => {
+    const time = (item.startTime !== undefined) ? item.startTime : (item.start || 0);
+    const text = item.text || '';
+    
+    // Format time mm:ss
+    const s = Math.floor(time);
+    const mm = Math.floor(s / 60);
+    const ss = s % 60;
+    const ts = `${mm}:${String(ss).padStart(2, '0')}`;
+    
+    return `${ts}: ${text}`;
+  }).join('\n');
+}
+
+export function extractTranscriptUrlFromHtml(html, sourceUrl) {
+    if (!html) return '';
+    
+    // Regex to find VTT urls inside JSON or variables
+    // Simple heuristic: looks for https://... .vtt
+    const invalidExtensions = ['.js', '.css', '.png', '.jpg'];
+    // Capture URL that ends with .vtt optionally with query params
+    const regex = /https?:\/\/[^"\s']+\.vtt(?:[^"\s']*)?/gi;
+    const matches = html.match(regex);
+    
+    if (!matches || matches.length === 0) return '';
+    
+    // De-duplicate
+    const unique = [...new Set(matches)];
+    
+    // Filter out obvious noise if any (though regex is specific to .vtt)
+    const valid = unique.filter(u => !u.includes('example.com') && !u.includes('localhost'));
+    
+    if (valid.length === 0) return '';
+
+    // Priority 1: _en.vtt
+    const en = valid.find(u => u.includes('_en.vtt') || u.includes('-en.vtt'));
+    if (en) return en;
+    
+    // Priority 2: Return first found
+    return valid[0];
+}
+
 export async function readStdin() {
   return new Promise((resolve) => {
     let data = '';
