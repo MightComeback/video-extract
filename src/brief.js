@@ -983,6 +983,7 @@ export function renderBrief({
   fetchError,
   teaserMax = 6,
   timestampsMax = 6,
+  screenshot,
 } = {}) {
   const cmdName = oneLine(cmd) || 'video-extract';
   const src = normalizeUrlLike(source || url);
@@ -1077,7 +1078,7 @@ export function renderBrief({
     `- When: ${d || '(unknown)'}`,
     '',
     '## Attachments / evidence',
-    '- Screenshot(s): ',
+    '- Screenshot(s): ' + (screenshot ? screenshot : ''),
     '- Console/logs: ',
     ...(stackTraces.length ? ['```', ...stackTraces, '```'] : []),
     `- Video: ${src || ''}`,

@@ -257,6 +257,16 @@ function extractDescriptionFromHtml(html) {
   );
 }
 
+function extractScreenshotFromHtml(html) {
+  const s = String(html);
+  return (
+    extractMetaContent(s, { property: 'og:image' }) ||
+    extractMetaContent(s, { name: 'twitter:image' }) ||
+    extractMetaContent(s, { itemprop: 'image' }) ||
+    ''
+  );
+}
+
 function stripHtmlToText(html) {
   let s = String(html);
   s = s.replace(/<script[\s\S]*?<\/script>/gi, ' ');
@@ -583,12 +593,13 @@ export function normalizeFetchedContent(content, baseUrl = null) {
   mediaUrl = resolveMaybeRelativeUrl(mediaUrl, baseUrl);
   const date = extractDateFromHtml(s);
   const description = extractDescriptionFromHtml(s);
+  const screenshot = extractScreenshotFromHtml(s);
   const author = resolveAuthor(s);
 
   // If a share page embeds a transcript/notes in JSON, prefer that over tag-stripping.
   const embeddedTranscript = tryExtractTranscriptFromEmbeddedJson(s);
   if (embeddedTranscript) {
-    return { text: embeddedTranscript, suggestedTitle: extractTitleFromHtml(s), mediaUrl, date, description, author };
+    return { text: embeddedTranscript, suggestedTitle: extractTitleFromHtml(s), mediaUrl, date, description, author, screenshot };
   }
 
   const stripped = stripHtmlToText(s);
@@ -599,7 +610,8 @@ export function normalizeFetchedContent(content, baseUrl = null) {
     mediaUrl,
     date,
     description,
-    author
+    author,
+    screenshot
   };
 }
 
@@ -1081,6 +1093,7 @@ export async function extractFromUrl(
         if (oembed) {
           if (oembed.title && !norm.suggestedTitle) norm.suggestedTitle = oembed.title;
           if (oembed.author_name && !norm.author) norm.author = oembed.author_name;
+          if (oembed.thumbnail_url && !norm.screenshot) norm.screenshot = oembed.thumbnail_url;
         }
       } catch {
         // ignore
@@ -1109,6 +1122,7 @@ export async function extractFromUrl(
       date: norm.date || '',
       description: norm.description || '',
       author: norm.author || '',
+      screenshot: norm.screenshot || '',
       suggestedTitle: norm.suggestedTitle,
       fetchError: null,
 
@@ -1199,10 +1213,11 @@ export async function extractFromUrl(
     source: url,
     text: 'Unable to fetch this link (likely auth/cookies). If you already have transcript/notes, pipe them into: fathom2action --stdin',
     mediaUrl: '',
-    title: '',
+    title: 'Unable to fetch this link',
     date: '',
     description: '',
     author: '',
+    screenshot: '',
     suggestedTitle: '',
     fetchError: fetched.error,
     artifactsDir: null,
@@ -1415,6 +1430,7 @@ export function extractFromStdin({ content, source }) {
     date,
     description,
     author,
+    screenshot: '',
     suggestedTitle: '',
     fetchError: null,
     artifactsDir: null,
@@ -1429,7 +1445,7 @@ export function extractFromStdin({ content, source }) {
 }
 
 export function formatCsv(data) {
-  const fields = ['date', 'title', 'source', 'mediaUrl', 'description', 'text'];
+  const fields = ['date', 'title', 'source', 'mediaUrl', 'description', 'screenshot', 'text'];
   return fields.map((k) => {
     let val = String(data[k] || '');
     if (val.includes('"') || val.includes(',') || val.includes('\n') || val.includes('\r')) {

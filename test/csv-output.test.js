@@ -13,8 +13,8 @@ test('formatCsv: formats expected fields correctly', (t) => {
   };
 
   const csv = formatCsv(data);
-  // date, title, source, mediaUrl, description, text
-  const expected = '2025-01-30,My Call,https://example.com,https://cdn.example.com/video.mp4,A test call,"Alice: Hello.\nBob: Hi."';
+  // date, title, source, mediaUrl, description, screenshot, text
+  const expected = '2025-01-30,My Call,https://example.com,https://cdn.example.com/video.mp4,A test call,,"Alice: Hello.\nBob: Hi."';
   assert.strictEqual(csv.trim(), expected);
 });
 
