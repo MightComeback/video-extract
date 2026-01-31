@@ -1137,15 +1137,16 @@ export async function extractFromUrl(
       try {
         const meta = extractLoomMetadataFromHtml(fetched.text);
         if (meta) {
-          if (meta.title && !norm.suggestedTitle) norm.suggestedTitle = meta.title;
-          if (meta.description && !norm.description) norm.description = meta.description;
+          // Prefer canonical metadata from Apollo state over generic HTML tags
+          if (meta.title) norm.suggestedTitle = meta.title;
+          if (meta.description) norm.description = meta.description;
           if (meta.mediaUrl) norm.mediaUrl = meta.mediaUrl;
           if (meta.transcriptUrl) norm._loomTranscriptUrl = meta.transcriptUrl;
           if (meta.transcriptText) norm._loomApiTranscript = meta.transcriptText;
-          if (meta.author && !norm.author) norm.author = meta.author;
-          if (meta.thumbnailUrl && !norm.screenshot) norm.screenshot = meta.thumbnailUrl;
-          if (meta.date && !norm.date) norm.date = meta.date;
-          if (meta.duration && !norm.duration) norm.duration = meta.duration;
+          if (meta.author) norm.author = meta.author;
+          if (meta.thumbnailUrl) norm.screenshot = meta.thumbnailUrl;
+          if (meta.date) norm.date = meta.date;
+          if (meta.duration) norm.duration = meta.duration;
         }
       } catch {
         // ignore
