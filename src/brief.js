@@ -251,6 +251,26 @@ export function extractTimestamps(transcript, { max = 6 } = {}) {
   return out;
 }
 
+export function extractSeverity(transcript) {
+  const s = String(transcript || '').toLowerCase();
+
+  // Critical / Blocker
+  if (
+    /production down|site is down|service is down|outage|sev ?1|p0|blocker|blocking release|data loss|critical|fatal/i.test(
+      s
+    )
+  ) {
+    return 'Critical / Blocker';
+  }
+
+  // High
+  if (/urgent|asap|high priority|important|deadline/i.test(s)) {
+    return 'High';
+  }
+
+  return '';
+}
+
 function extractEnvironment(transcript) {
   const s = String(transcript || '').toLowerCase();
   const hits = [];
@@ -642,6 +662,7 @@ export function renderBrief({
     timestamps.unshift(`${urlTs} (from URL)`);
   }
 
+  const severity = extractSeverity(transcript);
   const envLikely = extractEnvironment(transcript);
   const buildNum = extractBuildNumber(transcript);
   const speakers = extractSpeakers(transcript);
@@ -700,6 +721,7 @@ export function renderBrief({
     `- Actual: ${hints.actual.length ? hints.actual.join(' / ') : ''}`,
     '',
     '## Environment / context',
+    ...(severity ? [`- Severity: ${severity}`] : []),
     `- Who: ${speakers.length ? speakers.join(', ') : (auth || '(unknown)')}`,
     `- Where (page/URL): ${paths.length ? paths.join(', ') : ''}`,
     `- Browser / OS: ${envLikely || '(unknown)'}`,
