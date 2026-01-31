@@ -86,7 +86,18 @@ export function normalizeUrlLike(s) {
     if (!/^data:/i.test(v0)) {
       v0 = v0.replace(/\s+\([^)]*\)\s*$/g, '');
     }
-    return v0.replace(/[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』}]+$/g, '');
+    const stripped = v0.replace(/[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』}]+$/g, '');
+    if (v0.endsWith(')') && stripped.length < v0.length) {
+      const openCount = (stripped.match(/\(/g) || []).length;
+      const closeCount = (stripped.match(/\)/g) || []).length;
+      if (openCount > closeCount) {
+        const diff = v0.slice(stripped.length);
+        if (diff.startsWith(')')) {
+          return stripped + ')';
+        }
+      }
+    }
+    return stripped;
   }
 
   // Convenience: accept bare fathom.video URLs (no scheme) from chat copy/paste.
@@ -94,7 +105,19 @@ export function normalizeUrlLike(s) {
   if (bare) {
     let u = `https://${bare[0]}`;
     u = u.replace(/\s+\([^)]*\)\s*$/g, '');
-    return u.replace(/[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』}]+$/g, '');
+    
+    const stripped = u.replace(/[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』}]+$/g, '');
+    if (u.endsWith(')') && stripped.length < u.length) {
+      const openCount = (stripped.match(/\(/g) || []).length;
+      const closeCount = (stripped.match(/\)/g) || []).length;
+      if (openCount > closeCount) {
+        const diff = u.slice(stripped.length);
+        if (diff.startsWith(')')) {
+          return stripped + ')';
+        }
+      }
+    }
+    return stripped;
   }
 
   return v0;
