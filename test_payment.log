@@ -1,0 +1,17 @@
+
+> fathom-extract@0.1.0 test
+> node --test test/mig-14-payment.test.js
+
+▶ MIG-14: Heuristics - Payment/Billing
+  ✔ suggests checking Stripe/Billing when payment keywords are present in hints (1.540208ms)
+  ✔ suggests checking Stripe/Billing when payment keywords are present in transcript (0.3645ms)
+  ✔ detects "invoice" and "subscription" keywords (0.069292ms)
+✔ MIG-14: Heuristics - Payment/Billing (2.554584ms)
+ℹ tests 3
+ℹ suites 1
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 75.913042
