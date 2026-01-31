@@ -491,6 +491,38 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check network traces');
   }
 
+  // Network / DNS
+  if (
+    actualHints.some(h => /dns|nxdomain|modem|router|internet|wifi|cellular/i.test(h)) ||
+    /dns|nxdomain|modem|router|internet|wifi|cellular/i.test(lowerT)
+  ) {
+    actions.add('Check DNS records / Network connectivity');
+  }
+
+  // Connection Refused / Firewall
+  if (
+    actualHints.some(h => /econns|reset|refused|firewall|blocked port|port binding/i.test(h)) ||
+    /econns|reset|refused|connrefused|firewall|blocked port|port binding/i.test(lowerT)
+  ) {
+    actions.add('Check port binding / Firewall rules');
+  }
+
+  // SSL / TLS / Certificates
+  if (
+    actualHints.some(h => /ssl|tls|cert|handshake|clock skew|clock sync/i.test(h)) ||
+    /ssl|tls|cert|handshake|clock skew|clock sync/i.test(lowerT)
+  ) {
+    actions.add('Check SSL/TLS certificates / Clock synchronization');
+  }
+
+  // VPN / Offline
+  if (
+    actualHints.some(h => /vpn|proxy|tunnel|offline|no internet/i.test(h)) ||
+    /vpn|proxy|tunnel|offline|no internet/i.test(lowerT)
+  ) {
+    actions.add('Check VPN status / Network connectivity');
+  }
+
   // Auth / Permissions
   if (
     actualHints.some(h => /401|403|permission|access|denied|forbidden|login|sign in|auth|session expir|invalid session|invalid token|csrf|xsrf|jwt/i.test(h)) ||
