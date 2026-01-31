@@ -313,7 +313,7 @@ function extractEnvironment(transcript) {
   const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface', 'motorola', 'oppo', 'vivo', 'realme'];
   const environments = ['staging', 'production', 'prod', 'localhost'];
   const privacy = ['incognito', 'private window', 'private browsing', 'guest mode'];
-  const extensions = ['ublock', 'adblock', 'ghostery', 'privacy badger', 'grammarly', 'lastpass', '1password', 'bitwarden', 'react devtools', 'vue devtools', 'redux devtools', 'metamask', 'tampermonkey', 'greasemonkey'];
+  const extensions = ['ublock', 'adblock', 'ghostery', 'privacy badger', 'grammarly', 'lastpass', '1password', 'bitwarden', 'proton pass', 'dashlane', 'react devtools', 'vue devtools', 'redux devtools', 'metamask', 'tampermonkey', 'greasemonkey'];
 
   for (const b of browsers) {
     if (new RegExp(`\\b${b}\\b`, 'i').test(s)) {
