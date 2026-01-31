@@ -351,6 +351,12 @@ function extractBugHints(transcript) {
       lower.includes('happened') ||
       lower.includes('got an error') ||
       lower.includes('error occurred') ||
+      lower.includes('exception') ||
+      lower.includes('stack trace') ||
+      lower.includes('undefined') ||
+      lower.includes('bad request') ||
+      lower.includes('forbidden') ||
+      lower.includes('unauthorized') ||
       lower.includes('result was') ||
       lower.includes('output was') ||
       lower.includes('nothing happened') ||
