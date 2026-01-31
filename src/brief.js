@@ -769,6 +769,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check accessibility / keyboard navigation');
   }
 
+  // SEO / Meta Tags
+  if (
+    actualHints.some(h => /seo|search engine|meta tag|meta description|robots\.txt|sitemap|crawler|googlebot|indexing/i.test(h)) ||
+    /seo|search engine|meta tag|meta description|robots\.txt|sitemap|crawler|googlebot|indexing/i.test(lowerT)
+  ) {
+    actions.add('Check SEO settings / meta tags');
+  }
+
   // Pagination
   if (
     actualHints.some(h => /pagination|page \d|next page|load more|infinite scroll/i.test(h)) ||
