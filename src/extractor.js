@@ -1144,6 +1144,7 @@ export async function extractFromUrl(
           if (meta.description && !norm.description) norm.description = meta.description;
           if (meta.mediaUrl) norm.mediaUrl = meta.mediaUrl;
           if (meta.transcriptUrl) norm._loomTranscriptUrl = meta.transcriptUrl;
+          if (meta.transcriptText) norm._loomApiTranscript = meta.transcriptText;
           if (meta.author && !norm.author) norm.author = meta.author;
           if (meta.thumbnailUrl && !norm.screenshot) norm.screenshot = meta.thumbnailUrl;
           if (meta.date && !norm.date) norm.date = meta.date;
