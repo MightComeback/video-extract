@@ -544,6 +544,14 @@ export function generateNextActions(transcript, actualHints = []) {
   // Base action
   actions.add('Reproduce locally');
 
+  // Status Page
+  if (
+    actualHints.some(h => /status page|system status|outage page|incident/i.test(h)) ||
+    /status page|system status|outage page|incident/i.test(lowerT)
+  ) {
+    actions.add('Check external status page');
+  }
+
   // Crash / Error analysis
   if (
     actualHints.some(h => /crash|error|exception|stack|trace|bad gateway|internal server error|status code 5|HTTP 5\d{2}/i.test(h)) ||
