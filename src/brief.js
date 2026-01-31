@@ -275,7 +275,7 @@ function extractEnvironment(transcript) {
   const s = String(transcript || '').toLowerCase();
   const hits = [];
 
-  const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo', 'samsung internet', 'orion'];
+  const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo', 'samsung internet', 'orion', 'tor browser', 'zen'];
   const os = ['mac', 'macos', 'windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'linux', 'android', 'ios', 'iphone', 'ipad'];
   const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface', 'motorola'];
   const environments = ['staging', 'production', 'prod', 'localhost'];
