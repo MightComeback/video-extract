@@ -15,8 +15,17 @@ test('extractSeverity detects High priority keywords', () => {
   assert.equal(extractSeverity('High priority fix'), 'High');
 });
 
+test('extractSeverity detects Medium priority keywords', () => {
+  assert.equal(extractSeverity('This is medium priority'), 'Medium');
+  assert.equal(extractSeverity('Rate as P2'), 'Medium');
+});
+
+test('extractSeverity detects Low priority keywords', () => {
+  assert.equal(extractSeverity('Just a minor bug'), 'Low');
+  assert.equal(extractSeverity('Cosmetic issue'), 'Low');
+});
+
 test('extractSeverity returns empty string for normal text', () => {
-  assert.equal(extractSeverity('Just a minor bug'), '');
   assert.equal(extractSeverity('Hello world'), '');
 });
 

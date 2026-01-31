@@ -291,6 +291,16 @@ export function extractSeverity(transcript) {
     return 'High';
   }
 
+  // Medium
+  if (/medium priority|normal priority|sev[- ]?3|p2|moderate/i.test(s)) {
+    return 'Medium';
+  }
+
+  // Low
+  if (/low priority|minor|trivial|cosmetic|sev[- ]?4|p3/i.test(s)) {
+    return 'Low';
+  }
+
   return '';
 }
 
