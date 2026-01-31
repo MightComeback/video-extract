@@ -1,13 +1,13 @@
 import { JSDOM } from 'jsdom';
 import puppeteer from 'puppeteer';
 import { readFileSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+import { resolve, join } from 'path';
 import { exec } from 'child_process';
 import util from 'util';
 import { extractLoomMetadataFromHtml, isLoomUrl, parseLoomTranscript, fetchLoomOembed } from './providers/loom.js';
 import { isYoutubeUrl, extractYoutubeMetadataFromHtml, fetchYoutubeOembed } from './providers/youtube.js';
 import { isVimeoUrl, extractVimeoMetadataFromHtml } from './providers/vimeo.js';
-import { parseSimpleVtt } from './utils.js';
+import { parseSimpleVtt, downloadMedia } from './utils.js';
 
 const execAsync = util.promisify(exec);
 
@@ -332,10 +332,11 @@ export async function extractFromUrl(url, options = {}) {
     }
 
     if (options.downloadMedia && data.videoUrl) {
-        // Download logic would go here
-        // Using ffmpeg or curl
-        // For now, just logging
-        console.log(`[Mock] Downloading video from ${data.videoUrl} to ${options.outDir || '.'}`);
+        const outDir = options.outDir || '.';
+        const filename = 'video.mp4';
+        const destPath = join(outDir, filename);
+        console.log(`Downloading video from ${data.videoUrl} to ${destPath}...`);
+        await downloadMedia(data.videoUrl, destPath);
     }
 
     return data;
