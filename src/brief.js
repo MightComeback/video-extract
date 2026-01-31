@@ -485,8 +485,8 @@ export function generateNextActions(transcript, actualHints = []) {
 
   // Performance
   if (
-    actualHints.some(h => /slow|lag|timeout|latency|loading/i.test(h)) ||
-    /slow|lag|timeout|latency|loading/i.test(lowerT)
+    actualHints.some(h => /\b(?:slow|lag|timeout|latency|load)/i.test(h)) ||
+    /\b(?:slow|lag|timeout|latency|load)/i.test(lowerT)
   ) {
     actions.add('Check network traces');
   }
@@ -692,8 +692,8 @@ export function generateNextActions(transcript, actualHints = []) {
 
   // Feature Flags / Rollouts
   if (
-    actualHints.some(h => /feature flag|feature toggle|rollout|experiment|launchdarkly|split\.io|statsig|a\/b test|canary/i.test(h)) ||
-    /feature flag|feature toggle|rollout|experiment|launchdarkly|split\.io|statsig|a\/b test|canary/i.test(lowerT)
+    actualHints.some(h => /feature flag|feature toggle|rollout|experiment|launchdarkly|split\.io|statsig|growthbook|posthog|a\/b test|canary/i.test(h)) ||
+    /feature flag|feature toggle|rollout|experiment|launchdarkly|split\.io|statsig|growthbook|posthog|a\/b test|canary/i.test(lowerT)
   ) {
     actions.add('Check feature flags / rollout status');
   }
