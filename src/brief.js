@@ -330,8 +330,6 @@ function extractEnvironment(transcript) {
   }
 
   return unique.join(', ');
-
-  return unique.join(', ');
 }
 
 function extractBuildNumber(transcript) {
