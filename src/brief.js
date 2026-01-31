@@ -863,7 +863,11 @@ export function extractPaths(transcript) {
     if (/^https?:\/\//.test(t)) {
       try {
         const u = new URL(t);
-        if (u.pathname && u.pathname !== '/') out.add(u.pathname);
+        if (u.pathname && u.pathname !== '/') {
+          out.add(u.pathname);
+        } else if (u.hostname && !u.hostname.includes('fathom.video')) {
+          out.add(u.hostname);
+        }
       } catch (e) {
         // ignore
       }
