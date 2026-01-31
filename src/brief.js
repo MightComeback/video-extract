@@ -352,7 +352,7 @@ function extractBuildNumber(transcript) {
   return '';
 }
 
-function extractBugHints(transcript) {
+export function extractBugHints(transcript) {
   const expected = [];
   const actual = [];
 
@@ -597,6 +597,14 @@ export function generateNextActions(transcript, actualHints = []) {
     /feature flag|feature toggle|rollout|experiment|launchdarkly|split\.io|statsig|a\/b test|canary/i.test(lowerT)
   ) {
     actions.add('Check feature flags / rollout status');
+  }
+
+  // Payment / Billing
+  if (
+    actualHints.some(h => /stripe|payment|card|billing|invoice|subscription|upgrade|downgrade|proration/i.test(h)) ||
+    /stripe|payment|card|billing|invoice|subscription|upgrade|downgrade|proration/i.test(lowerT)
+  ) {
+    actions.add('Check Stripe logs / Billing status');
   }
 
   return [...actions].map(a => `- [ ] ${a}`);
