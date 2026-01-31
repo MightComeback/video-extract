@@ -13,6 +13,12 @@ test('extractLoomMetadataFromHtml handles nested JSON correctly', () => {
             "id": "123",
             "name": "Test User",
             "nested": { "a": 1, "b": 2 }
+        },
+        "RegularUserVideo:12345": {
+            "id": "12345",
+            "name": "Test Video",
+            "createdAt": "2023-01-01T00:00:00.000Z",
+             "posterUrl": "http://example.com/poster.jpg"
         }
     });
 
