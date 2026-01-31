@@ -687,9 +687,16 @@ function slugify(s) {
     .slice(0, 80);
 }
 
-function defaultArtifactsDir({ title } = {}) {
+function defaultArtifactsDir({ title, provider, id } = {}) {
   const ts = new Date().toISOString().replace(/[:.]/g, '-');
-  const base = slugify(title) || 'fathom';
+  const slug = slugify(title);
+  let base = slug || 'video';
+  if (provider && id) {
+    base = `${provider}-${id}`;
+    if (slug) base += `-${slug}`;
+  } else if (!slug) {
+    base = 'fathom'; // legacy fallback
+  }
   return path.join(process.cwd(), 'fathom-artifacts', `${ts}-${base}`);
 }
 
@@ -1120,9 +1127,13 @@ export async function extractFromUrl(
   const fetched = await fetchUrlText(url, { cookie, referer, userAgent, timeoutMs });
   if (fetched.ok) {
     const norm = normalizeFetchedContent(fetched.text, url);
+    let provider = null;
+    let providerId = null;
 
     // Context-specific enrichment
     if (isLoomUrl(url)) {
+      provider = 'loom';
+      providerId = extractLoomId(url);
       try {
         const oembed = await fetchLoomOembed(url, { userAgent });
         if (oembed) {
@@ -1231,6 +1242,8 @@ export async function extractFromUrl(
     const base = {
       ok: true,
       source: url,
+      provider,
+      providerId,
       text: transcriptText,
       mediaUrl: resolvedMediaUrl || '',
       duration: norm.duration || null,
@@ -1265,7 +1278,7 @@ export async function extractFromUrl(
         ? path.dirname(path.resolve(mediaOutPath))
         : outDir
           ? path.resolve(outDir)
-          : defaultArtifactsDir({ title: base.title || base.suggestedTitle });
+          : defaultArtifactsDir({ title: base.title || base.suggestedTitle, provider: base.provider, id: base.providerId });
 
       base.artifactsDir = artifactsDir;
       fs.mkdirSync(artifactsDir, { recursive: true });
