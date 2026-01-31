@@ -1,42 +1,66 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { fetchLoomOembed } from '../src/loom.js';
+import { isLoomUrl, extractLoomMetadataFromHtml } from '../src/loom.js';
 
-// Mock global fetch if needed, but for now we might rely on network or mock it.
-// Since this is a CI/Cron environment, external network calls might be flaky or blocked?
-// "Web search" tool is available, but exec network access depends on the host.
-// The user prompt setup says: "setup: set -a; source .secrets/linear.env"
-// It seems network is allowed (Linear API check worked).
-// But for unit tests, better to mock.
-
-test('fetchLoomOembed returns null for invalid URL', async () => {
-  const data = await fetchLoomOembed('');
-  assert.strictEqual(data, null);
+test('isLoomUrl', () => {
+  assert.ok(isLoomUrl('https://www.loom.com/share/abc-123'));
+  assert.ok(isLoomUrl('https://www.loom.com/v/abc-123'));
+  assert.strictEqual(isLoomUrl('https://google.com'), false);
 });
 
-// We can't easily mock fetch without a library or overriding global.fetch.
-// I'll skip the network test for now and just verify the function exists and handles empty input.
-// If I override global.fetch it might affect other things if parallel, but this is a standalone test file run.
+test('extractLoomMetadataFromHtml - Basic', () => {
+  const mockState = {
+    "RegularUserVideo:v1": {
+      "__typename": "RegularUserVideo",
+      "id": "v1",
+      "name": "Demo Video",
+      "description": "A test description",
+      "duration": 60,
+      "createdAt": "2023-01-01T00:00:00Z",
+      "nullableRawCdnUrl({\"type\":\"M3U8\"})": { "url": "https://cdn.loom/video.m3u8" },
+      "owner": { "__ref": "User:u1" }
+    },
+    "User:u1": {
+      "firstName": "Alice",
+      "lastName": "Doe"
+    }
+  };
 
-test('fetchLoomOembed handles 404 cleanly', async (t) => {
-  const originalFetch = global.fetch;
-  t.after(() => global.fetch = originalFetch);
+  const html = `
+    <html>
+    <script>
+      window.__APOLLO_STATE__ = ${JSON.stringify(mockState)};
+    </script>
+    </html>
+  `;
 
-  global.fetch = async () => ({ ok: false });
+  const meta = extractLoomMetadataFromHtml(html);
+  assert.ok(meta, 'Should extract metadata');
+  assert.strictEqual(meta.title, 'Demo Video');
+  assert.strictEqual(meta.description, 'A test description');
+  assert.strictEqual(meta.mediaUrl, 'https://cdn.loom/video.m3u8');
+  assert.strictEqual(meta.author, 'Alice Doe');
+  assert.strictEqual(meta.date, '2023-01-01T00:00:00Z');
+});
+
+test('extractLoomMetadataFromHtml - Transcript Object', () => {
+  const mockState = {
+    "RegularUserVideo:v1": { "id": "v1", "name": "T" },
+    "Transcript:t1": {
+      "paragraphs": [
+        { "__ref": "TranscriptParagraph:p1" },
+        { "__ref": "TranscriptParagraph:p2" }
+      ]
+    },
+    "TranscriptParagraph:p1": { "startTime": 0, "text": "Hello world." },
+    "TranscriptParagraph:p2": { "startTime": 2.5, "text": "This is a test." }
+  };
+
+  const html = `window.__APOLLO_STATE__ = ${JSON.stringify(mockState)};`;
+  const meta = extractLoomMetadataFromHtml(html);
   
-  const data = await fetchLoomOembed('https://www.loom.com/share/bad-id');
-  assert.strictEqual(data, null);
-});
-
-test('fetchLoomOembed parses JSON on 200', async (t) => {
-  const originalFetch = global.fetch;
-  t.after(() => global.fetch = originalFetch);
-
-  global.fetch = async () => ({
-    ok: true,
-    json: async () => ({ title: 'My Video', author_name: 'Might' })
-  });
-
-  const data = await fetchLoomOembed('https://www.loom.com/share/good-id');
-  assert.deepStrictEqual(data, { title: 'My Video', author_name: 'Might' });
+  assert.ok(meta.transcriptText, 'Should extract transcript text');
+  // 2.5s -> 0:02
+  assert.match(meta.transcriptText, /0:00 Hello world./);
+  assert.match(meta.transcriptText, /0:02 This is a test./);
 });
