@@ -540,8 +540,8 @@ export function generateNextActions(transcript, actualHints = []) {
 
   // Feature Flags / Rollouts
   if (
-    actualHints.some(h => /feature flag|feature toggle|rollout|experiment|launchdarkly|split\.io|statsig/i.test(h)) ||
-    /feature flag|feature toggle|rollout|experiment|launchdarkly|split\.io|statsig/i.test(lowerT)
+    actualHints.some(h => /feature flag|feature toggle|rollout|experiment|launchdarkly|split\.io|statsig|a\/b test|canary/i.test(h)) ||
+    /feature flag|feature toggle|rollout|experiment|launchdarkly|split\.io|statsig|a\/b test|canary/i.test(lowerT)
   ) {
     actions.add('Check feature flags / rollout status');
   }
