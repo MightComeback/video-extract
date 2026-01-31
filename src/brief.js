@@ -497,6 +497,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check API payloads / Validation');
   }
 
+  // GraphQL
+  if (
+    actualHints.some(h => /graphql|gql|schema error|variable \$|mutation failed/i.test(h)) ||
+    /graphql|gql|schema error|variable \$|mutation failed/i.test(lowerT)
+  ) {
+    actions.add('Check GraphQL schema / operations');
+  }
+
   // API Tools
   if (/postman|insomnia|curl|httpie/i.test(lowerT)) {
     actions.add('Reproduce via API client (Postman/curl)');
