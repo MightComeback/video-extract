@@ -538,6 +538,15 @@ export function extractStackTraces(transcript) {
     out.push(m[1].trim());
   }
 
+  // Go Panics
+  // Matches "panic: ...", optional signal info, then "goroutine ...:" followed by stack lines.
+  // Stops at an empty line.
+  const goRe = /(?:^|\n)(panic: [^\n]+(?:\n(?:\[signal [^\]]+\])?)?(?:\n\s*)?goroutine \d+ \[[^\]]+\]:(?:\n[^\n]+)+)/g;
+
+  while ((m = goRe.exec(s))) {
+    out.push(m[1].trim());
+  }
+
   return out;
 }
 
