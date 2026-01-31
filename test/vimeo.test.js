@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { isVimeoUrl, extractVimeoId } from '../src/vimeo.js';
+import { isVimeoUrl, extractVimeoId } from '../src/providers/vimeo.js';
 
 test('isVimeoUrl identifies Vimeo URLs', () => {
   assert.ok(isVimeoUrl('https://vimeo.com/123456789'));

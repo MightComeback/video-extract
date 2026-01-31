@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { extractVimeoMetadataFromHtml } from '../src/vimeo.js';
+import { extractVimeoMetadataFromHtml } from '../src/providers/vimeo.js';
 
 test('extractVimeoMetadataFromHtml extracts description from OG tags', () => {
   // Use valid JSON for config
