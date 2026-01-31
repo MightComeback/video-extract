@@ -7,12 +7,14 @@ test('extractSeverity detects Critical/Blocker keywords', () => {
   assert.equal(extractSeverity('This is a p0 issue'), 'Critical / Blocker');
   assert.equal(extractSeverity('Major data loss occurred'), 'Critical / Blocker');
   assert.equal(extractSeverity('Blocking release'), 'Critical / Blocker');
+  assert.equal(extractSeverity('This is an emergency'), 'Critical / Blocker');
 });
 
 test('extractSeverity detects High priority keywords', () => {
   assert.equal(extractSeverity('We need this ASAP'), 'High');
   assert.equal(extractSeverity('This is urgent'), 'High');
   assert.equal(extractSeverity('High priority fix'), 'High');
+  assert.equal(extractSeverity('This is major'), 'High');
 });
 
 test('extractSeverity detects Medium priority keywords', () => {
