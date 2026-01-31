@@ -6,7 +6,7 @@ import { pipeline } from 'node:stream/promises';
 import { Readable } from 'node:stream';
 
 import { normalizeUrlLike } from './brief.js';
-import { isLoomUrl, fetchLoomOembed } from './loom.js';
+import { isLoomUrl, fetchLoomOembed, extractLoomId, fetchLoomSession } from './loom.js';
 
 export function readStdin() {
   // If the user runs `fathom2action --stdin` interactively without piping input,
@@ -1094,6 +1094,19 @@ export async function extractFromUrl(
           if (oembed.title && !norm.suggestedTitle) norm.suggestedTitle = oembed.title;
           if (oembed.author_name && !norm.author) norm.author = oembed.author_name;
           if (oembed.thumbnail_url && !norm.screenshot) norm.screenshot = oembed.thumbnail_url;
+        }
+      } catch {
+        // ignore
+      }
+
+      try {
+        const id = extractLoomId(url);
+        if (id) {
+          const session = await fetchLoomSession(id, { cookie, timeoutMs });
+          if (session) {
+            if (session.name && !norm.suggestedTitle) norm.suggestedTitle = session.name;
+            if (session.description && !norm.description) norm.description = session.description;
+          }
         }
       } catch {
         // ignore
