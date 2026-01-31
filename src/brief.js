@@ -279,7 +279,7 @@ export function extractSeverity(transcript) {
 
   // Critical / Blocker
   if (
-    /production down|site is down|service is down|outage|sev ?1|p0|blocker|blocking release|data loss|critical|fatal/i.test(
+    /production down|site is down|service is down|outage|sev ?1|p0|blocker|blocking release|data loss|critical|fatal|emergency/i.test(
       s
     )
   ) {
@@ -287,7 +287,7 @@ export function extractSeverity(transcript) {
   }
 
   // High
-  if (/urgent|asap|high priority|important|deadline|sev[- ]?2|p1/i.test(s)) {
+  if (/urgent|asap|high priority|important|deadline|sev[- ]?2|p1|major/i.test(s)) {
     return 'High';
   }
 
