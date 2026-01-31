@@ -517,6 +517,13 @@ export function extractStackTraces(transcript) {
     out.push(m[1].trim());
   }
 
+  // Java Stack Traces
+  const javaRe = /(?:^|\n)((?:[a-zA-Z0-9_$.]+Exception|[a-zA-Z0-9_$.]+Error)(?::[^\n]*)?\n(?:\s+at [^\n]+\n)+)/g;
+  
+  while ((m = javaRe.exec(s))) {
+    out.push(m[1].trim());
+  }
+
   // Python Stack Traces
   // Traceback (most recent call last):
   //   File "...", line ..., in ...
