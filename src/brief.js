@@ -503,7 +503,8 @@ export function generateNextActions(transcript, actualHints = []) {
 
   // Database / Data
   if (
-    /database|sql|postgres|mongo|migration|seed|corrupt data|data integrity/i.test(lowerT)
+    actualHints.some(h => /duplicate key|foreign key|deadlock|unique constraint|serialization failure/i.test(h)) ||
+    /database|sql|postgres|mongo|migration|seed|corrupt data|data integrity|duplicate key|foreign key|deadlock|unique constraint|serialization failure/i.test(lowerT)
   ) {
     actions.add('Check database state / migrations');
   }
