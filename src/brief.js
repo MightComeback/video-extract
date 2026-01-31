@@ -668,6 +668,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Test on physical device / simulator');
   }
 
+  // Touch / Gestures
+  if (
+    actualHints.some(h => /swipe|pinch|zoom|gesture|touch|hard to tap|cant tap|cannot tap|unresponsive tap|\btap\s+(?:the|a|on)\b/i.test(h)) ||
+    /swipe|pinch|zoom|gesture|touch|hard to tap|cant tap|cannot tap|unresponsive tap|\btap\s+(?:the|a|on)\b/i.test(lowerT)
+  ) {
+    actions.add('Check touch events / gestures');
+  }
+
   // Database / Data
   if (
     actualHints.some(h => /duplicate key|foreign key|deadlock|unique constraint|serialization failure/i.test(h)) ||
