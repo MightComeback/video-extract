@@ -900,7 +900,8 @@ async function splitVideoIntoSegments({ inputPath, segmentsDir, segmentSeconds =
       ],
       { timeoutMs: ffmpegSplitTimeoutMs() }
     );
-  } catch {
+  } catch (err) {
+    console.warn(`[extractor] warning: fast split failed, falling back to re-encode (${String(err.message || err).split('\\n')[0]})`);
     // Fallback: re-encode + force keyframes at segment boundaries.
     await run(
       'ffmpeg',
