@@ -161,7 +161,25 @@ export function extractLoomMetadataFromHtml(html, targetId = null) {
 
   // Strategy: Look for in-memory Transcript object (avoid fetching if possible)
   // Usually has structure: Transcript:XYZ -> paragraphs -> [ {__ref: 'TranscriptParagraph:ABC'}, ... ]
-  const transcriptKey = Object.keys(state).find(k => k.startsWith('Transcript:') && state[k].paragraphs);
+  let transcriptKey = null;
+
+  // 1. Try to find explicit link from video object (most robust)
+  // The field name varies (transcript, videoTranscript, etc), but if we see a ref to "Transcript:...", use it.
+  if (videoKey && state[videoKey]) {
+    const v = state[videoKey];
+    for (const k of Object.keys(v)) {
+      if (v[k] && v[k].__ref && v[k].__ref.startsWith('Transcript:')) {
+        transcriptKey = v[k].__ref;
+        break;
+      }
+    }
+  }
+
+  // 2. Fallback: scan all keys for any Transcript object
+  if (!transcriptKey) {
+    transcriptKey = Object.keys(state).find(k => k.startsWith('Transcript:') && state[k].paragraphs);
+  }
+
   if (transcriptKey) {
     const tObj = state[transcriptKey];
     if (Array.isArray(tObj.paragraphs)) {

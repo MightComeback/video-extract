@@ -64,3 +64,31 @@ test('extractLoomMetadataFromHtml - Transcript Object', () => {
   assert.match(meta.transcriptText, /0:00 Hello world./);
   assert.match(meta.transcriptText, /0:02 This is a test./);
 });
+
+test('extractLoomMetadataFromHtml - Linked Transcript Precedence', () => {
+  const mockState = {
+    "RegularUserVideo:v1": { 
+      "id": "v1", 
+      "name": "Main Video",
+      // Explicit link to t2
+      "transcript": { "__ref": "Transcript:t2" }
+    },
+    // Random transcript (should be ignored)
+    "Transcript:t1": {
+      "paragraphs": [{ "__ref": "TranscriptParagraph:p1" }]
+    },
+    // Correct transcript
+    "Transcript:t2": {
+      "paragraphs": [{ "__ref": "TranscriptParagraph:p2" }]
+    },
+    "TranscriptParagraph:p1": { "startTime": 0, "text": "Wrong transcript." },
+    "TranscriptParagraph:p2": { "startTime": 1, "text": "Correct transcript." }
+  };
+
+  const html = `window.__APOLLO_STATE__ = ${JSON.stringify(mockState)};`;
+  const meta = extractLoomMetadataFromHtml(html);
+  
+  assert.ok(meta.transcriptText);
+  assert.match(meta.transcriptText, /Correct transcript/);
+  assert.doesNotMatch(meta.transcriptText, /Wrong transcript/);
+});
