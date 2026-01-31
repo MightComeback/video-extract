@@ -8,7 +8,7 @@ import { Readable } from 'node:stream';
 import { normalizeUrlLike } from './brief.js';
 import { isLoomUrl, fetchLoomOembed, extractLoomId, extractLoomMetadataFromHtml } from './loom.js';
 import { isYoutubeUrl, fetchYoutubeOembed, extractYoutubeMetadataFromHtml } from './youtube.js';
-import { isVimeoUrl, fetchVimeoOembed } from './vimeo.js';
+import { isVimeoUrl, fetchVimeoOembed, extractVimeoMetadataFromHtml } from './vimeo.js';
 
 export function readStdin() {
   // If the user runs `fathom2action --stdin` interactively without piping input,
@@ -1164,6 +1164,20 @@ export async function extractFromUrl(
       } catch {
         // ignore
       }
+
+      try {
+        const meta = extractVimeoMetadataFromHtml(fetched.text);
+        if (meta) {
+          if (meta.title && !norm.suggestedTitle) norm.suggestedTitle = meta.title;
+          if (meta.description && !norm.description) norm.description = meta.description;
+          if (meta.author && !norm.author) norm.author = meta.author;
+          if (meta.thumbnailUrl && !norm.screenshot) norm.screenshot = meta.thumbnailUrl;
+          if (meta.mediaUrl) norm.mediaUrl = meta.mediaUrl;
+          if (meta.transcriptUrl) norm._vimeoTranscriptUrl = meta.transcriptUrl;
+        }
+      } catch {
+        // ignore
+      }
     }
 
     // If the page doesn't embed a transcript, prefer the real transcript endpoint when available.
@@ -1173,6 +1187,7 @@ export async function extractFromUrl(
     let transcriptUrl = extractTranscriptUrlFromHtml(fetched.text, url);
     if (norm._loomTranscriptUrl) transcriptUrl = norm._loomTranscriptUrl;
     if (norm._youtubeTranscriptUrl) transcriptUrl = norm._youtubeTranscriptUrl;
+    if (norm._vimeoTranscriptUrl) transcriptUrl = norm._vimeoTranscriptUrl;
 
     const hasTimestamps = /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(String(transcriptText || ''));
     

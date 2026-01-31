@@ -34,3 +34,46 @@ export async function fetchVimeoOembed(url, { timeoutMs = 5000 } = {}) {
     return null;
   }
 }
+
+export function extractVimeoMetadataFromHtml(html) {
+  const s = String(html || '');
+  // Look for window.vimeo.clip_page_config = { ... }
+  const m = s.match(/window\.vimeo\.clip_page_config\s*=\s*(\{[\s\S]*?\});/);
+  if (!m) return null;
+
+  try {
+    const config = JSON.parse(m[1]);
+    if (!config || !config.clip) return null;
+
+    const result = {
+      title: config.clip.name || null,
+      description: null, // Often not in clip object, sometimes in schema
+      duration: config.clip.duration?.raw || null,
+      author: config.owner?.display_name || null,
+      thumbnailUrl: config.clip.poster?.display_src || null,
+      mediaUrl: null,
+      transcriptUrl: null,
+    };
+
+    // Media: files.progressive is usually the best for direct MP4
+    if (config.request?.files?.progressive?.length) {
+      // Sort by width/quality desc
+      const sorted = config.request.files.progressive.sort((a, b) => (b.width || 0) - (a.width || 0));
+      result.mediaUrl = sorted[0].url;
+    } else if (config.request?.files?.hls?.cdns?.fastly_skyfire?.url) {
+        result.mediaUrl = config.request.files.hls.cdns.fastly_skyfire.url;
+    }
+
+    // Transcript: text_tracks
+    if (config.request?.text_tracks?.length) {
+      const tracks = config.request.text_tracks;
+      // Prefer English
+      const en = tracks.find(t => String(t.lang).startsWith('en'));
+      result.transcriptUrl = en ? en.url : tracks[0].url;
+    }
+
+    return result;
+  } catch {
+    return null;
+  }
+}
