@@ -12,3 +12,17 @@ export function isFathomUrl(url) {
     return false;
   }
 }
+
+export function extractFathomTranscriptUrl(html) {
+  const s = String(html || '');
+  
+  // Fathom: copyTranscriptUrl in JSON state
+  const m = s.match(/copyTranscriptUrl"\s*:\s*"([^"\s]+\/copy_transcript[^"\s]*)"/i);
+  if (m && m[1]) return m[1];
+
+  // Fathom: direct copy_transcript URL match
+  const m2 = s.match(/https?:\/\/[^\s"'<>]+\/copy_transcript\b[^\s"'<>]*/i);
+  if (m2 && m2[0]) return m2[0];
+
+  return null;
+}

@@ -9,6 +9,7 @@ import { normalizeUrlLike } from './brief.js';
 import { isLoomUrl, fetchLoomOembed, extractLoomId, extractLoomMetadataFromHtml } from './loom.js';
 import { isYoutubeUrl, fetchYoutubeOembed, extractYoutubeMetadataFromHtml } from './youtube.js';
 import { isVimeoUrl, fetchVimeoOembed, extractVimeoMetadataFromHtml } from './vimeo.js';
+import { extractFathomTranscriptUrl } from './fathom.js';
 
 export function readStdin() {
   // If the user runs `fathom2action --stdin` interactively without piping input,
@@ -1018,13 +1019,9 @@ async function splitVideoIntoSegments({ inputPath, segmentsDir, segmentSeconds =
 export function extractTranscriptUrlFromHtml(html, pageUrl) {
   const s = decodeHtmlEntities(String(html || '')).replaceAll('\\/', '/');
 
-  // Fathom: copyTranscriptUrl in JSON state
-  const m = s.match(/copyTranscriptUrl"\s*:\s*"([^"\s]+\/copy_transcript[^"\s]*)"/i);
-  if (m && m[1]) return resolveMaybeRelativeUrl(m[1], pageUrl);
-
-  // Fathom: direct copy_transcript URL match
-  const m2 = s.match(/https?:\/\/[^\s"'<>]+\/copy_transcript\b[^\s"'<>]*/i);
-  if (m2 && m2[0]) return m2[0];
+  // Fathom: copyTranscriptUrl in JSON state or direct match
+  const fathomUrl = extractFathomTranscriptUrl(s);
+  if (fathomUrl) return resolveMaybeRelativeUrl(fathomUrl, pageUrl);
 
   // Loom: VTT captions in JSON state (often "url": "....vtt")
   // Look for .vtt url inside quotes.
