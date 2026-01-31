@@ -754,6 +754,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Clear cache / cookies');
   }
 
+  // JSON / Parsing
+  if (
+    actualHints.some(h => /json parse|unexpected token|invalid json|syntaxerror|circular structure/i.test(h)) ||
+    /json parse|unexpected token|invalid json|syntaxerror|circular structure/i.test(lowerT)
+  ) {
+    actions.add('Check JSON parsing / payload');
+  }
+
   // API / Validation
   if (
     actualHints.some(h => /400|bad request|validation|invalid param|invalid input/i.test(h)) ||
