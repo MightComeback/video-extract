@@ -6,7 +6,8 @@ import { pipeline } from 'node:stream/promises';
 import { Readable } from 'node:stream';
 
 import { normalizeUrlLike } from './brief.js';
-import { isLoomUrl, fetchLoomOembed, extractLoomId, extractLoomMetadataFromHtml } from './loom.js';
+import { isLoomUrl, fetchLoomOembed, extractLoomId, extractLoomMetadataFromHtml, fetchLoomSession } from './loom.js';
+import { isYoutubeUrl, fetchYoutubeOembed } from './youtube.js';
 
 export function readStdin() {
   // If the user runs `fathom2action --stdin` interactively without piping input,
@@ -1118,10 +1119,38 @@ export async function extractFromUrl(
       } catch {
         // ignore
       }
+
+      try {
+        const id = extractLoomId(url);
+        if (id) {
+          const session = await fetchLoomSession(id);
+          if (session) {
+            const found = findTranscriptInObject(session);
+            if (found) norm._loomApiTranscript = found;
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    if (isYoutubeUrl(url)) {
+      try {
+        const oembed = await fetchYoutubeOembed(url);
+        if (oembed) {
+          if (oembed.title && !norm.suggestedTitle) norm.suggestedTitle = oembed.title;
+          if (oembed.author_name && !norm.author) norm.author = oembed.author_name;
+          if (oembed.thumbnail_url && !norm.screenshot) norm.screenshot = oembed.thumbnail_url;
+        }
+      } catch {
+        // ignore
+      }
     }
 
     // If the page doesn't embed a transcript, prefer the real transcript endpoint when available.
     let transcriptText = norm.text;
+    if (norm._loomApiTranscript) transcriptText = norm._loomApiTranscript;
+
     let transcriptUrl = extractTranscriptUrlFromHtml(fetched.text, url);
     if (norm._loomTranscriptUrl) transcriptUrl = norm._loomTranscriptUrl;
 

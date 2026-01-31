@@ -31,6 +31,28 @@ export async function fetchLoomOembed(url, { timeoutMs = 5000 } = {}) {
   }
 }
 
+export async function fetchLoomSession(id, { timeoutMs = 5000 } = {}) {
+  const i = String(id || '').trim();
+  if (!i) return null;
+
+  try {
+    const apiUrl = `https://www.loom.com/api/campaigns/sessions/${encodeURIComponent(i)}`;
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), timeoutMs);
+
+    const res = await fetch(apiUrl, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'video-extract/0.1.0' }
+    });
+    clearTimeout(t);
+
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 export function extractLoomMetadataFromHtml(html) {
   const s = String(html || '');
   // Extract window.__APOLLO_STATE__
