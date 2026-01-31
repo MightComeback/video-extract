@@ -87,19 +87,13 @@ export function extractLoomMetadataFromHtml(html) {
       if (video.description) result.description = video.description;
       if (Number.isFinite(video.duration)) result.duration = video.duration;
 
-      // Extract Media URL (M3U8 preferred)
-      // Keys like: nullableRawCdnUrl({"acceptableMimes":["M3U8"],"password":null})
-      const m3u8Key = Object.keys(video).find(k => k.startsWith('nullableRawCdnUrl') && k.includes('M3U8'));
-      if (m3u8Key && video[m3u8Key] && video[m3u8Key].url) {
-        result.mediaUrl = video[m3u8Key].url;
-      } else {
-        // Fallback: DASH or direct mp4 if implied (Loom usually uses HLS/DASH for playback)
-        const dashKey = Object.keys(video).find(k => k.startsWith('nullableRawCdnUrl') && k.includes('DASH'));
-        if (dashKey && video[dashKey] && video[dashKey].url) {
-          // ffmpeg can handle .mpd
-          result.mediaUrl = video[dashKey].url; 
-        }
-      }
+      // Extract Media URL (priority: M3U8 > DASH > MP4)
+      const findUrl = (type) => {
+        const key = Object.keys(video).find(k => k.startsWith('nullableRawCdnUrl') && k.includes(type));
+        return (key && video[key]) ? video[key].url : null;
+      };
+
+      result.mediaUrl = findUrl('M3U8') || findUrl('DASH') || findUrl('MP4');
     }
   }
 
