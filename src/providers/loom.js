@@ -190,12 +190,25 @@ export function parseLoomTranscript(text) {
          return segments
            .map(p => {
              // Handle { text: "..." } or nested lines
-             if (p.text) return p.text;
-             if (p.lines && Array.isArray(p.lines)) return p.lines.map(l => l.text).join(' ');
-             return '';
+             let text = '';
+             if (p.text) text = p.text;
+             else if (p.lines && Array.isArray(p.lines)) text = p.lines.map(l => l.text).join(' ');
+             
+             if (!text) return null;
+
+             // Extract timestamp if available
+             const t = p.startTime !== undefined ? p.startTime : (p.start !== undefined ? p.start : null);
+             if (typeof t === 'number') {
+               const s = Math.floor(t);
+               const mm = Math.floor(s / 60);
+               const ss = s % 60;
+               return `${mm}:${String(ss).padStart(2, '0')} ${text}`;
+             }
+
+             return text;
            })
            .filter(Boolean)
-           .join(' ');
+           .join('\n');
       }
     } catch (e) {
       // ignore parse errors
