@@ -122,8 +122,35 @@ function extractMetaContent(html, { name, property }) {
   return '';
 }
 
+function extractLdJson(html) {
+  const s = String(html);
+  const matches = s.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  const out = [];
+  for (const m of matches) {
+    try {
+      const parsed = JSON.parse(m[1]);
+      if (Array.isArray(parsed)) out.push(...parsed);
+      else out.push(parsed);
+    } catch {
+      // ignore
+    }
+  }
+  return out;
+}
+
 function extractVideoUrlFromHtml(html) {
   const s = String(html);
+
+  // 1. Precise: Schema.org VideoObject (common on Loom, YouTube, Vimeo)
+  const ld = extractLdJson(s);
+  const flat = ld.flatMap(o => o['@graph'] || o);
+  const videoObj = flat.find(o => String(o['@type']).toLowerCase() === 'videoobject');
+  
+  if (videoObj) {
+    // Prefer contentUrl (actual file) over embedUrl (player).
+    if (videoObj.contentUrl) return decodeHtmlEntities(videoObj.contentUrl).trim();
+    if (videoObj.embedUrl) return decodeHtmlEntities(videoObj.embedUrl).trim();
+  }
 
   // Common OpenGraph video fields.
   const ogVideo =
