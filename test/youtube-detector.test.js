@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { isYoutubeUrl, extractYoutubeId } from '../src/youtube.js';
+import { isYoutubeUrl, extractYoutubeId } from '../src/providers/youtube.js';
 
 test('isYoutubeUrl identifies valid YouTube URLs', () => {
   assert.strictEqual(isYoutubeUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), true);

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { extractYoutubeMetadataFromHtml } from '../src/youtube.js';
+import { extractYoutubeMetadataFromHtml } from '../src/providers/youtube.js';
 
 test('extractYoutubeMetadataFromHtml: extracts title, description, transcript URL', () => {
   const mockData = {
