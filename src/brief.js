@@ -499,6 +499,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check permissions / user roles');
   }
 
+  // Audio / Video Devices
+  if (
+    actualHints.some(h => /camera|microphone|webcam|no audio|no video|muted|black screen|can't hear|cannot hear|no sound/i.test(h)) ||
+    /camera|microphone|webcam|no audio|no video|muted|black screen|can't hear|cannot hear|no sound/i.test(lowerT)
+  ) {
+    actions.add('Check Audio/Video permissions & device selection');
+  }
+
   // Regression
   if (
     /regression|used to work|worked before|worked yesterday|broken since|last update|stopped working/i.test(lowerT)
