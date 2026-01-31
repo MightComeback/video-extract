@@ -29,3 +29,10 @@ test('MIG-14: extractEnvironment detects PlayStation VR', () => {
   });
   assert.match(brief, /PlayStation VR/);
 });
+
+test('MIG-14: extractEnvironment detects Pico', () => {
+  const brief = renderBrief({
+    transcript: 'The issue happens on my Pico 4 headset browser.',
+  });
+  assert.match(brief, /Pico/);
+});
