@@ -1,4 +1,4 @@
-import { extractJsonBlock } from './utils.js';
+import { extractJsonBlock } from '../utils.js';
 
 export function isYoutubeUrl(url) {
   const u = String(url || '').trim();

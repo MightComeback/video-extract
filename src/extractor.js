@@ -5,8 +5,8 @@ import { resolve } from 'path';
 import { exec } from 'child_process';
 import util from 'util';
 import { extractLoomMetadataFromHtml, isLoomUrl } from './providers/loom.js';
-import { isYoutubeUrl, extractYoutubeMetadataFromHtml } from './youtube.js';
-import { isVimeoUrl, extractVimeoMetadataFromHtml } from './vimeo.js';
+import { isYoutubeUrl, extractYoutubeMetadataFromHtml } from './providers/youtube.js';
+import { isVimeoUrl, extractVimeoMetadataFromHtml } from './providers/vimeo.js';
 import { parseSimpleVtt } from './utils.js';
 
 const execAsync = util.promisify(exec);
