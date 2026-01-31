@@ -175,6 +175,10 @@ function extractVideoUrlFromHtml(html) {
   const m2 = s.match(/<source[^>]*\s+src=("([^"]+)"|'([^']+)')[^>]*>/i);
   if (m2) return decodeHtmlEntities(m2[2] || m2[3] || '').trim();
 
+  // Special-case: YouTube often uses googlevideo.com URLs which don't have standard extensions.
+  const googleVideoMatch = s.match(/https:\/\/[a-z0-9-]+\.googlevideo\.com\/videoplayback[^"'\s<>]*/i);
+  // We extract them if found in likely JSON blobs or attributes.
+
   // Some share pages stash the actual media URL in JSON-LD (contentUrl) or similar JSON blobs.
   // Keep this conservative: only absolute URLs with a media-ish extension.
   const jsonKeyMatch = s.match(/"(?:contentUrl|embedUrl|url)"\s*:\s*"(https?:\\\/\\\/[^\"<>]+\.(?:m3u8|mp4|mov|m4v|webm)(?:\?[^\"<>]*)?)"/i);
