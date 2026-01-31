@@ -388,6 +388,8 @@ function extractBugHints(transcript) {
       lower.includes('blank screen') ||
       lower.includes('white screen') ||
       lower.includes('spinning') ||
+      lower.includes('glitch') ||
+      lower.includes('flicker') ||
       lower.includes('infinite loop')
     ) {
       actual.push(s);
