@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { exec } from 'child_process';
 import util from 'util';
-import { extractLoomMetadataFromHtml, isLoomUrl, parseLoomTranscript } from './providers/loom.js';
+import { extractLoomMetadataFromHtml, isLoomUrl, parseLoomTranscript, fetchLoomOembed } from './providers/loom.js';
 import { isYoutubeUrl, extractYoutubeMetadataFromHtml } from './providers/youtube.js';
 import { isVimeoUrl, extractVimeoMetadataFromHtml } from './providers/vimeo.js';
 import { parseSimpleVtt } from './utils.js';
@@ -156,7 +156,23 @@ async function extractLoom(url, page) {
     const content = await page.content();
     
     // Try to extract via metadata (robust)
-    const meta = extractLoomMetadataFromHtml(content);
+    let meta = extractLoomMetadataFromHtml(content);
+
+    // Fallback: use OEmbed if metadata is missing critical fields
+    if (!meta || !meta.title) {
+        try {
+            const oembed = await fetchLoomOembed(url);
+            if (oembed) {
+                meta = meta || {};
+                if (!meta.title) meta.title = oembed.title;
+                if (!meta.author) meta.author = oembed.author_name;
+                if (!meta.thumbnailUrl) meta.thumbnailUrl = oembed.thumbnail_url;
+                if (!meta.duration && oembed.duration) meta.duration = oembed.duration;
+            }
+        } catch (e) {
+            console.warn('Failed to fetch Loom OEmbed:', e);
+        }
+    }
     
     // Fallback/Enhancement with DOM if meta is incomplete
     const dom = new JSDOM(content);
