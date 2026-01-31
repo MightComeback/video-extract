@@ -5,7 +5,7 @@ import { resolve } from 'path';
 import { exec } from 'child_process';
 import util from 'util';
 import { extractLoomMetadataFromHtml, isLoomUrl, parseLoomTranscript, fetchLoomOembed } from './providers/loom.js';
-import { isYoutubeUrl, extractYoutubeMetadataFromHtml } from './providers/youtube.js';
+import { isYoutubeUrl, extractYoutubeMetadataFromHtml, fetchYoutubeOembed } from './providers/youtube.js';
 import { isVimeoUrl, extractVimeoMetadataFromHtml } from './providers/vimeo.js';
 import { parseSimpleVtt } from './utils.js';
 
@@ -234,7 +234,23 @@ async function extractYoutube(url, page) {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     const content = await page.content();
-    const meta = extractYoutubeMetadataFromHtml(content);
+    let meta = extractYoutubeMetadataFromHtml(content);
+
+    // Initial player response might be missing or obfuscated, try OEmbed fallback
+    if (!meta || !meta.title) {
+        try {
+            const oembed = await fetchYoutubeOembed(url);
+            if (oembed) {
+                meta = meta || {};
+                if (!meta.title) meta.title = oembed.title;
+                if (!meta.author) meta.author = oembed.author_name;
+                if (!meta.thumbnailUrl) meta.thumbnailUrl = oembed.thumbnail_url;
+                // OEmbed does not provide duration or transcript, but title/author is better than nothing
+            }
+        } catch (e) {
+            console.warn('Failed to fetch YouTube OEmbed:', e);
+        }
+    }
 
     let transcript = '';
     if (meta?.transcriptUrl) {
