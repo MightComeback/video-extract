@@ -4,7 +4,8 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { exec } from 'child_process';
 import util from 'util';
-import { extractLoomMetadataFromHtml } from './loom.js';
+import { extractLoomMetadataFromHtml } from './providers/loom.js';
+import { isYoutubeUrl, extractYoutubeMetadataFromHtml } from './youtube.js';
 import { parseSimpleVtt } from './utils.js';
 
 const execAsync = util.promisify(exec);
@@ -221,6 +222,39 @@ async function extractLoom(url, page) {
     };
 }
 
+async function extractYoutube(url, page) {
+    console.log(`Navigating to ${url}...`);
+    // YouTube can be heavy; domcontentloaded is usually enough for metadata
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    
+    const content = await page.content();
+    const meta = extractYoutubeMetadataFromHtml(content);
+
+    let transcript = '';
+    if (meta?.transcriptUrl) {
+        try {
+            console.log(`Fetching transcript from ${meta.transcriptUrl}...`);
+            const res = await fetch(meta.transcriptUrl);
+            if (res.ok) {
+                 const txt = await res.text();
+                 // Expecting VTT because we appended fmt=vtt
+                 transcript = parseSimpleVtt(txt);
+            }
+        } catch (e) {
+            console.warn('Failed to fetch YouTube transcript:', e);
+        }
+    }
+
+    return {
+        title: meta?.title || 'YouTube Video',
+        date: new Date().toISOString(), 
+        transcript: transcript || '(No transcript found)',
+        videoUrl: url, 
+        sourceUrl: url,
+        author: meta?.author
+    };
+}
+
 export async function extractFromUrl(url, options = {}) {
   const browser = await puppeteer.launch({
     headless: 'new',
@@ -232,7 +266,9 @@ export async function extractFromUrl(url, options = {}) {
     await page.setViewport({ width: 1280, height: 800 });
 
     let data;
-    if (url.includes('loom.com')) {
+    if (isYoutubeUrl(url)) {
+        data = await extractYoutube(url, page);
+    } else if (url.includes('loom.com')) {
         data = await extractLoom(url, page);
     } else {
         data = await extractFathom(url, page);
