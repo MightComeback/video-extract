@@ -426,7 +426,10 @@ export function extractBugHints(transcript) {
       lower.includes('spinning') ||
       lower.includes('glitch') ||
       lower.includes('flicker') ||
-      lower.includes('infinite loop')
+      lower.includes('infinite loop') ||
+      lower.includes('broken') ||
+      lower.includes('timed out') ||
+      lower.includes('laggy')
     ) {
       actual.push(s);
     }
