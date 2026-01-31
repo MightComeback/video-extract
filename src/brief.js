@@ -570,6 +570,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check DNS records / Network connectivity');
   }
 
+  // Cloudflare / WAF
+  if (
+    actualHints.some(h => /cloudflare|ray id|waf|firewall block|security challenge|verification required/i.test(h)) ||
+    /cloudflare|ray id|waf|firewall block|security challenge|verification required/i.test(lowerT)
+  ) {
+    actions.add('Check Cloudflare logs / WAF rules');
+  }
+
   // Connection Refused / Firewall
   if (
     actualHints.some(h => /econns|reset|refused|firewall|blocked port|port binding/i.test(h)) ||
