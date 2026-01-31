@@ -1120,6 +1120,7 @@ export async function extractFromUrl(
           if (meta.author && !norm.author) norm.author = meta.author;
           if (meta.thumbnailUrl && !norm.screenshot) norm.screenshot = meta.thumbnailUrl;
           if (meta.date && !norm.date) norm.date = meta.date;
+          if (meta.duration && !norm.duration) norm.duration = meta.duration;
         }
       } catch {
         // ignore
@@ -1205,6 +1206,7 @@ export async function extractFromUrl(
       source: url,
       text: transcriptText,
       mediaUrl: resolvedMediaUrl || '',
+      duration: norm.duration || null,
       title: norm.suggestedTitle || '',
       date: norm.date || '',
       description: norm.description || '',
