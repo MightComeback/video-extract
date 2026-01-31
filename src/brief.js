@@ -605,6 +605,22 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check Stripe logs / Billing status');
   }
 
+  // Memory / OOM
+  if (
+    actualHints.some(h => /oom|out of memory|memory leak|heap limit|allocation failed/i.test(h)) ||
+    /oom|out of memory|memory leak|heap limit|allocation failed/i.test(lowerT)
+  ) {
+    actions.add('Check memory usage / OOM');
+  }
+
+  // Disk Space
+  if (
+    actualHints.some(h => /disk full|no space left|disk space/i.test(h)) ||
+    /disk full|no space left|disk space/i.test(lowerT)
+  ) {
+    actions.add('Check disk space / cleanup');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
