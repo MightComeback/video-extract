@@ -545,6 +545,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check Redis / backend connectivity');
   }
 
+  // Websockets / Realtime
+  if (
+    actualHints.some(h => /websocket|ws:|wss:|socket\.io|pusher|signalr/i.test(h)) ||
+    /websocket|ws:|wss:|socket\.io|pusher|signalr/i.test(lowerT)
+  ) {
+    actions.add('Check Websocket / Realtime logs');
+  }
+
   // File Upload
   if (
     actualHints.some(h => /upload|attachment|file too large|payload too large|entity too large/i.test(h)) ||
