@@ -991,11 +991,15 @@ export function extractTranscriptUrlFromHtml(html, pageUrl) {
   // Look for .vtt url inside quotes.
   // We prefer english captions if possible, but any VTT is better than nothing.
   const vttMatches = s.matchAll(/"([^"]+\.vtt[^"]*)"/gi);
+  const candidates = [];
   for (const match of vttMatches) {
-    const candidate = match[1];
-    if (candidate) {
-      return resolveMaybeRelativeUrl(candidate, pageUrl);
-    }
+    if (match[1]) candidates.push(match[1]);
+  }
+
+  if (candidates.length) {
+    // Prioritize English (common patterns: _en.vtt, /en/, -en.vtt)
+    const en = candidates.find((c) => /[-_]en\.vtt/i.test(c) || /\/en\//i.test(c));
+    return resolveMaybeRelativeUrl(en || candidates[0], pageUrl);
   }
 
   return '';
