@@ -894,6 +894,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check Stripe logs / Billing status');
   }
 
+  // Jobs / Queues
+  if (
+    actualHints.some(h => /job|queue|worker|processing|stuck|consumer|producer|topic|lag|backlog|sidekiq|bullmq|kafka|rabbitmq|sqs/i.test(h)) ||
+    /background job|worker process|job queue|queue backed up|stuck.*queue|queue.*stuck|consumer lag|kafka|rabbitmq|sqs|sidekiq|bullmq|activemq|zeromq|celery/i.test(lowerT)
+  ) {
+    actions.add('Check background job processing / queues');
+  }
+
   // Memory / OOM
   if (
     actualHints.some(h => /oom|out of memory|memory leak|heap limit|allocation failed/i.test(h)) ||
