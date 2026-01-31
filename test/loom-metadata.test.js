@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { isLoomUrl, extractLoomMetadataFromHtml } from '../src/loom.js';
+import { isLoomUrl, extractLoomMetadataFromHtml } from '../src/providers/loom.js';
 
 test('isLoomUrl', () => {
   assert.ok(isLoomUrl('https://www.loom.com/share/abc-123'));

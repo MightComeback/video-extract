@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { isLoomUrl, extractLoomId } from '../src/loom.js';
+import { isLoomUrl, extractLoomId } from '../src/providers/loom.js';
 
 test('isLoomUrl identifies valid Loom URLs', (t) => {
   assert.strictEqual(isLoomUrl('https://www.loom.com/share/1234567890abcdef'), true);

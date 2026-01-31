@@ -4,8 +4,9 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { exec } from 'child_process';
 import util from 'util';
-import { extractLoomMetadataFromHtml } from './providers/loom.js';
+import { extractLoomMetadataFromHtml, isLoomUrl } from './providers/loom.js';
 import { isYoutubeUrl, extractYoutubeMetadataFromHtml } from './youtube.js';
+import { isVimeoUrl, extractVimeoMetadataFromHtml } from './vimeo.js';
 import { parseSimpleVtt } from './utils.js';
 
 const execAsync = util.promisify(exec);
@@ -255,6 +256,39 @@ async function extractYoutube(url, page) {
     };
 }
 
+async function extractVimeo(url, page) {
+    console.log(`Navigating to ${url}...`);
+    // Vimeo often works well with simple domcontentloaded
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    
+    const content = await page.content();
+    const meta = extractVimeoMetadataFromHtml(content);
+
+    let transcript = '';
+    if (meta?.transcriptUrl) {
+        try {
+            console.log(`Fetching transcript from ${meta.transcriptUrl}...`);
+            const res = await fetch(meta.transcriptUrl);
+            if (res.ok) {
+                 const txt = await res.text();
+                 // Vimeo VTT
+                 transcript = parseSimpleVtt(txt);
+            }
+        } catch (e) {
+            console.warn('Failed to fetch Vimeo transcript:', e);
+        }
+    }
+
+    return {
+        title: meta?.title || 'Vimeo Video',
+        date: new Date().toISOString(), 
+        transcript: transcript || '(No transcript found)',
+        videoUrl: meta?.mediaUrl || null, 
+        sourceUrl: url,
+        author: meta?.author
+    };
+}
+
 export async function extractFromUrl(url, options = {}) {
   const browser = await puppeteer.launch({
     headless: 'new',
@@ -268,7 +302,9 @@ export async function extractFromUrl(url, options = {}) {
     let data;
     if (isYoutubeUrl(url)) {
         data = await extractYoutube(url, page);
-    } else if (url.includes('loom.com')) {
+    } else if (isVimeoUrl(url)) {
+        data = await extractVimeo(url, page);
+    } else if (isLoomUrl(url)) {
         data = await extractLoom(url, page);
     } else {
         data = await extractFathom(url, page);

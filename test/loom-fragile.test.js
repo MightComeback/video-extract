@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { extractLoomMetadataFromHtml } from '../src/loom.js';
+import { extractLoomMetadataFromHtml } from '../src/providers/loom.js';
 
 test('extractLoomMetadataFromHtml handles } inside strings', () => {
     // A fake Apollo state where a string contains "};" which might trick the regex

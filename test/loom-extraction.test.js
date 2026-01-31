@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { extractLoomMetadataFromHtml } from '../src/loom.js';
+import { extractLoomMetadataFromHtml } from '../src/providers/loom.js';
 
 test('extractLoomMetadataFromHtml: extracts MP4 if M3U8/DASH missing', () => {
     const mockState = {

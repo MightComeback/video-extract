@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { extractLoomMetadataFromHtml } from '../src/loom.js';
+import { extractLoomMetadataFromHtml } from '../src/providers/loom.js';
 
 test('extractLoomMetadataFromHtml: falls back to source_url (JSON) if vtt missing', () => {
     const mockState = {

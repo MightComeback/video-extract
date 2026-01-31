@@ -1,5 +1,5 @@
 
-import { extractLoomMetadataFromHtml } from '../src/loom.js';
+import { extractLoomMetadataFromHtml } from '../src/providers/loom.js';
 import assert from 'assert';
 import { test } from 'node:test';
 
