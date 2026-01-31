@@ -718,7 +718,7 @@ export function generateNextActions(transcript, actualHints = []) {
   // Database / Data
   if (
     actualHints.some(h => /duplicate key|foreign key|deadlock|unique constraint|serialization failure/i.test(h)) ||
-    /database|sql|postgres|mongo|mysql|sqlite|prisma|drizzle|migration|seed|corrupt data|data integrity|duplicate key|foreign key|deadlock|unique constraint|serialization failure/i.test(lowerT)
+    /database|sql|postgres|mongo|mysql|sqlite|supabase|dynamodb|cockroachdb|planetscale|firebase|prisma|drizzle|migration|seed|corrupt data|data integrity|duplicate key|foreign key|deadlock|unique constraint|serialization failure/i.test(lowerT)
   ) {
     actions.add('Check database state / migrations');
   }
@@ -767,10 +767,10 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check Websocket / Realtime logs');
   }
 
-  // File Upload
+  // File Upload / Storage
   if (
-    actualHints.some(h => /upload|attachment|file too large|payload too large|entity too large/i.test(h)) ||
-    /upload|attachment|file too large|payload too large|entity too large/i.test(lowerT)
+    actualHints.some(h => /s3|r2|minio|blob storage|gcs|azure blob|upload|attachment|file too large|payload too large|entity too large/i.test(h)) ||
+    /s3|r2|minio|blob storage|gcs|azure blob|upload|attachment|file too large|payload too large|entity too large/i.test(lowerT)
   ) {
     actions.add('Check file upload limits / S3');
   }
