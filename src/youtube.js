@@ -53,10 +53,14 @@ export function extractYoutubeMetadataFromHtml(html) {
       description: d.shortDescription || null,
       duration: d.lengthSeconds ? Number(d.lengthSeconds) : null,
       author: d.author || null,
+      channelId: d.channelId || null,
       viewCount: d.viewCount ? Number(d.viewCount) : null,
       isLive: d.isLiveContent || false,
       mediaUrl: null,
-      transcriptUrl: null
+      transcriptUrl: null,
+      thumbnailUrl: d.thumbnail?.thumbnails?.length 
+        ? d.thumbnail.thumbnails[d.thumbnail.thumbnails.length - 1].url 
+        : null
     };
 
     // Extract caption tracks

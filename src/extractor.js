@@ -1147,6 +1147,7 @@ export async function extractFromUrl(
           if (meta.title && !norm.suggestedTitle) norm.suggestedTitle = meta.title;
           if (meta.description && !norm.description) norm.description = meta.description;
           if (meta.author && !norm.author) norm.author = meta.author;
+          if (meta.thumbnailUrl && !norm.screenshot) norm.screenshot = meta.thumbnailUrl;
           if (meta.transcriptUrl) norm._youtubeTranscriptUrl = meta.transcriptUrl;
         }
       } catch {

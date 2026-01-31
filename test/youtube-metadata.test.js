@@ -73,3 +73,22 @@ test('extractYoutubeMetadataFromHtml: prefers English captions', () => {
   const meta = extractYoutubeMetadataFromHtml(html);
   assert.ok(meta.transcriptUrl.includes('/en'));
 });
+
+test('extractYoutubeMetadataFromHtml: extracts channelId and thumbnail', () => {
+  const mockData = {
+    videoDetails: {
+      channelId: 'UCuAXFkgsw1L7xaCfnd5JJOw',
+      thumbnail: {
+        thumbnails: [
+          { url: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/default.jpg', width: 120, height: 90 },
+          { url: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg', width: 480, height: 360 }
+        ]
+      }
+    }
+  };
+
+  const html = `var ytInitialPlayerResponse = ${JSON.stringify(mockData)};`;
+  const meta = extractYoutubeMetadataFromHtml(html);
+  assert.equal(meta.channelId, 'UCuAXFkgsw1L7xaCfnd5JJOw');
+  assert.equal(meta.thumbnailUrl, 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg');
+});
