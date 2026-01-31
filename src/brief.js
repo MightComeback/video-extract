@@ -707,6 +707,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check touch events / gestures');
   }
 
+  // Hover / Tooltips
+  if (
+    actualHints.some(h => /hover|mouseover|mouse over|tooltip|popover|on hover/i.test(h)) ||
+    /hover|mouseover|mouse over|tooltip|popover|on hover/i.test(lowerT)
+  ) {
+    actions.add('Check hover state / tooltip implementation');
+  }
+
   // SSR / Hydration (React/Next.js)
   if (
     actualHints.some(h => /hydration|minified react error|text content did not match|prop.*did not match/i.test(h)) ||
