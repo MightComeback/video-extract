@@ -6,6 +6,7 @@ import { pipeline } from 'node:stream/promises';
 import { Readable } from 'node:stream';
 
 import { normalizeUrlLike } from './brief.js';
+import { isLoomUrl, fetchLoomOembed } from './loom.js';
 
 export function readStdin() {
   // If the user runs `fathom2action --stdin` interactively without piping input,
@@ -1072,6 +1073,19 @@ export async function extractFromUrl(
   const fetched = await fetchUrlText(url, { cookie, referer, userAgent, timeoutMs });
   if (fetched.ok) {
     const norm = normalizeFetchedContent(fetched.text, url);
+
+    // Context-specific enrichment
+    if (isLoomUrl(url)) {
+      try {
+        const oembed = await fetchLoomOembed(url);
+        if (oembed) {
+          if (oembed.title && !norm.suggestedTitle) norm.suggestedTitle = oembed.title;
+          if (oembed.author_name && !norm.author) norm.author = oembed.author_name;
+        }
+      } catch {
+        // ignore
+      }
+    }
 
     // If the page doesn't embed a transcript, prefer the real transcript endpoint when available.
     let transcriptText = norm.text;
