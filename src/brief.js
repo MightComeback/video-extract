@@ -824,8 +824,8 @@ export function generateNextActions(transcript, actualHints = []) {
 
   // Search / Filtration
   if (
-    actualHints.some(h => /search|filter|sort|query|no results|found nothing/i.test(h)) ||
-    /search|filter|sort|query|no results|found nothing/i.test(lowerT)
+    actualHints.some(h => /search|filter|sort|query|no results|found nothing|elasticsearch|algolia|meilisearch|solr|opensearch/i.test(h)) ||
+    /search|filter|sort|query|no results|found nothing|elasticsearch|algolia|meilisearch|solr|opensearch/i.test(lowerT)
   ) {
     actions.add('Check search indexing / query logic');
   }
