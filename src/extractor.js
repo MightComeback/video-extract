@@ -946,7 +946,7 @@ async function splitVideoIntoSegments({ inputPath, segmentsDir, segmentSeconds =
   return files;
 }
 
-function extractTranscriptUrlFromHtml(html, pageUrl) {
+export function extractTranscriptUrlFromHtml(html, pageUrl) {
   const s = decodeHtmlEntities(String(html || '')).replaceAll('\\/', '/');
 
   // Fathom: copyTranscriptUrl in JSON state
