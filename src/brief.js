@@ -637,6 +637,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check third-party integrations (Slack/Salesforce/etc)');
   }
 
+  // Analytics / Telemetry
+  if (
+    actualHints.some(h => /segment|mixpanel|amplitude|google analytics|ga4|analytics|telemetry|tracking event/i.test(h)) ||
+    /segment|mixpanel|amplitude|google analytics|ga4|analytics|telemetry|tracking event/i.test(lowerT)
+  ) {
+    actions.add('Check analytics / telemetry logs');
+  }
+
   return [...actions].map(a => `- [ ] ${a}`);
 }
 
