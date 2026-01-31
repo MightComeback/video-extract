@@ -309,7 +309,7 @@ function extractEnvironment(transcript) {
   const hits = [];
 
   const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo', 'samsung internet', 'orion', 'tor browser', 'zen', 'librewolf', 'ladybird', 'floorp', 'waterfox'];
-  const os = ['mac', 'macos', 'sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina', 'mojave', 'high sierra', 'sierra', 'el capitan', 'yosemite', 'mavericks', 'windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'nixos', 'alpine', 'manjaro', 'gentoo', 'opensuse', 'linux', 'android', 'ios', 'iphone', 'ipad', 'chromeos', 'chromebook', 'cros', 'visionos', 'vision pro', 'oculus', 'quest', 'meta quest', 'playstation 5', 'playstation 4', 'playstation', 'ps5', 'ps4', 'xbox series x', 'xbox series s', 'xbox', 'steam deck', 'steamos'];
+  const os = ['mac', 'macos', 'sequoia', 'sonoma', 'ventura', 'monterey', 'big sur', 'catalina', 'mojave', 'high sierra', 'sierra', 'el capitan', 'yosemite', 'mavericks', 'windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'nixos', 'alpine', 'manjaro', 'gentoo', 'opensuse', 'kali', 'linux', 'android', 'ios', 'iphone', 'ipad', 'chromeos', 'chromebook', 'cros', 'visionos', 'vision pro', 'oculus', 'quest', 'meta quest', 'playstation 5', 'playstation 4', 'playstation', 'ps5', 'ps4', 'xbox series x', 'xbox series s', 'xbox', 'steam deck', 'steamos'];
   const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface', 'motorola', 'oppo', 'vivo', 'realme'];
   const environments = ['staging', 'production', 'prod', 'localhost'];
   const privacy = ['incognito', 'private window', 'private browsing', 'guest mode'];
@@ -348,6 +348,7 @@ function extractEnvironment(transcript) {
       else if (o === 'arch linux') hits.push('Arch Linux');
       else if (o === 'gentoo') hits.push('Gentoo');
       else if (o === 'opensuse') hits.push('openSUSE');
+      else if (o === 'kali') hits.push('Kali Linux');
       else if (o === 'nixos') hits.push('NixOS');
       else if (o.startsWith('windows ')) {
         // Specific Windows version
