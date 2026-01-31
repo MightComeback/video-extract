@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { exec } from 'child_process';
 import util from 'util';
-import { extractLoomMetadataFromHtml, isLoomUrl } from './providers/loom.js';
+import { extractLoomMetadataFromHtml, isLoomUrl, parseLoomTranscript } from './providers/loom.js';
 import { isYoutubeUrl, extractYoutubeMetadataFromHtml } from './providers/youtube.js';
 import { isVimeoUrl, extractVimeoMetadataFromHtml } from './providers/vimeo.js';
 import { parseSimpleVtt } from './utils.js';
@@ -183,18 +183,7 @@ async function extractLoom(url, page) {
                 const res = await fetch(tUrl);
                 if (res.ok) {
                     const txt = await res.text();
-                    // Basic VTT detection
-                    if (txt.includes('WEBVTT') || tUrl.endsWith('.vtt')) {
-                        transcript = parseSimpleVtt(txt);
-                    } else if (txt.trim().startsWith('{')) {
-                         // JSON format (sometimes VTT is hidden in JSON output/structure?)
-                         // For now, if it's unknown JSON, skip or try to parse 'transcript' field
-                         try {
-                           const j = JSON.parse(txt);
-                           // Simple heuristic if it matches standard patterns
-                           if (j.text) transcript = j.text;
-                         } catch {}
-                    }
+                    transcript = parseLoomTranscript(txt);
                 }
             } catch (e) {
                 console.warn('Failed to fetch transcript:', e);

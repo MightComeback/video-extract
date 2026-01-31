@@ -1,4 +1,4 @@
-import { extractJsonBlock } from '../utils.js';
+import { extractJsonBlock, parseSimpleVtt } from '../utils.js';
 
 export function isLoomUrl(url) {
   const u = String(url || '').trim();
@@ -164,4 +164,45 @@ export function extractLoomMetadataFromHtml(html, targetId = null) {
   }
 
   return result;
+}
+
+export function parseLoomTranscript(text) {
+  if (!text) return '';
+  const s = String(text).trim();
+
+  // VTT check
+  if (s.startsWith('WEBVTT') || s.includes('-->')) {
+    return parseSimpleVtt(s);
+  }
+
+  // JSON check
+  if (s.startsWith('{') || s.startsWith('[')) {
+    try {
+      const json = JSON.parse(s);
+      
+      // 1. Simple text field
+      if (json.text && typeof json.text === 'string') return json.text;
+      
+      // 2. Array of segments (e.g. [{text: "Hi"}, {text: "there"}])
+      const segments = Array.isArray(json) ? json : (json.paragraphs || json.segments || json.captions || []);
+      
+      if (Array.isArray(segments) && segments.length > 0) {
+         return segments
+           .map(p => {
+             // Handle { text: "..." } or nested lines
+             if (p.text) return p.text;
+             if (p.lines && Array.isArray(p.lines)) return p.lines.map(l => l.text).join(' ');
+             return '';
+           })
+           .filter(Boolean)
+           .join(' ');
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+  }
+
+  // Fallback: return as-is if it looks like prose? 
+  // For now return empty to avoid returning raw JSON or HTML junk.
+  return '';
 }
