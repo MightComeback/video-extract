@@ -1146,7 +1146,7 @@ export async function extractFromUrl(
       }
 
       try {
-        const meta = extractLoomMetadataFromHtml(fetched.text);
+        const meta = extractLoomMetadataFromHtml(fetched.text, providerId);
         if (meta) {
           // Prefer canonical metadata from Apollo state over generic HTML tags
           if (meta.title) norm.suggestedTitle = meta.title;

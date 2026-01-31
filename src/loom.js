@@ -76,7 +76,7 @@ function extractJsonBlock(html, prefixRegex) {
   return null;
 }
 
-export function extractLoomMetadataFromHtml(html) {
+export function extractLoomMetadataFromHtml(html, targetId = null) {
   const s = String(html || '');
   // Extract window.__APOLLO_STATE__
   // Note: we look for the assignment.
@@ -102,9 +102,19 @@ export function extractLoomMetadataFromHtml(html) {
     date: null,
   };
 
-  // Find the RegularUserVideo object
-  // Strategy: Look for the first key starting with "RegularUserVideo:"
-  const videoKey = Object.keys(state).find(k => k.startsWith('RegularUserVideo:'));
+  // Find the video object
+  let videoKey = null;
+  if (targetId) {
+    // Try precise lookup if we know the ID
+    const candidates = [`RegularUserVideo:${targetId}`, `Video:${targetId}`];
+    videoKey = candidates.find(k => state[k]);
+  }
+
+  if (!videoKey) {
+    // Fallback: Use the first RegularUserVideo or any object that looks like the main video
+    videoKey = Object.keys(state).find(k => k.startsWith('RegularUserVideo:'));
+  }
+
   if (videoKey) {
     const video = state[videoKey];
     if (video) {
