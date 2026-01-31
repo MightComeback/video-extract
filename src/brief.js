@@ -511,6 +511,14 @@ export function generateNextActions(transcript, actualHints = []) {
     actions.add('Check responsive styles / CSS');
   }
 
+  // Design / Figma
+  if (
+    actualHints.some(h => /design|figma|mockup|sketch|doesn't match|looks different/i.test(h)) ||
+    /design|figma|mockup|sketch|doesn't match|looks different/i.test(lowerT)
+  ) {
+    actions.add('Check Figma / Design specs');
+  }
+
   // If mobile mentioned
   if (/ios|android|mobile|iphone|ipad/i.test(lowerT)) {
     actions.add('Test on physical device / simulator');
