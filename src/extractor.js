@@ -5,6 +5,7 @@ import { resolve } from 'path';
 import { exec } from 'child_process';
 import util from 'util';
 import { extractLoomMetadataFromHtml } from './loom.js';
+import { parseSimpleVtt } from './utils.js';
 
 const execAsync = util.promisify(exec);
 
@@ -167,6 +168,37 @@ async function extractLoom(url, page) {
     const date = meta?.date || new Date().toISOString();
 
     let transcript = meta?.transcriptText || '';
+    
+    if (!transcript) {
+        let tUrl = meta?.transcriptUrl;
+        if (!tUrl) {
+             tUrl = extractTranscriptUrlFromHtml(content, url);
+        }
+
+        if (tUrl) {
+            try {
+                console.log(`Fetching transcript from ${tUrl}...`);
+                const res = await fetch(tUrl);
+                if (res.ok) {
+                    const txt = await res.text();
+                    // Basic VTT detection
+                    if (txt.includes('WEBVTT') || tUrl.endsWith('.vtt')) {
+                        transcript = parseSimpleVtt(txt);
+                    } else if (txt.trim().startsWith('{')) {
+                         // JSON format (sometimes VTT is hidden in JSON output/structure?)
+                         // For now, if it's unknown JSON, skip or try to parse 'transcript' field
+                         try {
+                           const j = JSON.parse(txt);
+                           // Simple heuristic if it matches standard patterns
+                           if (j.text) transcript = j.text;
+                         } catch {}
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to fetch transcript:', e);
+            }
+        }
+    }
     
     if (!transcript) {
         // Fallback DOM scraping for transcript

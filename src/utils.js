@@ -57,3 +57,33 @@ export async function downloadMedia(url, destPath) {
   }
 }
 
+export function parseSimpleVtt(vttString) {
+  if (!vttString) return '';
+  
+  // Remove WEBVTT header and metadata
+  const lines = vttString.split(/\r?\n/);
+  let content = [];
+  
+  let isHeader = true;
+  for (const line of lines) {
+    const l = line.trim();
+    if (isHeader) {
+      if (l === '' || l.includes('-->')) {
+        isHeader = false;
+      } else {
+        continue;
+      }
+    }
+    
+    // Skip empty lines, queues, and timestamp lines
+    if (!l) continue;
+    if (l.includes('-->')) continue;
+    // Skip numeric cues if present alone
+    if (/^\d+$/.test(l)) continue;
+    
+    content.push(l);
+  }
+  
+  return content.join(' ');
+}
+
