@@ -483,14 +483,28 @@ export function extractBugHints(transcript) {
 export function extractStackTraces(transcript) {
   const s = String(transcript || '');
   const out = [];
+  
+  // JS Stack Traces
   // Basic heuristic: Line starting with ErrorName: ... followed by indented 'at ...' lines.
   // We require at least one 'at ' line indentation.
-  const re = /(?:^|\n)((?:[a-zA-Z0-9_$]+Error|[a-zA-Z0-9_$]+Exception|SyntaxError|TypeError|ReferenceError|RangeError|URIError|EvalError|AggregateError):[^\n]*\n(?:\s+at [^\n]+\n)+)/g;
+  const jsRe = /(?:^|\n)((?:[a-zA-Z0-9_$]+Error|[a-zA-Z0-9_$]+Exception|SyntaxError|TypeError|ReferenceError|RangeError|URIError|EvalError|AggregateError):[^\n]*\n(?:\s+at [^\n]+\n)+)/g;
   
   let m;
-  while ((m = re.exec(s))) {
+  while ((m = jsRe.exec(s))) {
     out.push(m[1].trim());
   }
+
+  // Python Stack Traces
+  // Traceback (most recent call last):
+  //   File "...", line ..., in ...
+  //     ...
+  // ExceptionName: ...
+  const pyRe = /(?:^|\n)(Traceback \(most recent call last\):(?:\n\s+File [^\n]+(?:\n\s+[^\n]+)*)+(\n(?!\s)[^\n]+)?)/g;
+  
+  while ((m = pyRe.exec(s))) {
+    out.push(m[1].trim());
+  }
+
   return out;
 }
 
