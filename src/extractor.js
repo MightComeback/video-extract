@@ -6,7 +6,7 @@ import { pipeline } from 'node:stream/promises';
 import { Readable } from 'node:stream';
 
 import { normalizeUrlLike } from './brief.js';
-import { isLoomUrl, fetchLoomOembed, extractLoomId, extractLoomMetadataFromHtml, fetchLoomSession, extractLoomMetadataFromSession } from './loom.js';
+import { isLoomUrl, fetchLoomOembed, extractLoomId, extractLoomMetadataFromHtml } from './loom.js';
 import { isYoutubeUrl, fetchYoutubeOembed, extractYoutubeMetadataFromHtml } from './youtube.js';
 
 export function readStdin() {
@@ -46,7 +46,8 @@ function resolveUserAgent(override = null) {
 
   const platform = process.platform || 'unknown';
   const arch = process.arch || 'unknown';
-  return `fathom-extract/${getVersion()} (${platform}; ${arch}) (+https://github.com/MightComeback/fathom-extract)`;
+  // Use a browser-like string to minimize blocking (e.g. Loom, Cloudflare).
+  return `Mozilla/5.0 (compatible; fathom-extract/${getVersion()}; +https://github.com/MightComeback/fathom-extract) (${platform}; ${arch})`;
 }
 
 function decodeHtmlEntities(s) {
@@ -1122,26 +1123,7 @@ export async function extractFromUrl(
         // ignore
       }
 
-      try {
-        const id = extractLoomId(url);
-        if (id) {
-          const session = await fetchLoomSession(id);
-          if (session) {
-            const found = findTranscriptInObject(session);
-            if (found) norm._loomApiTranscript = found;
-
-            const sessionMeta = extractLoomMetadataFromSession(session);
-            if (sessionMeta) {
-              if (sessionMeta.title && !norm.suggestedTitle) norm.suggestedTitle = sessionMeta.title;
-              if (sessionMeta.description && !norm.description) norm.description = sessionMeta.description;
-              if (sessionMeta.mediaUrl && !norm.mediaUrl) norm.mediaUrl = sessionMeta.mediaUrl;
-              if (sessionMeta.author && !norm.author) norm.author = sessionMeta.author;
-            }
-          }
-        }
-      } catch {
-        // ignore
-      }
+      // Note: Legacy Loom API (campaigns/sessions) is deprecated/404. We rely on OEmbed + HTML metadata.
     }
 
     if (isYoutubeUrl(url)) {
