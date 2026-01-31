@@ -257,7 +257,7 @@ function extractEnvironment(transcript) {
 
   const browsers = ['chrome', 'firefox', 'safari', 'edge', 'brave', 'arc', 'opera', 'vivaldi', 'chromium', 'duckduckgo', 'samsung internet', 'orion'];
   const os = ['mac', 'macos', 'windows', 'ubuntu', 'fedora', 'debian', 'centos', 'mint', 'rhel', 'arch linux', 'linux', 'android', 'ios', 'iphone', 'ipad'];
-  const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface'];
+  const devices = ['pixel', 'galaxy', 'xiaomi', 'oneplus', 'redmi', 'huawei', 'surface', 'motorola'];
   const environments = ['staging', 'production', 'prod', 'localhost'];
 
   for (const b of browsers) {

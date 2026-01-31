@@ -16,3 +16,9 @@ test('extractEnvironment detects Galaxy devices', () => {
   // Should detect Galaxy
   assert.match(brief, /- Browser \/ OS: .*Galaxy.*/);
 });
+
+test('extractEnvironment detects Motorola devices', () => {
+  const transcript = "I saw the issue on my Motorola Edge.";
+  const brief = renderBrief({ transcript });
+  assert.match(brief, /- Browser \/ OS: .*Motorola.*/);
+});
