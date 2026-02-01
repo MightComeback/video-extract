@@ -24,6 +24,7 @@ function printHelp() {
   node scripts/linear.mjs issue-state-type MIG-14
   node scripts/linear.mjs dump MIG-14
   node scripts/linear.mjs comment MIG-14 "text..."
+  node scripts/linear.mjs set-state MIG-14 "Done"
 
 Requires env:
   LINEAR_API_KEY
@@ -38,7 +39,7 @@ if (!cmd || cmd === '--help' || cmd === '-h' || cmd === 'help') {
 const token = process.env.LINEAR_API_KEY;
 if (!token) die('Missing env LINEAR_API_KEY');
 
-if (cmd !== 'issue-state-type' && cmd !== 'comment' && cmd !== 'dump') die(`Unknown command: ${cmd}`);
+if (cmd !== 'issue-state-type' && cmd !== 'comment' && cmd !== 'dump' && cmd !== 'set-state') die(`Unknown command: ${cmd}`);
 if (!issueKey) die('Missing issue key (e.g. MIG-14)');
 
 async function linearGraphQL(query, variables) {
@@ -129,6 +130,38 @@ async function main() {
     );
 
     process.stdout.write('ok\n');
+    return;
+  }
+
+  if (cmd === 'set-state') {
+    const stateNameOrType = rest.join(' ').trim();
+    if (!stateNameOrType) die('Missing state name/type');
+    const issue = await getIssueByIdentifier(issueKey);
+
+    const data = await linearGraphQL(`query { workflowStates { nodes { id name type } } }`);
+    const states = data?.workflowStates?.nodes || [];
+    
+    // Match by exact name or type (case-insensitive)
+    const targetState = states.find(s => 
+      s.name.toLowerCase() === stateNameOrType.toLowerCase() || 
+      s.type.toLowerCase() === stateNameOrType.toLowerCase()
+    );
+
+    if (!targetState) {
+      const available = states.map(s => `${s.name} (${s.type})`).join(', ');
+      die(`State not found: "${stateNameOrType}". Available: ${available}`);
+    }
+
+    await linearGraphQL(
+      `mutation IssueUpdate($id: String!, $stateId: String!) {
+        issueUpdate(id: $id, input: { stateId: $stateId }) { 
+          issue { id state { name } } 
+        }
+      }`,
+      { id: issue.id, stateId: targetState.id }
+    );
+
+    console.log(`Updated ${issueKey} to state: ${targetState.name}`);
     return;
   }
 }
