@@ -7,6 +7,7 @@ import util from 'util';
 import { extractLoomMetadataFromHtml, isLoomUrl, parseLoomTranscript, fetchLoomOembed } from './providers/loom.js';
 import { isYoutubeUrl, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
 import { isVimeoUrl, extractVimeoMetadataFromHtml } from './providers/vimeo.js';
+import { extractFathom, isFathomUrl } from './providers/fathom.js';
 import { parseSimpleVtt, downloadMedia } from './utils.js';
 
 const execAsync = util.promisify(exec);
@@ -101,51 +102,6 @@ export function extractFromStdin({ content, source }) {
         videoUrl: null,
         sourceUrl: source || 'stdin'
     };
-}
-
-async function extractFathom(url, page) {
-    // Navigate and wait for content to load
-    console.log(`Navigating to ${url}...`);
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-
-    try {
-        await page.waitForSelector('[data-testid="transcript-container"], video', { timeout: 15000 });
-    } catch (e) {
-        console.warn("Timed out waiting for transcript or video selector. Continuing with current DOM state.");
-    }
-
-    const content = await page.content();
-    const dom = new JSDOM(content);
-    const document = dom.window.document;
-
-    const title = document.querySelector('h1')?.textContent?.trim() || 
-                  document.title.replace(' | Fathom', '').trim() || 
-                  'Fathom Recording';
-    
-    const date = document.querySelector('time')?.getAttribute('datetime') || 
-                 new Date().toISOString();
-
-    const transcriptBlocks = [];
-    const transcriptContainer = document.querySelector('[data-testid="transcript-container"]') || 
-                                document.querySelector('.transcript-content');
-    
-    if (transcriptContainer) {
-      const textNodes = Array.from(transcriptContainer.querySelectorAll('p, div[role="listitem"]'));
-      textNodes.forEach(node => {
-          const text = node.textContent.trim();
-          if (text) transcriptBlocks.push(text);
-      });
-    }
-
-    const transcript = transcriptBlocks.join('\n\n');
-
-    let videoUrl = null;
-    const videoEl = document.querySelector('video');
-    if (videoEl) {
-        videoUrl = videoEl.src || videoEl.querySelector('source')?.src;
-    }
-
-    return { title, date, transcript, videoUrl, sourceUrl: url };
 }
 
 async function extractLoom(url, page) {
@@ -337,6 +293,7 @@ export async function extractFromUrl(url, options = {}) {
     } else if (isLoomUrl(url)) {
         data = await extractLoom(url, page);
     } else {
+        // Default to Fathom or generic extraction
         data = await extractFathom(url, page);
     }
 
