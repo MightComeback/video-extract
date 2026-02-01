@@ -2,6 +2,24 @@
 
 import { renderBrief, normalizeUrlLike } from '../src/brief.js';
 import fs from 'node:fs';
+import { spawn } from 'node:child_process';
+
+async function copyToClipboard(text) {
+  return new Promise((resolve, reject) => {
+    if (process.platform === 'darwin') {
+      const child = spawn('pbcopy');
+      child.stdin.write(text);
+      child.stdin.end();
+      child.on('close', (code) => {
+        if (code === 0) resolve();
+        else reject(new Error(`pbcopy exited with code ${code}`));
+      });
+      child.on('error', reject);
+    } else {
+      reject(new Error('Clipboard copy only supported on macOS for now'));
+    }
+  });
+}
 
 async function readStdin() {
   return new Promise((resolve) => {
@@ -38,6 +56,7 @@ Usage: fathom2action [options] < extract.json
 
 Options:
   --cmd <name>          Command name to display in instructions (default: video-extract)
+  --copy-brief          Copy output to clipboard (macOS only)
   --teaser <n>          Web teaser line count (default: 6)
   --timestamps <n>      Timestamp count (default: 6)
   --version             Show version info
@@ -57,6 +76,7 @@ const opts = {
   cmd: parseValue('--cmd') || 'video-extract',
   teaserMax: parseValue('--teaser'),
   timestampsMax: parseValue('--timestamps'),
+  copy: args.includes('--copy-brief') || !!process.env.F2A_COPY,
 };
 
 async function main() {
@@ -75,7 +95,18 @@ async function main() {
          console.error('NOTE: Unable to fetch this link (CLI only generates briefs from JSON/text stdin). To fetch content, pipe from `fathom-extract`.');
        }
 
-       console.log(renderBrief({ url, ...opts }));
+       const brief = renderBrief({ url, ...opts });
+       if (opts.copy) {
+         try {
+           await copyToClipboard(brief);
+           console.error('Copied brief to clipboard.');
+         } catch (e) {
+           console.error(`Failed to copy: ${e.message}`);
+           console.log(brief);
+         }
+       } else {
+         console.log(brief);
+       }
        return;
     }
     console.error('Error: no input provided via stdin.');
@@ -113,7 +144,17 @@ async function main() {
     timestampsMax: opts.timestampsMax,
   });
 
-  console.log(brief);
+  if (opts.copy) {
+    try {
+      await copyToClipboard(brief);
+      console.error('Copied brief to clipboard.');
+    } catch (e) {
+      console.error(`Failed to copy: ${e.message}`);
+      console.log(brief);
+    }
+  } else {
+    console.log(brief);
+  }
 }
 
 main().catch(e => {
