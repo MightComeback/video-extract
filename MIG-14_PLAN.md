@@ -15,4 +15,5 @@
 - Released: v0.2.0 tagged and pushed.
 
 ## Next Steps
-- [x] Run release script.
+- [x] Run release script
+- [x] Final automated verification passed (all tests green).
