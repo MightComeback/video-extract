@@ -5,6 +5,10 @@ import fs from 'node:fs';
 
 async function readStdin() {
   return new Promise((resolve) => {
+    if (process.stdin.isTTY) {
+      resolve('');
+      return;
+    }
     let data = '';
     process.stdin.setEncoding('utf8');
     process.stdin.on('data', (c) => (data += c));
@@ -53,6 +57,11 @@ async function main() {
        // Just a URL passed? We can't fetch here. We rely on extractor.
        // But we can generate a stub brief.
        const url = normalizeUrlLike(pos[0]);
+
+       if (!process.env.F2A_NO_NOTE) {
+         console.error('NOTE: Unable to fetch this link (CLI only generates briefs from JSON/text stdin). To fetch content, pipe from `fathom-extract`.');
+       }
+
        console.log(renderBrief({ url, ...opts }));
        return;
     }
