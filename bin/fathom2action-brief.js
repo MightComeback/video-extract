@@ -40,6 +40,7 @@ Options:
   --cmd <name>          Command name to display in instructions (default: video-extract)
   --teaser <n>          Web teaser line count (default: 6)
   --timestamps <n>      Timestamp count (default: 6)
+  --version             Show version info
 `);
   process.exit(0);
 }

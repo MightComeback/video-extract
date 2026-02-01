@@ -61,7 +61,7 @@ test.skip('brief CLI documents --copy-brief in --help output', async () => {
   assert.match(stdout, /--copy-brief/);
 });
 
-test.skip('brief CLI documents --version in --help output', async () => {
+test('brief CLI documents --version in --help output', async () => {
   const { stdout } = await runBrief(['--help']);
   assert.match(stdout, /--version/);
 });
