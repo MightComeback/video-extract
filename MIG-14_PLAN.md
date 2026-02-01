@@ -12,6 +12,7 @@
 - Vimeo support: Implemented in `src/providers/vimeo.js`. Verified by tests.
 - Cleanup: Root directory debris removed.
 - Release prep: Version bumped to 0.2.0.
+- Released: v0.2.0 tagged and pushed.
 
 ## Next Steps
-1. Run release script.
+- [x] Run release script.
