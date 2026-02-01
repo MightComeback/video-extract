@@ -26,6 +26,12 @@ test('extractTimestamps respects max limit', () => {
   assert.deepEqual(actual, ['00:01', '00:02']);
 });
 
+test('extractTimestamps returns empty array when max is 0', () => {
+  const input = '00:01 00:02';
+  const actual = extractTimestamps(input, { max: 0 });
+  assert.deepEqual(actual, []);
+});
+
 test('extractTimestamps ignores duplicates', () => {
   const input = `
     00:01
