@@ -3,9 +3,18 @@
 import { extractFromUrl, extractFromStdin, readStdin, formatCsv } from '../src/extractor.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const args = process.argv.slice(2);
 const help = args.includes('--help') || args.includes('-h');
+const showVersion = args.includes('--version') || args.includes('-v');
+
+if (showVersion) {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
+  console.log(pkg.version);
+  process.exit(0);
+}
 
 if (help) {
   console.log(`
