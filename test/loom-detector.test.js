@@ -35,3 +35,7 @@ test('extractLoomId extracts IDs with dashes fully', (t) => {
 test('extractLoomId returns null for invalid URLs', (t) => {
   assert.strictEqual(extractLoomId('https://google.com'), null);
 });
+
+test('isLoomUrl allows IDs with underscores', (t) => {
+  assert.strictEqual(isLoomUrl('https://www.loom.com/share/_start_with_underscore'), true);
+});
