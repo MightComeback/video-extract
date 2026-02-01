@@ -50,7 +50,7 @@ test('brief CLI accepts bare fathom.video URLs (no scheme) and normalizes to htt
   assert.match(stdout, /Source: https:\/\/fathom\.video\/share\/abc/);
 });
 
-test.skip('brief CLI prints version with --version', async () => {
+test('brief CLI prints version with --version', async () => {
   const { stdout, stderr } = await runBrief(['--version']);
   assert.equal(stderr.trim(), '');
   assert.match(stdout.trim(), /^\d+\.\d+\.\d+/);

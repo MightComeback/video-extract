@@ -18,6 +18,18 @@ async function readStdin() {
 
 const args = process.argv.slice(2);
 const help = args.includes('--help') || args.includes('-h');
+const version = args.includes('--version') || args.includes('-v');
+
+if (version) {
+  try {
+    const pkgUrl = new URL('../package.json', import.meta.url);
+    const pkg = JSON.parse(fs.readFileSync(pkgUrl, 'utf8'));
+    console.log(pkg.version);
+  } catch (e) {
+    console.error('unknown');
+  }
+  process.exit(0);
+}
 
 if (help) {
   console.log(`
