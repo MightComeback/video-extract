@@ -14,6 +14,66 @@ export function normalizeUrlLike(s) {
   let v0 = oneLine(s);
   if (!v0) return '';
 
+  function canonicalizeKnownProviderUrl(u) {
+    const raw = String(u || '').trim();
+    if (!/^https?:\/\//i.test(raw)) return raw;
+
+    let url;
+    try {
+      url = new URL(raw);
+    } catch {
+      return raw;
+    }
+
+    const host = url.hostname.toLowerCase().replace(/^www\./, '');
+    const path = url.pathname || '/';
+
+    // YouTube
+    if (host === 'youtu.be') {
+      const id = path.split('/').filter(Boolean)[0];
+      if (!id) return raw;
+      return `https://youtube.com/watch?v=${id}`;
+    }
+    if (host === 'm.youtube.com' || host === 'music.youtube.com' || host === 'youtube.com') {
+      // Normalize host.
+      url.hostname = 'youtube.com';
+
+      // Convert common path forms to canonical watch URLs.
+      const m = path.match(/^\/(?:shorts|embed|live)\/(?<id>[^/?#]+)/i);
+      if (m?.groups?.id) {
+        return `https://youtube.com/watch?v=${m.groups.id}`;
+      }
+
+      if (path.toLowerCase() === '/watch') {
+        const v = url.searchParams.get('v');
+        if (!v) return raw;
+        return `https://youtube.com/watch?v=${v}`;
+      }
+
+      return raw;
+    }
+
+    // Loom
+    if (host === 'loom.com') {
+      const m = path.match(/^\/(?:share|embed)\/(?<id>[^/?#]+)/i);
+      if (m?.groups?.id) {
+        return `https://loom.com/share/${m.groups.id}`;
+      }
+      return raw;
+    }
+
+    // Vimeo
+    if (host === 'player.vimeo.com' || host === 'vimeo.com') {
+      const m = path.match(/^(?:\/video)?\/(?<id>\d+)(?:\/)?$/i);
+      if (m?.groups?.id) {
+        return `https://vimeo.com/${m.groups.id}`;
+      }
+      return raw;
+    }
+
+    return raw;
+  }
+
   // Strip common quote prefixes from email/chat copy/paste (e.g., "> ") early.
   // We do this before checking for "Source:" prefixes so that "> Source: ..." is handled correctly.
   v0 = v0.replace(/^>+\s*/g, '').trim();
@@ -119,7 +179,7 @@ export function normalizeUrlLike(s) {
         }
       }
     }
-    return stripped;
+    return canonicalizeKnownProviderUrl(stripped);
   }
 
   // Convenience: accept bare provider URLs (no scheme) from chat copy/paste.
@@ -139,7 +199,7 @@ export function normalizeUrlLike(s) {
         }
       }
     }
-    return stripped;
+    return canonicalizeKnownProviderUrl(stripped);
   }
 
   return v0;

@@ -422,7 +422,7 @@ test('extractFromStdin accepts a bare youtu.be URL on its own line (no Source: h
   ].join('\n');
 
   const out = extractFromStdin({ content: input, source: 'stdin' });
-  assert.equal(out.source, 'https://youtu.be/dQw4w9WgXcQ');
+  assert.equal(out.source, 'https://youtube.com/watch?v=dQw4w9WgXcQ');
 });
 
 test('extractFromStdin accepts a bare Vimeo URL on its own line (no Source: header)', () => {
@@ -444,5 +444,5 @@ test('extractFromStdin accepts a bare player.vimeo.com URL on its own line (no S
   ].join('\n');
 
   const out = extractFromStdin({ content: input, source: 'stdin' });
-  assert.equal(out.source, 'https://vimeo.com/video/123456789');
+  assert.equal(out.source, 'https://vimeo.com/123456789');
 });
