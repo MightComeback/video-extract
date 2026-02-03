@@ -88,6 +88,10 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
   assert.equal(normalizeUrlLike('https://youtube.com/shorts/abc123?si=xyz'), 'https://youtube.com/shorts/abc123?si=xyz');
 
   assert.equal(normalizeUrlLike('https://loom.com/embed/1234abcd'), 'https://loom.com/share/1234abcd');
+  assert.equal(
+    normalizeUrlLike('https://www.loom.com/share/1234abcd?sid=deadbeef&utm_source=share'),
+    'https://loom.com/share/1234abcd?sid=deadbeef'
+  );
   assert.equal(normalizeUrlLike('https://share.loom.com/share/1234abcd'), 'https://loom.com/share/1234abcd');
   assert.equal(normalizeUrlLike('share.loom.com/share/1234abcd'), 'https://loom.com/share/1234abcd');
   assert.equal(normalizeUrlLike('https://www.loom.com/v/abc-123'), 'https://loom.com/share/abc-123');
