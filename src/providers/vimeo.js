@@ -53,6 +53,7 @@ export function extractVimeoId(url) {
     'apps',
     'categories',
     'event',
+    'events',
   ]);
 
   const first = (segs[0] || '').toLowerCase();
@@ -159,7 +160,7 @@ export function vimeoNonVideoReason(url) {
     .filter(Boolean);
 
   const first = (segs[0] || '').toLowerCase();
-  if (first === 'event') {
+  if (first === 'event' || first === 'events') {
     return 'Vimeo event pages are not supported. Open the event and copy the actual video URL (typically https://vimeo.com/<id> or https://player.vimeo.com/video/<id>).';
   }
 
