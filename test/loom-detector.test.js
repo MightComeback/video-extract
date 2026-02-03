@@ -36,6 +36,13 @@ test('extractLoomId extracts IDs with dashes fully', (t) => {
 
 test('extractLoomId returns null for invalid URLs', (t) => {
   assert.strictEqual(extractLoomId('https://google.com'), null);
+  // Ensure we don't accidentally match a Loom-looking substring on another host.
+  assert.strictEqual(extractLoomId('https://google.com/?q=loom.com/share/abcdef123'), null);
+});
+
+test('extractLoomId works with scheme-less URLs', (t) => {
+  assert.strictEqual(extractLoomId('loom.com/share/abcdef123'), 'abcdef123');
+  assert.strictEqual(extractLoomId('www.loom.com/v/xyz789'), 'xyz789');
 });
 
 test('isLoomUrl allows IDs with underscores', (t) => {

@@ -1,26 +1,32 @@
 export function isLoomUrl(url) {
-  const s = String(url || '').trim();
-  if (!s) return false;
+  return !!extractLoomId(url);
+}
 
+export function extractLoomId(url) {
+  const s = String(url || '').trim();
+  if (!s) return null;
+
+  // Ensure we can parse even if the user omitted scheme.
   const withScheme = /^https?:\/\//i.test(s) ? s : `https://${s}`;
+
   let u;
   try {
     u = new URL(withScheme);
   } catch {
-    return false;
+    return null;
   }
 
   const host = u.hostname.replace(/^www\./i, '').toLowerCase();
-  if (host !== 'loom.com') return false;
+  if (host !== 'loom.com') return null;
 
-  // Loom uses a few canonical URL shapes.
-  // Keep this permissive (but still hostname-anchored) so copy/paste links keep working.
-  return /^(?:\/share\/|\/v\/|\/embed\/|\/recording\/)/.test(u.pathname);
-}
+  const parts = u.pathname.split('/').filter(Boolean);
+  if (parts.length < 2) return null;
 
-export function extractLoomId(url) {
-  const match = String(url || '').match(/loom\.com\/(?:share|v|embed|recording)\/([a-zA-Z0-9_\-]+)/);
-  return match ? match[1] : null;
+  const kind = parts[0];
+  if (!['share', 'v', 'embed', 'recording'].includes(kind)) return null;
+
+  const id = parts[1];
+  return /^[a-zA-Z0-9_-]+$/.test(id || '') ? id : null;
 }
 
 function extractBalancedJsonObject(source, startIndex) {
