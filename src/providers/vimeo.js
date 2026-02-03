@@ -1,6 +1,10 @@
 function withScheme(s) {
   const v = String(s || '').trim();
   if (!v) return '';
+
+  // Accept protocol-relative URLs like "//player.vimeo.com/video/...".
+  if (v.startsWith('//')) return `https:${v}`;
+
   if (/^https?:\/\//i.test(v)) return v;
   return `https://${v}`;
 }
