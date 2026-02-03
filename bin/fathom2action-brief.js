@@ -88,8 +88,8 @@ if (version) {
 
 if (help) {
   console.log(`
-Usage: fathom2action [options] < extract.json
-       fathom2action "https://..." (requires fetch/extract first, simpler to use fathom-extract | fathom2action)
+Usage: video-brief [options] < extract.json
+       video-brief "https://..." (requires fetch/extract first, simpler to use fathom-extract | video-brief)
 
 Options:
   --cmd <name>          Command name to display in instructions (default: video-extract)

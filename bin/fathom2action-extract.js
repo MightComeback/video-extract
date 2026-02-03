@@ -21,8 +21,8 @@ if (showVersion) {
 
 if (help) {
   console.log(`
-Usage: fathom-extract <url> [options]
-       fathom-extract --stdin < transcript.txt
+Usage: video-extract <url> [options]
+       video-extract --stdin < transcript.txt
 
 Options:
   --out-dir <dir>        Write transcript.txt + extracted.json + media artifacts
