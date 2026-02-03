@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { normalizeUrlLike } from './brief.js';
 import { parseSimpleVtt } from './utils.js';
 import { extractFathomTranscriptUrl } from './providers/fathom.js';
-import { isYoutubeUrl, extractYoutubeMetadataFromHtml } from './providers/youtube.js';
+import { isYoutubeUrl, extractYoutubeMetadataFromHtml, fetchYoutubeMediaUrl } from './providers/youtube.js';
 import { isVimeoUrl, extractVimeoMetadataFromHtml } from './providers/vimeo.js';
 import { isLoomUrl, extractLoomMetadataFromHtml, parseLoomTranscript } from './providers/loom.js';
 
@@ -425,9 +425,31 @@ async function bestEffortExtract({ url, cookie, referer, userAgent }) {
 
       // Caption tracks are usually VTT.
       if (meta.transcriptUrl && (!text || text === normalizedText)) {
-        const tUrl = resolveUrl(meta.transcriptUrl, url);
-        const { body } = await fetchText(tUrl, { headers });
-        text = parseSimpleVtt(body);
+        try {
+          const tUrl = resolveUrl(meta.transcriptUrl, url);
+          const { body } = await fetchText(tUrl, { headers });
+          text = parseSimpleVtt(body);
+        } catch {
+          // Best-effort only: transcript extraction shouldn't block media URL resolution.
+        }
+      }
+
+      // Media URL: YouTube pages often expose an "embed"/player URL via meta tags (not a direct asset).
+      // Use ytdl-core as a best-effort fallback to resolve a downloadable MP4.
+      const shouldResolveMediaUrl = (() => {
+        if (!mediaUrl) return true;
+        try {
+          const u = new URL(String(mediaUrl));
+          const h = u.hostname.replace(/^www\./i, '').toLowerCase();
+          return /(^|\.)youtube\.com$/.test(h) || /(^|\.)youtube-nocookie\.com$/.test(h) || h === 'youtu.be';
+        } catch {
+          return false;
+        }
+      })();
+
+      if (shouldResolveMediaUrl) {
+        const m = await fetchYoutubeMediaUrl(url);
+        if (m) mediaUrl = m;
       }
     } else if (isVimeoUrl(url)) {
       const meta = extractVimeoMetadataFromHtml(html) || {};
