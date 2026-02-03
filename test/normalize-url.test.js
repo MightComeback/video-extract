@@ -119,5 +119,9 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
   assert.equal(normalizeUrlLike('https://vimeo.com/12345?t=1m2s'), 'https://vimeo.com/12345#t=1m2s');
   assert.equal(normalizeUrlLike('https://vimeo.com/channels/staffpicks/12345'), 'https://vimeo.com/12345');
   assert.equal(normalizeUrlLike('https://staffpicks.vimeo.com/12345'), 'https://vimeo.com/12345');
+  assert.equal(normalizeUrlLike('staffpicks.vimeo.com/12345'), 'https://vimeo.com/12345');
   assert.equal(normalizeUrlLike('https://vimeo.com/ondemand/somefilm/987654321'), 'https://vimeo.com/987654321');
+
+  // Provider parity: accept any YouTube subdomain for bare links too.
+  assert.equal(normalizeUrlLike(`gaming.youtube.com/watch?v=${id}`), `https://youtube.com/watch?v=${id}`);
 });
