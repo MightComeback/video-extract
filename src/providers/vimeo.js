@@ -46,6 +46,7 @@ export function extractVimeoId(url) {
     'api',
     'apps',
     'categories',
+    'event',
   ]);
 
   const first = (segs[0] || '').toLowerCase();

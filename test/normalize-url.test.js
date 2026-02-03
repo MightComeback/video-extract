@@ -140,6 +140,7 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
     normalizeUrlLike('https://vimeo.com/blog/post/2026/02/03/some-announcement'),
     'https://vimeo.com/blog/post/2026/02/03/some-announcement'
   );
+  assert.equal(normalizeUrlLike('https://vimeo.com/event/123456'), 'https://vimeo.com/event/123456');
 
   // Provider parity: accept any YouTube subdomain for bare links too.
   assert.equal(normalizeUrlLike(`gaming.youtube.com/watch?v=${id}`), `https://youtube.com/watch?v=${id}`);

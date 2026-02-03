@@ -16,6 +16,9 @@ test('isVimeoUrl identifies Vimeo URLs', () => {
   // Provider parity: avoid false positives for non-video Vimeo pages with date-like paths.
   assert.equal(isVimeoUrl('https://vimeo.com/blog/post/2026/02/03/some-article'), false);
 
+  // Avoid false positives for Vimeo events (not a clip URL).
+  assert.equal(isVimeoUrl('https://vimeo.com/event/123456'), false);
+
   assert.equal(isVimeoUrl('https://youtube.com/watch?v=123'), false);
   assert.equal(isVimeoUrl('https://example.com'), false);
 });
@@ -29,6 +32,7 @@ test('extractVimeoId extracts numeric ID', () => {
   assert.equal(extractVimeoId('https://vimeo.com/123456789/abcdef1234'), '123456789');
 
   assert.equal(extractVimeoId('https://vimeo.com/blog/post/2026/02/03/some-article'), null);
+  assert.equal(extractVimeoId('https://vimeo.com/event/123456'), null);
 });
 
 test('extractVimeoMetadataFromHtml parses config object', () => {
