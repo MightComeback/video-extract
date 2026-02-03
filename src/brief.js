@@ -53,6 +53,10 @@ export function normalizeUrlLike(s) {
       "mc_cid",
       "mc_eid",
       "igshid",
+      // Common YouTube share/copy params that don't affect the canonical video.
+      "feature",
+      "ab_channel",
+      "pp",
       // YouTube share links often include an opaque session-ish tracking token.
       "si",
     ]);

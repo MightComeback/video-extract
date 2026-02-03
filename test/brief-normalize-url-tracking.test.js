@@ -39,4 +39,13 @@ describe("normalizeUrlLike - tracking params", () => {
       "https://youtube.com/watch?v=dQw4w9WgXcQ",
     );
   });
+
+  test("strips common YouTube share/copy params (feature/ab_channel/pp)", () => {
+    assert.equal(
+      normalizeUrlLike(
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=share&ab_channel=RickAstley&pp=ygUe&t=1m2s",
+      ),
+      "https://youtube.com/watch?v=dQw4w9WgXcQ&t=1m2s",
+    );
+  });
 });
