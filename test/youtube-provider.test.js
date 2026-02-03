@@ -81,6 +81,6 @@ test('extractYoutubeMetadataFromHtml parses initial player response', () => {
   
   // Verify caption selection logic (English manual > English ASR > First)
   // Our logic: sorts en, then manual. So 'en-official' should win.
-  // And it should have &fmt=vtt appended if missing.
-  assert.strictEqual(meta.transcriptUrl, 'http://example.com/en-official&fmt=vtt');
+  // And it should have fmt=vtt appended if missing.
+  assert.strictEqual(meta.transcriptUrl, 'http://example.com/en-official?fmt=vtt');
 });

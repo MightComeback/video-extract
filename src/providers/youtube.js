@@ -74,9 +74,10 @@ function ensureVtt(baseUrl) {
   if (!u) return '';
   if (/\bfmt=vtt\b/i.test(u)) return u;
 
-  // NOTE: tests expect "&fmt=vtt" even when no query string is present.
-  // (YouTube timedtext baseUrl usually already has query params.)
-  return `${u}&fmt=vtt`;
+  // Most YouTube timedtext baseUrl values already contain query params.
+  // If it doesn't, use '?' instead of '&' to avoid generating an invalid URL.
+  const sep = u.includes('?') ? '&' : '?';
+  return `${u}${sep}fmt=vtt`;
 }
 
 function extractBalancedJsonObject(source, startIndex) {

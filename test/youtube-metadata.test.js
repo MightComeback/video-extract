@@ -48,6 +48,27 @@ test('extractYoutubeMetadataFromHtml: extracts title, description, transcript UR
   assert.ok(meta.transcriptUrl.startsWith('https://www.youtube.com/api/timedtext'));
 });
 
+test('extractYoutubeMetadataFromHtml: uses ?fmt=vtt when baseUrl has no query string', () => {
+  const mockData = {
+    videoDetails: { title: 'No Query' },
+    captions: {
+      playerCaptionsTracklistRenderer: {
+        captionTracks: [
+          {
+            baseUrl: 'https://www.youtube.com/api/timedtext',
+            languageCode: 'en',
+            kind: 'standard'
+          }
+        ]
+      }
+    }
+  };
+
+  const html = `var ytInitialPlayerResponse = ${JSON.stringify(mockData)};`;
+  const meta = extractYoutubeMetadataFromHtml(html);
+  assert.equal(meta.transcriptUrl, 'https://www.youtube.com/api/timedtext?fmt=vtt');
+});
+
 test('extractYoutubeMetadataFromHtml: prefers English captions', () => {
   const mockData = {
     videoDetails: { title: 'Test' },
