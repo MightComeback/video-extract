@@ -60,6 +60,12 @@ export function extractVimeoId(url) {
 
   const isId = (x) => /^\d{3,}$/.test(String(x || ''));
 
+  // Provider parity: Vimeo "manage" links (seen when copying from the dashboard).
+  // Example: https://vimeo.com/manage/videos/123456789
+  if (first === 'manage' && (segs[1] || '').toLowerCase() === 'videos' && isId(segs[2] || '')) {
+    return String(segs[2]);
+  }
+
   // Unlisted Vimeo URLs often look like:
   //   https://vimeo.com/<id>/<hash>
   // where <hash> is a non-numeric token. Treat these as video URLs.

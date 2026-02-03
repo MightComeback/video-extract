@@ -238,8 +238,13 @@ export function normalizeUrlLike(s) {
       }
 
       // First: common direct forms.
+      // Vimeo dashboard copy/paste links:
+      //   https://vimeo.com/manage/videos/<id>
+      const manage = path.match(/^\/manage\/videos\/(?<id>\d+)\b/i);
+      if (manage?.groups?.id) id = manage.groups.id;
+
       const direct = path.match(/^(?:\/video)?\/(?<id>\d+)(?:\/)?$/i);
-      if (direct?.groups?.id) id = direct.groups.id;
+      if (!id && direct?.groups?.id) id = direct.groups.id;
 
       // Fallback: pick the last numeric path segment.
       if (!id) {
