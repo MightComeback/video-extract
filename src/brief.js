@@ -103,7 +103,7 @@ export function normalizeUrlLike(s) {
         return `https://youtube.com/watch?v=${m.groups.id}${youtubeTimeSuffix(url)}`;
       }
 
-      if (path.toLowerCase() === '/watch') {
+      if (/^\/watch\/?$/i.test(path)) {
         const v = url.searchParams.get('v');
         if (!isValidYoutubeId(v)) return raw;
         return `https://youtube.com/watch?v=${v}${youtubeTimeSuffix(url)}`;
