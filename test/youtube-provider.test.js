@@ -44,6 +44,9 @@ test('isYoutubeUrl rejects invalid URLs', () => {
 test('isYoutubeClipUrl identifies clip URLs', () => {
   assert.strictEqual(isYoutubeClipUrl('https://www.youtube.com/clip/UgkxyZKk3VwzExampleClipId'), true);
   assert.strictEqual(isYoutubeClipUrl('https://youtube.com/clip/UgkxyZKk3VwzExampleClipId?feature=share'), true);
+  // Subdomains (common on mobile / app shares)
+  assert.strictEqual(isYoutubeClipUrl('https://m.youtube.com/clip/UgkxyZKk3VwzExampleClipId'), true);
+  assert.strictEqual(isYoutubeClipUrl('https://music.youtube.com/clip/UgkxyZKk3VwzExampleClipId'), true);
   // Protocol-relative URLs (common in embedded HTML)
   assert.strictEqual(isYoutubeClipUrl('//youtube.com/clip/UgkxyZKk3VwzExampleClipId'), true);
   assert.strictEqual(isYoutubeClipUrl('https://youtu.be/dQw4w9WgXcQ'), false);

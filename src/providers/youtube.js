@@ -89,11 +89,13 @@ export function isYoutubeClipUrl(url) {
   }
 
   const host = u.hostname.replace(/^www\./i, '').toLowerCase();
+
+  // Accept youtube.com subdomains (m., music., etc) for clip URLs too.
+  // Clips do not contain a stable 11-char video id without an additional fetch.
   if (!/(^|\.)youtube\.com$/i.test(host)) return false;
 
   // YouTube clip links look like:
   //   https://www.youtube.com/clip/<clipId>
-  // They do not contain a stable 11-char video id without an additional fetch.
   return /^\/clip\//i.test(u.pathname || '');
 }
 
