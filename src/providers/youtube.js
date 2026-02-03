@@ -111,14 +111,27 @@ function pickBestCaptionTrack(tracks = []) {
 }
 
 function ensureVtt(baseUrl) {
-  const u = String(baseUrl || '');
-  if (!u) return '';
-  if (/\bfmt=vtt\b/i.test(u)) return u;
+  const raw = String(baseUrl || '').trim();
+  if (!raw) return '';
 
-  // Most YouTube timedtext baseUrl values already contain query params.
-  // If it doesn't, use '?' instead of '&' to avoid generating an invalid URL.
-  const sep = u.includes('?') ? '&' : '?';
-  return `${u}${sep}fmt=vtt`;
+  // If there's already a fmt=vtt, keep as-is.
+  if (/\bfmt=vtt\b/i.test(raw)) return raw;
+
+  // Prefer URL parsing so we can *replace* an existing fmt=... cleanly.
+  try {
+    const u = new URL(raw);
+    u.searchParams.set('fmt', 'vtt');
+    return u.toString();
+  } catch {
+    // Fall back to string manipulation for non-absolute URLs.
+    if (/([?&])fmt=[^&]+/i.test(raw)) {
+      return raw.replace(/([?&])fmt=[^&]+/i, '$1fmt=vtt');
+    }
+
+    // If it doesn't have any query params, use '?' instead of '&'.
+    const sep = raw.includes('?') ? '&' : '?';
+    return `${raw}${sep}fmt=vtt`;
+  }
 }
 
 function extractBalancedJsonObject(source, startIndex) {

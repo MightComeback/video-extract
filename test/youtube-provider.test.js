@@ -73,7 +73,8 @@ test('extractYoutubeMetadataFromHtml parses initial player response', () => {
         captionTracks: [
           { languageCode: 'es', baseUrl: 'http://example.com/es?fmt=vtt' },
           { languageCode: 'en', baseUrl: 'http://example.com/en', kind: 'asr' }, // Auto-generated
-          { languageCode: 'en', baseUrl: 'http://example.com/en-official' }      // Manual
+          // Manual captions sometimes come back as fmt=srv3 (or similar). We should force fmt=vtt.
+          { languageCode: 'en', baseUrl: 'http://example.com/en-official?fmt=srv3&foo=1' }
         ]
       }
     }
@@ -97,5 +98,5 @@ test('extractYoutubeMetadataFromHtml parses initial player response', () => {
   // Verify caption selection logic (English manual > English ASR > First)
   // Our logic: sorts en, then manual. So 'en-official' should win.
   // And it should have fmt=vtt appended if missing.
-  assert.strictEqual(meta.transcriptUrl, 'http://example.com/en-official?fmt=vtt');
+  assert.strictEqual(meta.transcriptUrl, 'http://example.com/en-official?fmt=vtt&foo=1');
 });
