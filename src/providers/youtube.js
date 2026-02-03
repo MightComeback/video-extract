@@ -117,6 +117,10 @@ export function extractYoutubeIdFromClipHtml(html) {
   const m2 = h.match(/"videoId"\s*:\s*"(?<id>[a-zA-Z0-9_-]{11})"/);
   if (m2?.groups?.id) return m2.groups.id;
 
+  // Clip pages sometimes only expose the id inside a nested watchEndpoint payload.
+  const mWatch = h.match(/"watchEndpoint"\s*:\s*\{[^}]*"videoId"\s*:\s*"(?<id>[a-zA-Z0-9_-]{11})"/);
+  if (mWatch?.groups?.id) return mWatch.groups.id;
+
   // Fallback: sometimes the canonical watch URL is embedded.
   const m3 = h.match(/watch\?v=(?<id>[a-zA-Z0-9_-]{11})\b/);
   if (m3?.groups?.id) return m3.groups.id;
