@@ -57,9 +57,6 @@ video-brief "https://www.youtube.com/watch?v=..."
 # Vimeo
 video-brief "https://vimeo.com/..."
 
-# legacy compat commands (older names)
-fathom2action "https://fathom.video/share/<TOKEN>"
-fathom-extract "https://fathom.video/share/<TOKEN>" --out-dir ./artifacts --pretty
 
 # (optional) copy the brief directly to your clipboard
 video-brief "https://fathom.video/share/<TOKEN>" --copy
@@ -78,6 +75,15 @@ video-brief --version
 
 # hide timestamps/teaser sections (useful when you want a very compact brief)
 video-brief "https://fathom.video/share/<TOKEN>" --max-timestamps 0 --max-teaser 0
+```
+
+### Compatibility (legacy commands)
+
+These are kept for older scripts, but new usage should prefer `video-brief` / `video-extract` / `vdxtr`.
+
+```bash
+fathom2action "https://fathom.video/share/<TOKEN>"
+fathom-extract "https://fathom.video/share/<TOKEN>" --out-dir ./artifacts --pretty
 ```
 
 If the link is auth-gated (401/403) or otherwise not fetchable, paste transcript/notes:
