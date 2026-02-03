@@ -128,6 +128,24 @@ test('supports auth-gated pages via FATHOM_COOKIE', async () => {
   }
 });
 
+test('provides a helpful transcript placeholder when fetch succeeds but no text is extractable', async () => {
+  const s = await withServer((req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html' });
+    // Intentionally empty body: no <p>, no transcript JSON.
+    res.end('<html><head><title>Empty Page</title></head><body></body></html>');
+  });
+
+  try {
+    const { stdout } = await runExtract([`${s.url}/empty`, '--no-download']);
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.match(String(obj.text || ''), /No transcript text was found/i);
+    assert.match(String(obj.text || ''), /FATHOM_COOKIE/i);
+  } finally {
+    await s.close();
+  }
+});
+
 test('extract CLI accepts chat-wrapped URLs (angle brackets / Slack links) and strips trailing punctuation', async () => {
   const s = await withServer((req, res) => {
     res.writeHead(200, { 'content-type': 'text/html' });

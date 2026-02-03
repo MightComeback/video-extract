@@ -648,6 +648,21 @@ export async function extractFromUrl(rawUrl, options = {}) {
     result.title = ex.title || '';
     result.text = ex.text || '';
     result.mediaUrl = ex.mediaUrl || '';
+
+    // Clear failure mode: if we successfully fetched the page but couldn't extract any
+    // meaningful transcript/body text, provide an actionable placeholder instead of an
+    // empty transcript.txt.
+    if (!String(result.text || '').trim()) {
+      result.text = [
+        'No transcript text was found for this link.',
+        `Source: ${url}`,
+        '',
+        'If this link is auth-gated, pass cookies:',
+        '- FATHOM_COOKIE=... (or --cookie)',
+        '- FATHOM_COOKIE_FILE=... (or --cookie-file)',
+      ].join('\n');
+    }
+
     // If we rejected a candidate mediaUrl during enrichment/probing, preserve the reason
     // so downstream callers (and extracted.json) are actionable.
     if (!result.mediaUrl && ex.mediaUrlRejectReason) {
