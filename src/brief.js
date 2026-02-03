@@ -215,6 +215,12 @@ export function normalizeUrlLike(s) {
       ]);
       if (blockedTopLevel.has(first)) return raw;
 
+      // Provider parity / correctness:
+      // Vimeo showcases are collections. The top-level showcase URL is *not* a clip URL.
+      // Only normalize showcases when the URL explicitly includes a video id, e.g.:
+      //   https://vimeo.com/showcase/<showcaseId>/video/<videoId>
+      if (first === 'showcase' && !/\/video\/\d+\b/i.test(path)) return raw;
+
       // Vimeo has many URL shapes:
       //   https://vimeo.com/123
       //   https://vimeo.com/channels/foo/123

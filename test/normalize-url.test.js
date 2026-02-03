@@ -149,6 +149,12 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
   assert.equal(normalizeUrlLike('https://vimeo.com/channels/staffpicks/12345'), 'https://vimeo.com/12345');
   // Provider parity: preserve unlisted hash tokens even when they appear on channel/showcase routes.
   assert.equal(normalizeUrlLike('https://vimeo.com/channels/staffpicks/12345/abcdef'), 'https://vimeo.com/12345?h=abcdef');
+
+  // Correctness: showcases are collections; the showcase root URL is not a clip.
+  assert.equal(normalizeUrlLike('https://vimeo.com/showcase/12345'), 'https://vimeo.com/showcase/12345');
+  assert.equal(normalizeUrlLike('https://vimeo.com/showcase/12345/'), 'https://vimeo.com/showcase/12345/');
+  // But if the showcase URL references a specific video, normalize to that video id.
+  assert.equal(normalizeUrlLike('https://vimeo.com/showcase/12345/video/67890'), 'https://vimeo.com/67890');
   assert.equal(normalizeUrlLike('https://staffpicks.vimeo.com/12345'), 'https://vimeo.com/12345');
   assert.equal(normalizeUrlLike('staffpicks.vimeo.com/12345'), 'https://vimeo.com/12345');
   assert.equal(normalizeUrlLike('https://vimeo.com/ondemand/somefilm/987654321'), 'https://vimeo.com/987654321');
