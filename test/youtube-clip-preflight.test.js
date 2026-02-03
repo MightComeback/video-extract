@@ -44,6 +44,14 @@ test('extractFromUrl resolves YouTube clip URLs to canonical watch URLs when pos
 
     assert.equal(res.ok, true);
     assert.equal(res.sourceUrl, 'https://youtube.com/watch?v=dQw4w9WgXcQ');
+
+    const resHashTime = await extractFromUrl('https://www.youtube.com/clip/UgkxyZKk3VwzExampleClipId#t=1m2s', {
+      noDownload: true,
+      noSplit: true,
+    });
+
+    assert.equal(resHashTime.ok, true);
+    assert.equal(resHashTime.sourceUrl, 'https://youtube.com/watch?v=dQw4w9WgXcQ&t=1m2s');
   } finally {
     globalThis.fetch = originalFetch;
   }

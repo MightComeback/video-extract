@@ -132,6 +132,9 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
   assert.equal(normalizeUrlLike('https://share.loom.com/share/1234abcd'), 'https://loom.com/share/1234abcd');
   assert.equal(normalizeUrlLike('//share.loom.com/share/1234abcd'), 'https://loom.com/share/1234abcd');
   assert.equal(normalizeUrlLike('share.loom.com/share/1234abcd'), 'https://loom.com/share/1234abcd');
+  // Provider parity: accept bare player.loom.com links (no scheme) in chat copy/paste.
+  assert.equal(normalizeUrlLike('player.loom.com/share/1234abcd'), 'https://loom.com/share/1234abcd');
+  assert.equal(normalizeUrlLike('[Loom](player.loom.com/share/1234abcd)'), 'https://loom.com/share/1234abcd');
   assert.equal(normalizeUrlLike('https://www.loom.com/v/abc-123'), 'https://loom.com/share/abc-123');
   assert.equal(normalizeUrlLike('https://www.loom.com/recording/abc-123'), 'https://loom.com/share/abc-123');
   assert.equal(normalizeUrlLike('https://www.loom.com/i/abc_123'), 'https://loom.com/share/abc_123');

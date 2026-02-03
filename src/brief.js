@@ -354,7 +354,7 @@ export function normalizeUrlLike(s) {
     // Convenience: accept bare provider URLs (no scheme) from chat copy/paste.
     // Keep this intentionally narrow (well-known hosts only).
     const m = s.match(
-      /^(?:www\.)?(?<host>(?:fathom\.video|loom\.com|share\.loom\.com|youtu\.be|(?:[a-z0-9-]+\.)*youtube\.com|(?:[a-z0-9-]+\.)*youtube-nocookie\.com|(?:player\.vimeo\.com|(?:[a-z0-9-]+\.)*vimeo\.com)))\/(?<rest>\S+)/i
+      /^(?:www\.)?(?<host>(?:fathom\.video|loom\.com|share\.loom\.com|player\.loom\.com|youtu\.be|(?:[a-z0-9-]+\.)*youtube\.com|(?:[a-z0-9-]+\.)*youtube-nocookie\.com|(?:player\.vimeo\.com|(?:[a-z0-9-]+\.)*vimeo\.com)))\/(?<rest>\S+)/i
     );
     if (!m) return '';
 
@@ -376,6 +376,7 @@ export function normalizeUrlLike(s) {
     if (normalizedHost === 'vimeo.com' || normalizedHost.endsWith('.vimeo.com')) normalizedHost = 'vimeo.com';
 
     if (normalizedHost === 'share.loom.com') normalizedHost = 'loom.com';
+    if (normalizedHost === 'player.loom.com') normalizedHost = 'loom.com';
 
     return `https://${normalizedHost}/${rest}`;
   }
@@ -410,7 +411,7 @@ export function normalizeUrlLike(s) {
   //   [label](fathom.video/share/...) or [label](www.fathom.video/share/...)
   // Also tolerate trailing punctuation after the wrapper.
   const md = v0.match(
-    /^\[[^\]]*\]\(\s*(?<u>(?:(?:https?:\/\/|data:)[^)\s]+)|(?:(?:www\.)?(?:fathom\.video|loom\.com|share\.loom\.com|youtu\.be|(?:[a-z0-9-]+\.)*youtube\.com|(?:[a-z0-9-]+\.)*youtube-nocookie\.com|(?:player\.vimeo\.com|(?:[a-z0-9-]+\.)*vimeo\.com))\/[^)\s]+))\s*\)\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』}]*$/i
+    /^\[[^\]]*\]\(\s*(?<u>(?:(?:https?:\/\/|data:)[^)\s]+)|(?:(?:www\.)?(?:fathom\.video|loom\.com|share\.loom\.com|player\.loom\.com|youtu\.be|(?:[a-z0-9-]+\.)*youtube\.com|(?:[a-z0-9-]+\.)*youtube-nocookie\.com|(?:player\.vimeo\.com|(?:[a-z0-9-]+\.)*vimeo\.com))\/[^)\s]+))\s*\)\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』}]*$/i
   );
   if (md) {
     const u = String(md.groups?.u || '').trim();

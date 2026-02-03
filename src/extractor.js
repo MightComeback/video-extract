@@ -622,7 +622,16 @@ export async function extractFromUrl(rawUrl, options = {}) {
           let t = '';
           try {
             const u = new URL(normalizeUrlLike(url));
+            // Preserve timestamps when clip URLs deep-link using either query params (?t=.../?start=...)
+            // or hash fragments (#t=.../#start=...).
             t = u.searchParams.get('t') || u.searchParams.get('start') || '';
+            if (!t) {
+              const hash = String(u.hash || '').replace(/^#/, '').trim();
+              if (hash) {
+                const hp = new URLSearchParams(hash);
+                t = hp.get('t') || hp.get('start') || '';
+              }
+            }
           } catch {
             // ignore
           }
