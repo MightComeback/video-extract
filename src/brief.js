@@ -29,6 +29,8 @@ export function normalizeUrlLike(s) {
     const path = url.pathname || '/';
 
     // YouTube
+    const isValidYoutubeId = (id) => /^[a-zA-Z0-9_-]{11}$/.test(String(id || '').trim());
+
     // Preserve common time params when canonicalizing.
     // YouTube share links sometimes put the timestamp in the URL hash (e.g. youtu.be/...#t=1m2s).
     function youtubeTimeSuffix(u) {
@@ -50,7 +52,7 @@ export function normalizeUrlLike(s) {
 
     if (host === 'youtu.be') {
       const id = path.split('/').filter(Boolean)[0];
-      if (!id) return raw;
+      if (!isValidYoutubeId(id)) return raw;
       return `https://youtube.com/watch?v=${id}${youtubeTimeSuffix(url)}`;
     }
     const isYoutubeHost =
@@ -84,13 +86,13 @@ export function normalizeUrlLike(s) {
 
       // Convert common path forms to canonical watch URLs.
       const m = path.match(/^\/(?:shorts|embed|live)\/(?<id>[^/?#]+)/i);
-      if (m?.groups?.id) {
+      if (m?.groups?.id && isValidYoutubeId(m.groups.id)) {
         return `https://youtube.com/watch?v=${m.groups.id}${youtubeTimeSuffix(url)}`;
       }
 
       if (path.toLowerCase() === '/watch') {
         const v = url.searchParams.get('v');
-        if (!v) return raw;
+        if (!isValidYoutubeId(v)) return raw;
         return `https://youtube.com/watch?v=${v}${youtubeTimeSuffix(url)}`;
       }
 

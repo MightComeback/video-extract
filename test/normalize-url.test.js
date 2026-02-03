@@ -59,22 +59,25 @@ test('normalizeUrlLike handles unusual brackets', () => {
 
 
 test('normalizeUrlLike canonicalizes common provider URL variants', () => {
-  assert.equal(normalizeUrlLike('https://youtu.be/abc123?t=30'), 'https://youtube.com/watch?v=abc123&t=30');
-  assert.equal(normalizeUrlLike('https://youtu.be/abc123#t=1m2s'), 'https://youtube.com/watch?v=abc123&t=1m2s');
-  assert.equal(normalizeUrlLike('https://youtu.be/abc123#start=62'), 'https://youtube.com/watch?v=abc123&t=62');
-  assert.equal(
-    normalizeUrlLike('https://www.youtube.com/watch?v=abc123&feature=youtu.be'),
-    'https://youtube.com/watch?v=abc123'
-  );
+  const id = 'dQw4w9WgXcQ';
+
+  assert.equal(normalizeUrlLike(`https://youtu.be/${id}?t=30`), `https://youtube.com/watch?v=${id}&t=30`);
+  assert.equal(normalizeUrlLike(`https://youtu.be/${id}#t=1m2s`), `https://youtube.com/watch?v=${id}&t=1m2s`);
+  assert.equal(normalizeUrlLike(`https://youtu.be/${id}#start=62`), `https://youtube.com/watch?v=${id}&t=62`);
+  assert.equal(normalizeUrlLike(`https://www.youtube.com/watch?v=${id}&feature=youtu.be`), `https://youtube.com/watch?v=${id}`);
   assert.equal(
     normalizeUrlLike(
-      'https://www.youtube.com/attribution_link?u=%2Fwatch%3Fv%3Dabc123%26t%3D30s%26feature%3Dshare&a=foo'
+      `https://www.youtube.com/attribution_link?u=%2Fwatch%3Fv%3D${id}%26t%3D30s%26feature%3Dshare&a=foo`
     ),
-    'https://youtube.com/watch?v=abc123&t=30s'
+    `https://youtube.com/watch?v=${id}&t=30s`
   );
-  assert.equal(normalizeUrlLike('https://youtube.com/shorts/abc123?si=xyz'), 'https://youtube.com/watch?v=abc123');
-  assert.equal(normalizeUrlLike('https://www.youtube-nocookie.com/embed/abc123'), 'https://youtube.com/watch?v=abc123');
-  assert.equal(normalizeUrlLike('youtube-nocookie.com/embed/abc123'), 'https://youtube.com/watch?v=abc123');
+  assert.equal(normalizeUrlLike(`https://youtube.com/shorts/${id}?si=xyz`), `https://youtube.com/watch?v=${id}`);
+  assert.equal(normalizeUrlLike(`https://www.youtube-nocookie.com/embed/${id}`), `https://youtube.com/watch?v=${id}`);
+  assert.equal(normalizeUrlLike(`youtube-nocookie.com/embed/${id}`), `https://youtube.com/watch?v=${id}`);
+
+  // Invalid / non-YouTube IDs should not be forced into a canonical watch URL.
+  assert.equal(normalizeUrlLike('https://youtu.be/abc123?t=30'), 'https://youtu.be/abc123?t=30');
+  assert.equal(normalizeUrlLike('https://youtube.com/shorts/abc123?si=xyz'), 'https://youtube.com/shorts/abc123?si=xyz');
 
   assert.equal(normalizeUrlLike('https://loom.com/embed/1234abcd'), 'https://loom.com/share/1234abcd');
   assert.equal(normalizeUrlLike('https://www.loom.com/v/abc-123'), 'https://loom.com/share/abc-123');
