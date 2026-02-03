@@ -5,6 +5,7 @@ import { isLoomUrl, extractLoomId } from '../src/providers/loom.js';
 test('isLoomUrl identifies valid Loom URLs', (t) => {
   assert.strictEqual(isLoomUrl('https://www.loom.com/share/1234567890abcdef'), true);
   assert.strictEqual(isLoomUrl('https://loom.com/share/1234567890abcdef'), true);
+  assert.strictEqual(isLoomUrl('https://share.loom.com/share/1234567890abcdef'), true);
   assert.strictEqual(isLoomUrl('https://www.loom.com/v/1234567890abcdef'), true);
   assert.strictEqual(isLoomUrl('https://www.loom.com/embed/1234567890abcdef'), true);
   assert.strictEqual(isLoomUrl('https://www.loom.com/recording/1234567890abcdef'), true);

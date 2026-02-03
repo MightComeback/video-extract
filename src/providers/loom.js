@@ -16,8 +16,9 @@ export function extractLoomId(url) {
     return null;
   }
 
-  const host = u.hostname.replace(/^www\./i, '').toLowerCase();
-  if (host !== 'loom.com') return null;
+  const host = u.hostname.toLowerCase();
+  // Loom links can come from subdomains (e.g. share.loom.com).
+  if (!/(^|\.)loom\.com$/i.test(host)) return null;
 
   const parts = u.pathname.split('/').filter(Boolean);
   if (parts.length < 2) return null;
