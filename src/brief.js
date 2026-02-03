@@ -548,7 +548,8 @@ export function extractStackTraces(transcript) {
     out.push(m[1].trim());
   }
 
-  return out;
+  // Avoid double-counting when multiple regexes match the same trace.
+  return [...new Set(out)];
 }
 
 export function extractReproSteps(transcript) {
