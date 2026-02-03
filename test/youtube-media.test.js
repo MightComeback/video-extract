@@ -1,45 +1,59 @@
-import { test, mock } from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert';
 import { fetchYoutubeMediaUrl } from '../src/providers/youtube.js';
 import ytdl from 'ytdl-core';
 
 test('fetchYoutubeMediaUrl returns URL when format found', async () => {
+  const originalGetInfo = ytdl.getInfo;
+  const originalChooseFormat = ytdl.chooseFormat;
+
+  let getInfoCalls = 0;
+  let chooseFormatCalls = 0;
+
+  try {
     // Mock ytdl.getInfo and chooseFormat
     const mockInfo = { formats: [] };
-    const mockFormat = { url: 'https://video.url/file.mp4' };
+    const mockFormat = { url: 'https://video.url/file.mp4', container: 'mp4', hasVideo: true, hasAudio: true };
 
-    // Create a mock for getInfo
-    const getInfoMock = mock.method(ytdl, 'getInfo', async () => mockInfo);
-    // Create a mock for chooseFormat
-    const chooseFormatMock = mock.method(ytdl, 'chooseFormat', () => mockFormat);
+    ytdl.getInfo = async () => {
+      getInfoCalls++;
+      return mockInfo;
+    };
+
+    ytdl.chooseFormat = () => {
+      chooseFormatCalls++;
+      return mockFormat;
+    };
 
     const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
     const result = await fetchYoutubeMediaUrl(url);
 
     assert.strictEqual(result, 'https://video.url/file.mp4');
-    assert.strictEqual(getInfoMock.mock.calls.length, 1);
-    assert.strictEqual(chooseFormatMock.mock.calls.length, 1);
+    assert.strictEqual(getInfoCalls, 1);
+    assert.strictEqual(chooseFormatCalls, 1);
+  } finally {
+    ytdl.getInfo = originalGetInfo;
+    ytdl.chooseFormat = originalChooseFormat;
+  }
 });
 
 test('fetchYoutubeMediaUrl returns null on error', async () => {
-    // We can't easily restore the previous mock if restore() is missing,
-    // but we can re-mock or just ignore if the order is safe.
-    // However, if getInfoMock persisted, we need to override it.
-    
-    // Let's rely on the timestamp or different url to differentiate if needed,
-    // but here we just want it to throw.
-    // Since we cannot restore, we are stuck with the previous mock if we don't fix this.
-    
-    // Actually, let's just create a fresh mock behavior by defining the method again?
-    // Multiple mocks on same method? Node test runner might stack them or replace.
-    
-    const getInfoMock2 = mock.method(ytdl, 'getInfo', async () => {
-        throw new Error('Video unavailable');
-    });
+  const originalGetInfo = ytdl.getInfo;
+
+  let getInfoCalls = 0;
+
+  try {
+    ytdl.getInfo = async () => {
+      getInfoCalls++;
+      throw new Error('Video unavailable');
+    };
 
     const url = 'https://www.youtube.com/watch?v=broken';
     const result = await fetchYoutubeMediaUrl(url);
 
     assert.strictEqual(result, null);
-    assert.strictEqual(getInfoMock2.mock.calls.length, 1);
+    assert.strictEqual(getInfoCalls, 1);
+  } finally {
+    ytdl.getInfo = originalGetInfo;
+  }
 });

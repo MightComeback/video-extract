@@ -1,52 +1,55 @@
-import { test, mock } from 'node:test';
-import assert from 'node:assert';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-
+import { fileURLToPath } from 'node:url';
 import ytdl from 'ytdl-core';
+
 import { extractFromUrl } from '../src/extractor.js';
-import { fetchYoutubeMediaUrl } from '../src/providers/youtube.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function loadFixture(name) {
-  const p = path.join(process.cwd(), 'test', 'fixtures', name);
-  return fs.readFileSync(p, 'utf8');
+  return fs.readFileSync(path.join(__dirname, 'fixtures', name), 'utf8');
 }
 
-function mkResponse(body, { status = 200, headers = {} } = {}) {
-  return new Response(body, { status, headers });
-}
+test('extractFromUrl uses ytdl-core as a fallback to resolve YouTube mediaUrl', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalGetInfo = ytdl.getInfo;
+  const originalChooseFormat = ytdl.chooseFormat;
 
-test('extractFromUrl uses ytdl-core as a fallback to resolve YouTube mediaUrl', async (t) => {
-  const youtubeHtml = loadFixture('youtube-watch.html');
+  try {
+    const youtubeHtml = loadFixture('youtube-watch.html');
 
-  // Mock ytdl calls so we never hit the network.
-  mock.method(ytdl, 'getInfo', async () => ({ formats: [] }));
-  mock.method(ytdl, 'chooseFormat', () => ({ url: 'https://example.com/video.mp4' }));
+    // Mock network: fetch the YouTube HTML, nothing else.
+    globalThis.fetch = async () => ({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: { get: () => 'text/html' },
+      text: async () => youtubeHtml,
+      body: { cancel: async () => {} },
+    });
 
-  // Sanity: our ytdl mocks should affect the provider helper directly.
-  const direct = await fetchYoutubeMediaUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-  assert.equal(direct, 'https://example.com/video.mp4');
+    // Mock ytdl calls so we never hit the network.
+    ytdl.getInfo = async () => ({ formats: [] });
+    ytdl.chooseFormat = () => ({
+      url: 'https://cdn.example.com/video.mp4',
+      container: 'mp4',
+      hasVideo: true,
+      hasAudio: true,
+    });
 
-  const oldFetch = globalThis.fetch;
-  t.after(() => {
-    globalThis.fetch = oldFetch;
-  });
+    const r = await extractFromUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ', {
+      noDownload: true,
+    });
 
-  globalThis.fetch = async (input, init = {}) => {
-    const url = String(typeof input === 'string' ? input : input?.url || '');
-    const method = String(init?.method || 'GET').toUpperCase();
-
-    if (method === 'HEAD') return mkResponse('', { status: 405 });
-
-    if (/^https:\/\/(?:www\.)?youtube\.com\/watch\b/i.test(url)) {
-      return mkResponse(youtubeHtml, { status: 200, headers: { 'content-type': 'text/html' } });
-    }
-
-    // We don't need captions for this test; just return 404 for everything else.
-    return mkResponse('not found', { status: 404 });
-  };
-
-  const res = await extractFromUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ', { noDownload: true, noSplit: true });
-  assert.equal(res.ok, true);
-  assert.equal(res.mediaUrl, 'https://example.com/video.mp4');
+    assert.equal(r.ok, true);
+    assert.equal(r.mediaUrl, 'https://cdn.example.com/video.mp4');
+  } finally {
+    globalThis.fetch = originalFetch;
+    ytdl.getInfo = originalGetInfo;
+    ytdl.chooseFormat = originalChooseFormat;
+  }
 });

@@ -1,49 +1,52 @@
-import { test, mock } from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-
+import { fileURLToPath } from 'node:url';
 import ytdl from 'ytdl-core';
+
 import { extractFromUrl } from '../src/extractor.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 function loadFixture(name) {
-  const p = path.join(process.cwd(), 'test', 'fixtures', name);
-  return fs.readFileSync(p, 'utf8');
+  return fs.readFileSync(path.join(__dirname, 'fixtures', name), 'utf8');
 }
 
-function mkResponse(body, { status = 200, headers = {} } = {}) {
-  return new Response(body, { status, headers });
-}
+test('extractFromUrl preserves a helpful reason when YouTube mediaUrl cannot be resolved', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalGetInfo = ytdl.getInfo;
 
-test('extractFromUrl preserves a helpful reason when YouTube mediaUrl cannot be resolved', async (t) => {
-  const youtubeHtml = loadFixture('youtube-watch.html');
+  try {
+    const youtubeHtml = loadFixture('youtube-watch.html');
 
-  // Force ytdl-core to fail so mediaUrl resolution returns null.
-  mock.method(ytdl, 'getInfo', async () => {
-    throw new Error('blocked');
-  });
+    globalThis.fetch = async () => ({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: { get: () => 'text/html' },
+      text: async () => youtubeHtml,
+      body: { cancel: async () => {} },
+    });
 
-  const oldFetch = globalThis.fetch;
-  t.after(() => {
-    globalThis.fetch = oldFetch;
-  });
+    // Force ytdl-core to fail so mediaUrl resolution returns null.
+    ytdl.getInfo = async () => {
+      throw new Error('blocked');
+    };
 
-  globalThis.fetch = async (input, init = {}) => {
-    const url = String(typeof input === 'string' ? input : input?.url || '');
-    const method = String(init?.method || 'GET').toUpperCase();
+    const r = await extractFromUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ', {
+      noDownload: true,
+    });
 
-    if (method === 'HEAD') return mkResponse('', { status: 405 });
-
-    if (/^https:\/\/(?:www\.)?youtube\.com\/watch\b/i.test(url)) {
-      return mkResponse(youtubeHtml, { status: 200, headers: { 'content-type': 'text/html' } });
-    }
-
-    // No captions for this test.
-    return mkResponse('not found', { status: 404 });
-  };
-
-  const res = await extractFromUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ', { noSplit: true });
-  assert.equal(res.ok, true);
-  assert.equal(res.mediaUrl, '');
-  assert.match(String(res.mediaDownloadError || ''), /Unable to resolve a downloadable YouTube media URL/i);
+    assert.equal(r.ok, true);
+    assert.equal(r.mediaUrl, '');
+    assert.ok(
+      String(r.mediaDownloadError || '').includes('Unable to resolve a downloadable YouTube media URL'),
+      `Expected a helpful mediaDownloadError; got: ${r.mediaDownloadError}`
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    ytdl.getInfo = originalGetInfo;
+  }
 });
