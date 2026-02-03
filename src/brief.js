@@ -92,7 +92,7 @@ export function normalizeUrlLike(s) {
       }
 
       // Convert common path forms to canonical watch URLs.
-      const m = path.match(/^\/(?:shorts|embed|live)\/(?<id>[^/?#]+)/i);
+      const m = path.match(/^\/(?:shorts|embed|live|v)\/(?<id>[^/?#]+)/i);
       if (m?.groups?.id && isValidYoutubeId(m.groups.id)) {
         return `https://youtube.com/watch?v=${m.groups.id}${youtubeTimeSuffix(url)}`;
       }
