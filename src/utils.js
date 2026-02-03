@@ -62,7 +62,10 @@ export function parseSimpleVtt(text) {
       .replace(/&lt;/gi, '<')
       .replace(/&gt;/gi, '>')
       .replace(/&quot;/gi, '"')
-      .replace(/&#39;/g, "'");
+      // Apostrophes show up in provider transcripts in a few common encodings.
+      .replace(/&apos;/gi, "'")
+      .replace(/&#39;/g, "'")
+      .replace(/&#x27;/gi, "'");
 
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     if (cleaned) out.push(cleaned);

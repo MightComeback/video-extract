@@ -65,6 +65,20 @@ test('parseSimpleVtt strips common WebVTT markup + decodes basic entities', (t) 
   assert.equal(text, 'Hello & welcome Look <here> now');
 });
 
+test('parseSimpleVtt decodes common apostrophe entities', (t) => {
+  const vtt = `WEBVTT
+
+00:00:01.000 --> 00:00:04.000
+Don&apos;t stop
+
+00:00:04.000 --> 00:00:08.000
+Rock &#x27;n&#39; roll
+`;
+
+  const text = parseSimpleVtt(vtt);
+  assert.equal(text, "Don't stop Rock 'n' roll");
+});
+
 test('parseSimpleVtt returns empty string for empty input', (t) => {
   assert.equal(parseSimpleVtt(''), '');
   assert.equal(parseSimpleVtt(null), '');
