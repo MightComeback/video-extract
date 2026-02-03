@@ -109,6 +109,14 @@ export function normalizeUrlLike(s) {
         return `https://youtube.com/watch?v=${v}${youtubeTimeSuffix(url)}`;
       }
 
+      // YouTube clip URLs do not contain a stable 11-char video id. Still normalize the host
+      // and strip tracking params so downstream detection + error messaging is consistent.
+      const clip = path.match(/^\/clip\/(?<clipId>[^/?#]+)/i);
+      if (clip?.groups?.clipId) {
+        const time = youtubeTimeSuffix(url).replace(/^&/, '?');
+        return `https://youtube.com/clip/${clip.groups.clipId}${time}`;
+      }
+
       return raw;
     }
 

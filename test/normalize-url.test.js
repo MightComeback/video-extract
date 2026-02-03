@@ -77,6 +77,12 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
   assert.equal(normalizeUrlLike(`https://www.youtube.com/watch?v=${id}&feature=youtu.be`), `https://youtube.com/watch?v=${id}`);
   // Provider parity: accept /watch/ (some share flows include a trailing slash).
   assert.equal(normalizeUrlLike(`https://www.youtube.com/watch/?v=${id}&feature=share`), `https://youtube.com/watch?v=${id}`);
+
+  // Clip URLs: normalize host + strip tracking params (even though we can't resolve a stable video id).
+  assert.equal(
+    normalizeUrlLike('https://www.youtube.com/clip/UgkxyZKk3VwzExampleClipId?feature=share'),
+    'https://youtube.com/clip/UgkxyZKk3VwzExampleClipId'
+  );
   assert.equal(
     normalizeUrlLike(
       `https://www.youtube.com/attribution_link?u=%2Fwatch%3Fv%3D${id}%26t%3D30s%26feature%3Dshare&a=foo`
