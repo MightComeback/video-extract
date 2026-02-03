@@ -52,6 +52,17 @@ export function extractVimeoId(url) {
   const isBlocked = blockedTopLevel.has(first);
 
   const isId = (x) => /^\d{3,}$/.test(String(x || ''));
+
+  // Unlisted Vimeo URLs often look like:
+  //   https://vimeo.com/<id>/<hash>
+  // where <hash> is a non-numeric token. Treat these as video URLs.
+  // This improves provider parity when the URL hasn't been normalized upstream.
+  if (segs.length >= 2 && isId(segs[0]) && !isBlocked) {
+    const maybeHash = String(segs[1] || '');
+    const looksHashy = /^[a-z0-9]+$/i.test(maybeHash) && maybeHash.length >= 6;
+    if (looksHashy) return segs[0];
+  }
+
   const isVideoKeyword = (x) => {
     const v = String(x || '').toLowerCase();
     return v === 'video' || v === 'videos';
