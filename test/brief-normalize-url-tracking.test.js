@@ -25,4 +25,18 @@ describe("normalizeUrlLike - tracking params", () => {
       "https://youtube.com/watch?v=dQw4w9WgXcQ&t=30s",
     );
   });
+
+  test("strips si param for YouTube share URLs (watch + youtu.be)", () => {
+    assert.equal(
+      normalizeUrlLike(
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ&si=deadbeef&t=30s",
+      ),
+      "https://youtube.com/watch?v=dQw4w9WgXcQ&t=30s",
+    );
+
+    assert.equal(
+      normalizeUrlLike("https://youtu.be/dQw4w9WgXcQ?si=deadbeef"),
+      "https://youtube.com/watch?v=dQw4w9WgXcQ",
+    );
+  });
 });

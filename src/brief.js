@@ -47,6 +47,8 @@ export function normalizeUrlLike(s) {
       "mc_cid",
       "mc_eid",
       "igshid",
+      // YouTube share links often include an opaque session-ish tracking token.
+      "si",
     ]);
     for (const k of [...url.searchParams.keys()]) {
       const lk = String(k || "").toLowerCase();
