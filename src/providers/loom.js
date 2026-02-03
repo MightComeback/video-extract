@@ -2,6 +2,21 @@ export function isLoomUrl(url) {
   return !!extractLoomId(url);
 }
 
+function isVttUrl(u) {
+  const s = String(u || '').trim();
+  if (!s) return false;
+  return /\.vtt(?:\?|#|$)/i.test(s) || /[?&](?:format|fmt)=vtt(?:&|$)/i.test(s);
+}
+
+function normalizeLoomAssetUrl(url, base = 'https://www.loom.com') {
+  const v = String(url || '').trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  if (v.startsWith('//')) return `https:${v}`;
+  if (v.startsWith('/')) return `${base}${v}`;
+  return v;
+}
+
 export function extractLoomId(url) {
   const s = String(url || '').trim();
   if (!s) return null;
@@ -113,9 +128,9 @@ export function extractLoomMetadataFromHtml(html) {
         const m3u8Key = cdnKeys.find((k) => /M3U8/i.test(k)) || cdnKeys[0];
         const chosen = mp4Key || m3u8Key;
         if (chosen && vid[chosen]?.url) {
-          meta.mediaUrl = vid[chosen].url;
+          meta.mediaUrl = normalizeLoomAssetUrl(vid[chosen].url);
         } else if (vid.nullableRawCdnUrl?.url) {
-          meta.mediaUrl = vid.nullableRawCdnUrl.url;
+          meta.mediaUrl = normalizeLoomAssetUrl(vid.nullableRawCdnUrl.url);
         }
 
         if (vid.posterUrl && !meta.thumbnailUrl) meta.thumbnailUrl = vid.posterUrl;
@@ -150,7 +165,18 @@ export function extractLoomMetadataFromHtml(html) {
         if (vtdKey) {
           const vtd = state[vtdKey] || {};
           // Loom has used both `source_url` (JSON transcript) and `captions_source_url` (VTT) over time.
-          meta.transcriptUrl = vtd.source_url || vtd.captions_source_url || meta.transcriptUrl;
+          const captions = vtd.captions_source_url;
+          const source = vtd.source_url;
+
+          // Prefer VTT (more consistent) over JSON when both exist.
+          const preferred =
+            (isVttUrl(captions) ? captions : '') ||
+            (isVttUrl(source) ? source : '') ||
+            captions ||
+            source ||
+            '';
+
+          meta.transcriptUrl = normalizeLoomAssetUrl(preferred) || meta.transcriptUrl;
         }
 
         // Transcript text (Transcript paragraphs)

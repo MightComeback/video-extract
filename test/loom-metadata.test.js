@@ -17,7 +17,7 @@ test('extractLoomMetadataFromHtml - Basic', () => {
       "description": "A test description",
       "duration": 60,
       "createdAt": "2023-01-01T00:00:00Z",
-      "nullableRawCdnUrl({\"type\":\"M3U8\"})": { "url": "https://cdn.loom/video.m3u8" },
+      "nullableRawCdnUrl({\"type\":\"M3U8\"})": { "url": "//cdn.loom/video.m3u8" },
       "owner": { "__ref": "User:u1" }
     },
     "User:u1": {
@@ -107,7 +107,7 @@ test('extractLoomMetadataFromHtml - Transcript URL prefers linked video', () => 
     // The one that should be picked
     "VideoTranscriptDetails:t_main": {
       "videoId": "v1",
-      "captions_source_url": "https://cdn.loom/transcript-main.vtt"
+      "captions_source_url": "//cdn.loom/transcript-main.vtt"
     }
   };
 
