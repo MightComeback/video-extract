@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { normalizeUrlLike } from './brief.js';
 import { parseSimpleVtt } from './utils.js';
 import { extractFathomTranscriptUrl } from './providers/fathom.js';
-import { isYoutubeUrl, isYoutubeClipUrl, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
+import { isYoutubeUrl, isYoutubeClipUrl, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
 import { isVimeoUrl, extractVimeoMetadataFromHtml, fetchVimeoOembed } from './providers/vimeo.js';
 import { isLoomUrl, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript } from './providers/loom.js';
 
@@ -687,14 +687,40 @@ export async function extractFromUrl(rawUrl, options = {}) {
 
   try {
     // YouTube clip URLs (youtube.com/clip/...) don't include a stable 11-char video id.
-    // Treat them as an unsupported URL shape and guide the user toward a canonical watch URL.
+    // Best-effort: fetch the clip page and try to resolve its underlying watch video id.
+    // If we can't, fall back to a clear, actionable error.
+    let fetchUrl = url;
     if (isYoutubeClipUrl(url)) {
-      throw new Error(
-        'YouTube clip URLs are not supported. Open the clip and copy the full video URL (https://youtube.com/watch?v=...) instead.'
-      );
+      try {
+        const clipEx = await bestEffortExtract({ url, cookie, referer, userAgent });
+        const id = extractYoutubeIdFromClipHtml(clipEx?.html || '');
+
+        if (id) {
+          // Preserve time hints if they exist on the clip URL.
+          let t = '';
+          try {
+            const u = new URL(normalizeUrlLike(url));
+            t = u.searchParams.get('t') || u.searchParams.get('start') || '';
+          } catch {
+            // ignore
+          }
+
+          fetchUrl = `https://youtube.com/watch?v=${id}${t ? `&t=${encodeURIComponent(t)}` : ''}`;
+          result.sourceUrl = fetchUrl;
+        } else {
+          throw new Error(
+            'YouTube clip URLs are not supported (unable to resolve underlying video id). Open the clip and copy the full video URL (https://youtube.com/watch?v=...) instead.'
+          );
+        }
+      } catch (e) {
+        // If clip fetch itself fails, preserve the existing helpful guidance.
+        throw new Error(
+          `YouTube clip URLs are not supported. Open the clip and copy the full video URL (https://youtube.com/watch?v=...) instead. (${e?.message || e})`
+        );
+      }
     }
 
-    const ex = await bestEffortExtract({ url, cookie, referer, userAgent });
+    const ex = await bestEffortExtract({ url: fetchUrl, cookie, referer, userAgent });
     result.ok = true;
     result.title = ex.title || '';
     result.text = ex.text || '';

@@ -103,6 +103,27 @@ export function isYoutubeUrl(url) {
   return !!extractYoutubeId(url);
 }
 
+// YouTube clip pages (youtube.com/clip/<clipId>) do not include a stable 11-char video id in the URL,
+// but the underlying watch video id is often present in the HTML payload.
+// This helper enables best-effort resolution so clip links can be treated like normal watch URLs.
+export function extractYoutubeIdFromClipHtml(html) {
+  const h = String(html || '');
+  if (!h.trim()) return null;
+
+  // Common payload shapes include JSON with "videoId":"<id>".
+  const m1 = h.match(/\"videoId\"\s*:\s*\"(?<id>[a-zA-Z0-9_-]{11})\"/);
+  if (m1?.groups?.id) return m1.groups.id;
+
+  const m2 = h.match(/"videoId"\s*:\s*"(?<id>[a-zA-Z0-9_-]{11})"/);
+  if (m2?.groups?.id) return m2.groups.id;
+
+  // Fallback: sometimes the canonical watch URL is embedded.
+  const m3 = h.match(/watch\?v=(?<id>[a-zA-Z0-9_-]{11})\b/);
+  if (m3?.groups?.id) return m3.groups.id;
+
+  return null;
+}
+
 function safeJsonParse(s) {
   try {
     return JSON.parse(s);
