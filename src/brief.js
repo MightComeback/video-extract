@@ -190,10 +190,27 @@ export function normalizeUrlLike(s) {
 
         if (!h) {
           const segs = path.split('/').filter(Boolean);
-          // Find the segment immediately after the numeric id (if any).
-          const idx = segs.findIndex((x) => x === id);
-          const next = idx !== -1 ? segs[idx + 1] : '';
-          if (next && /^[a-zA-Z0-9]+$/.test(next)) h = next;
+
+          // Only treat a trailing segment as the unlisted hash when the path shape matches
+          // a canonical unlisted share URL. This avoids accidentally interpreting other
+          // routes as hashes.
+          // Examples:
+          //   /<id>/<hash>
+          //   /video/<id>/<hash>
+          if (
+            segs.length === 2 &&
+            segs[0] === id &&
+            /^[a-zA-Z0-9]+$/.test(segs[1] || '')
+          ) {
+            h = segs[1];
+          } else if (
+            segs.length === 3 &&
+            String(segs[0] || '').toLowerCase() === 'video' &&
+            segs[1] === id &&
+            /^[a-zA-Z0-9]+$/.test(segs[2] || '')
+          ) {
+            h = segs[2];
+          }
         }
 
         const time = vimeoTimeSuffix(url);
