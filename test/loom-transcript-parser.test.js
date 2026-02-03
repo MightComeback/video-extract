@@ -23,3 +23,17 @@ test('parseLoomTranscript parses a flat array of {startTime,text}', () => {
   const out = parseLoomTranscript(json);
   assert.equal(out, ['0:10 First segment', '0:20 Second segment'].join('\n'));
 });
+
+test('parseLoomTranscript parses WebVTT transcripts', () => {
+  const vtt = `WEBVTT
+
+00:00:00.000 --> 00:00:02.000
+Hello
+
+00:00:02.000 --> 00:00:04.000
+world
+`;
+
+  const out = parseLoomTranscript(vtt);
+  assert.equal(out, 'Hello world');
+});

@@ -1,3 +1,5 @@
+import { parseSimpleVtt } from '../utils.js';
+
 export function isLoomUrl(url) {
   return !!extractLoomId(url);
 }
@@ -238,8 +240,16 @@ function formatTime(seconds) {
 }
 
 export function parseLoomTranscript(text) {
+  const raw = String(text || '');
+
+  // Loom transcript endpoints sometimes return WebVTT.
+  // Treat those as VTT and extract plain text for better provider parity.
+  if (/^\s*WEBVTT\b/i.test(raw) || /\d{2}:\d{2}(?::\d{2})?\.\d{3}\s*-->\s*\d{2}:\d{2}(?::\d{2})?\.\d{3}/.test(raw)) {
+    return parseSimpleVtt(raw);
+  }
+
   try {
-    const data = JSON.parse(text);
+    const data = JSON.parse(raw);
 
     // Common Loom transcript JSON shapes we've seen in the wild:
     //  - { paragraphs: [{ startTime, text }, ...] }
@@ -268,7 +278,7 @@ export function parseLoomTranscript(text) {
   } catch {
     // ignore
   }
-  return String(text || '');
+  return raw;
 }
 
 export async function fetchLoomOembed(url) {
