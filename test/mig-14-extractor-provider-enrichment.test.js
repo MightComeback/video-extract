@@ -123,3 +123,51 @@ test('extractFromUrl parses Vimeo JSON text tracks (non-VTT) when provided', asy
   assert.equal(res.ok, true);
   assert.equal(res.text, 'Hello Vimeo');
 });
+
+test('extractFromUrl parses Vimeo JSON text tracks from cues[] shape', async (t) => {
+  const mockConfig = {
+    clip: { name: 'Vimeo Cues Transcript Test' },
+    request: { text_tracks: [{ url: 'https://cdn.vimeo.com/cues.json', lang: 'en' }] },
+  };
+
+  const vimeoHtml = `
+    <html>
+      <script>
+        window.vimeo = window.vimeo || {};
+        window.vimeo.clip_page_config = ${JSON.stringify(mockConfig)};
+      </script>
+    </html>
+  `;
+
+  const oldFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = oldFetch;
+  });
+
+  globalThis.fetch = async (input, init = {}) => {
+    const url = String(typeof input === 'string' ? input : input?.url || '');
+    const method = String(init?.method || 'GET').toUpperCase();
+
+    if (method === 'HEAD') return mkResponse('', { status: 405 });
+
+    if (/^https:\/\/vimeo\.com\/999999999\b/i.test(url)) {
+      return mkResponse(vimeoHtml, { status: 200, headers: { 'content-type': 'text/html' } });
+    }
+
+    if (/cdn\.vimeo\.com\/cues\.json/i.test(url)) {
+      const json = JSON.stringify({
+        cues: [
+          { startTime: 0, text: 'Hello' },
+          { startTime: 1, text: 'again' },
+        ],
+      });
+      return mkResponse(json, { status: 200, headers: { 'content-type': 'application/json' } });
+    }
+
+    return mkResponse('not found', { status: 404 });
+  };
+
+  const res = await extractFromUrl('https://vimeo.com/999999999', { noDownload: true, noSplit: true });
+  assert.equal(res.ok, true);
+  assert.equal(res.text, 'Hello again');
+});

@@ -476,18 +476,39 @@ async function bestEffortExtract({ url, cookie, referer, userAgent }) {
         // Try JSON first, then fall back to VTT parsing.
         try {
           const json = JSON.parse(body);
-          const items = Array.isArray(json)
-            ? json
-            : Array.isArray(json?.transcript)
-              ? json.transcript
-              : Array.isArray(json?.captions)
-                ? json.captions
-                : [];
+
+          const candidates = [
+            // Some endpoints return a raw array.
+            Array.isArray(json) ? json : null,
+            // Common shapes.
+            Array.isArray(json?.transcript) ? json.transcript : null,
+            Array.isArray(json?.captions) ? json.captions : null,
+            // Alternate shapes we've seen in the wild.
+            Array.isArray(json?.cues) ? json.cues : null,
+            Array.isArray(json?.subtitles) ? json.subtitles : null,
+            Array.isArray(json?.entries) ? json.entries : null,
+            // Nested variants.
+            Array.isArray(json?.data?.transcript) ? json.data.transcript : null,
+            Array.isArray(json?.data?.captions) ? json.data.captions : null,
+          ].filter((x) => Array.isArray(x) && x.length);
+
+          const items = candidates[0] || [];
           const joined = items
-            .map((it) => String(it?.text || '').trim())
+            .map((it) => {
+              if (typeof it === 'string') return it.trim();
+              return String(
+                it?.text ||
+                  it?.caption ||
+                  it?.line ||
+                  it?.content ||
+                  it?.value ||
+                  ''
+              ).trim();
+            })
             .filter(Boolean)
             .join(' ')
             .trim();
+
           text = joined || parseSimpleVtt(body);
         } catch {
           text = parseSimpleVtt(body);
