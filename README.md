@@ -290,9 +290,9 @@ Env defaults (flags win):
 
 ```bash
 # install
-npm install
+bun install
 
 # verify
-npm test
-npm run lint
+bun run test
+bun run lint
 ```
