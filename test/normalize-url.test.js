@@ -72,11 +72,13 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
   const id = 'dQw4w9WgXcQ';
 
   assert.equal(normalizeUrlLike(`https://youtu.be/${id}?t=30`), `https://youtube.com/watch?v=${id}&t=30`);
+  assert.equal(normalizeUrlLike(`https://youtu.be/${id}?time_continue=62`), `https://youtube.com/watch?v=${id}&t=62`);
   // Provider parity: accept protocol-relative URLs too.
   assert.equal(normalizeUrlLike(`//youtu.be/${id}?t=30`), `https://youtube.com/watch?v=${id}&t=30`);
   assert.equal(normalizeUrlLike(`https://youtu.be/${id}#t=1m2s`), `https://youtube.com/watch?v=${id}&t=1m2s`);
   assert.equal(normalizeUrlLike(`https://youtu.be/${id}#start=62`), `https://youtube.com/watch?v=${id}&t=62`);
   assert.equal(normalizeUrlLike(`https://www.youtube.com/watch?v=${id}&feature=youtu.be`), `https://youtube.com/watch?v=${id}`);
+  assert.equal(normalizeUrlLike(`https://www.youtube.com/watch?v=${id}&time_continue=62`), `https://youtube.com/watch?v=${id}&t=62`);
   // Provider parity: accept /watch/ (some share flows include a trailing slash).
   assert.equal(normalizeUrlLike(`https://www.youtube.com/watch/?v=${id}&feature=share`), `https://youtube.com/watch?v=${id}`);
   // Provider parity: tolerate HTML-escaped query separators from copy/paste.

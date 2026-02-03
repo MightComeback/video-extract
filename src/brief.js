@@ -69,7 +69,13 @@ export function normalizeUrlLike(s) {
     // Preserve common time params when canonicalizing.
     // YouTube share links sometimes put the timestamp in the URL hash (e.g. youtu.be/...#t=1m2s).
     function youtubeTimeSuffix(u) {
-      const fromQuery = u.searchParams.get('t') || u.searchParams.get('start');
+      // YouTube can express timestamps a few different ways depending on share flow.
+      // We normalize everything into a canonical &t=... suffix.
+      const fromQuery =
+        u.searchParams.get('t') ||
+        u.searchParams.get('start') ||
+        // Provider parity: older share links sometimes use time_continue.
+        u.searchParams.get('time_continue');
       if (fromQuery) return `&t=${encodeURIComponent(fromQuery)}`;
 
       const hash = String(u.hash || '').replace(/^#/, '').trim();
@@ -80,7 +86,7 @@ export function normalizeUrlLike(s) {
       //   #start=62
       // (We ignore other hash fragments.)
       const hp = new URLSearchParams(hash);
-      const fromHash = hp.get('t') || hp.get('start');
+      const fromHash = hp.get('t') || hp.get('start') || hp.get('time_continue');
       if (!fromHash) return '';
       return `&t=${encodeURIComponent(fromHash)}`;
     }
