@@ -690,8 +690,8 @@ export async function extractFromUrl(rawUrl, options = {}) {
         `Source: ${url}`,
         '',
         'If this link is auth-gated, pass cookies:',
-        '- FATHOM_COOKIE=... (or --cookie)',
-        '- FATHOM_COOKIE_FILE=... (or --cookie-file)',
+        '- VIDEO_EXTRACT_COOKIE=... (or --cookie; compat: FATHOM_COOKIE)',
+        '- VIDEO_EXTRACT_COOKIE_FILE=... (or --cookie-file; compat: FATHOM_COOKIE_FILE)',
       ].join('\n');
     }
 
@@ -710,8 +710,8 @@ export async function extractFromUrl(rawUrl, options = {}) {
       `Fetch error: ${result.fetchError}`,
       '',
       'If this link is auth-gated, pass cookies:',
-      '- FATHOM_COOKIE=... (or --cookie)',
-      '- FATHOM_COOKIE_FILE=... (or --cookie-file)',
+      '- VIDEO_EXTRACT_COOKIE=... (or --cookie; compat: FATHOM_COOKIE)',
+      '- VIDEO_EXTRACT_COOKIE_FILE=... (or --cookie-file; compat: FATHOM_COOKIE_FILE)',
     ].join('\n');
   }
 

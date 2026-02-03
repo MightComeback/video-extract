@@ -218,7 +218,9 @@ vdxtr "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt --no-downl
 
 ```bash
 # default split size when --split-seconds isn't provided
-export FATHOM_SPLIT_SECONDS=300
+export VIDEO_EXTRACT_SPLIT_SECONDS=300
+# compat:
+# export FATHOM_SPLIT_SECONDS=300
 
 vdxtr "https://..." --cookie-file ./cookie.txt --out-dir ./artifacts --pretty
 ```
@@ -228,11 +230,14 @@ vdxtr "https://..." --cookie-file ./cookie.txt --out-dir ./artifacts --pretty
 Any of these work:
 - `--cookie "name=value; other=value"`
 - `--cookie-file ./cookie.txt`
-- `FATHOM_COOKIE=...`
-- `FATHOM_COOKIE_FILE=...`
+- `VIDEO_EXTRACT_COOKIE=...` (preferred)
+- `VIDEO_EXTRACT_COOKIE_FILE=...` (preferred)
+- `FATHOM_COOKIE=...` (compat)
+- `FATHOM_COOKIE_FILE=...` (compat)
 
 Optional:
-- `FATHOM_USER_AGENT=...` (override the default `video-extract/<version>` user-agent)
+- `VIDEO_EXTRACT_USER_AGENT=...` (preferred; override the default `video-extract/<version>` user-agent)
+- `FATHOM_USER_AGENT=...` (compat)
 
 `--cookie-file` supports:
 - Netscape cookies.txt

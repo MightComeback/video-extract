@@ -95,6 +95,7 @@ test('still writes stub artifacts when URL fetch fails and --out-dir is provided
   const transcript = fs.readFileSync(obj.transcriptPath, 'utf8');
   assert.match(transcript, /Unable to fetch this link/);
   assert.match(transcript, /Fetch error:/);
+  assert.match(transcript, /VIDEO_EXTRACT_COOKIE/);
   assert.match(transcript, /FATHOM_COOKIE/);
 });
 
@@ -128,6 +129,29 @@ test('supports auth-gated pages via FATHOM_COOKIE', async () => {
   }
 });
 
+test('supports auth-gated pages via VIDEO_EXTRACT_COOKIE (alias)', async () => {
+  const s = await withServer((req, res) => {
+    const cookie = String(req.headers.cookie || '');
+    if (!cookie.includes('auth=1')) {
+      res.writeHead(403, { 'content-type': 'text/plain' });
+      res.end('forbidden');
+      return;
+    }
+
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end('<html><head><title>Private Recording</title></head><body><p>hello transcript</p></body></html>');
+  });
+
+  try {
+    const { stdout } = await runExtract([`${s.url}/share/abc`, '--no-download'], { env: { VIDEO_EXTRACT_COOKIE: 'auth=1' } });
+    const obj = JSON.parse(stdout);
+    assert.equal(obj.ok, true);
+    assert.match(obj.title, /Private Recording/);
+  } finally {
+    await s.close();
+  }
+});
+
 test('provides a helpful transcript placeholder when fetch succeeds but no text is extractable', async () => {
   const s = await withServer((req, res) => {
     res.writeHead(200, { 'content-type': 'text/html' });
@@ -140,6 +164,7 @@ test('provides a helpful transcript placeholder when fetch succeeds but no text 
     const obj = JSON.parse(stdout);
     assert.equal(obj.ok, true);
     assert.match(String(obj.text || ''), /No transcript text was found/i);
+    assert.match(String(obj.text || ''), /VIDEO_EXTRACT_COOKIE/i);
     assert.match(String(obj.text || ''), /FATHOM_COOKIE/i);
   } finally {
     await s.close();

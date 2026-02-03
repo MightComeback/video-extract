@@ -30,7 +30,7 @@ Options:
   --cookie-file <path>   Read Cookie header from file (supports JSON export / Cookie: header)
   --referer <url>        Override Referer header for fetch + ffmpeg
   --user-agent <ua>      Override User-Agent header for fetch + ffmpeg
-  --split-seconds <n>    Segment size in seconds (default: FATHOM_SPLIT_SECONDS or 300)
+  --split-seconds <n>    Segment size in seconds (default: VIDEO_EXTRACT_SPLIT_SECONDS or 300; compat: FATHOM_SPLIT_SECONDS)
   --clip-from <ts>       Extract a clip starting at timestamp (mm:ss or hh:mm:ss)
   --clip-to <ts>         Extract a clip ending at timestamp (mm:ss or hh:mm:ss)
   --clip-seconds <n>     Clip duration in seconds (alternative to --clip-to)
@@ -49,12 +49,41 @@ function parseValue(key) {
   return null;
 }
 
-const outDir = parseValue('--out-dir') || process.env.FATHOM_OUT_DIR || null;
-let cookie = parseValue('--cookie') || process.env.FATHOM_COOKIE || '';
-const cookieFile = parseValue('--cookie-file') || process.env.FATHOM_COOKIE_FILE || '';
-const referer = parseValue('--referer') || process.env.FATHOM_REFERER || '';
-const userAgent = parseValue('--user-agent') || process.env.FATHOM_USER_AGENT || '';
-const splitSeconds = parseValue('--split-seconds') || process.env.FATHOM_SPLIT_SECONDS || null;
+const outDir =
+  parseValue('--out-dir') ||
+  process.env.VIDEO_EXTRACT_OUT_DIR ||
+  process.env.FATHOM_OUT_DIR ||
+  null;
+
+let cookie =
+  parseValue('--cookie') ||
+  process.env.VIDEO_EXTRACT_COOKIE ||
+  process.env.FATHOM_COOKIE ||
+  '';
+
+const cookieFile =
+  parseValue('--cookie-file') ||
+  process.env.VIDEO_EXTRACT_COOKIE_FILE ||
+  process.env.FATHOM_COOKIE_FILE ||
+  '';
+
+const referer =
+  parseValue('--referer') ||
+  process.env.VIDEO_EXTRACT_REFERER ||
+  process.env.FATHOM_REFERER ||
+  '';
+
+const userAgent =
+  parseValue('--user-agent') ||
+  process.env.VIDEO_EXTRACT_USER_AGENT ||
+  process.env.FATHOM_USER_AGENT ||
+  '';
+
+const splitSeconds =
+  parseValue('--split-seconds') ||
+  process.env.VIDEO_EXTRACT_SPLIT_SECONDS ||
+  process.env.FATHOM_SPLIT_SECONDS ||
+  null;
 const clipFrom = parseValue('--clip-from') || null;
 const clipTo = parseValue('--clip-to') || null;
 const clipSeconds = parseValue('--clip-seconds') || null;
