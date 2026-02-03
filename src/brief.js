@@ -63,6 +63,25 @@ export function normalizeUrlLike(s) {
       // Normalize host.
       url.hostname = 'youtube.com';
 
+      // Mobile shares often use /attribution_link with an encoded inner path.
+      // Example:
+      //   https://www.youtube.com/attribution_link?u=%2Fwatch%3Fv%3Dabc123%26t%3D30s%26feature%3Dshare
+      if (path.toLowerCase() === '/attribution_link') {
+        const encoded = url.searchParams.get('u') || '';
+        if (encoded) {
+          try {
+            const decoded = decodeURIComponent(encoded);
+            const inner = decoded.startsWith('http')
+              ? decoded
+              : `https://youtube.com${decoded.startsWith('/') ? '' : '/'}${decoded}`;
+            return canonicalizeKnownProviderUrl(inner);
+          } catch {
+            // ignore
+          }
+        }
+        return raw;
+      }
+
       // Convert common path forms to canonical watch URLs.
       const m = path.match(/^\/(?:shorts|embed|live)\/(?<id>[^/?#]+)/i);
       if (m?.groups?.id) {
