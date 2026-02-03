@@ -137,6 +137,9 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
 
   assert.equal(normalizeUrlLike('https://player.vimeo.com/video/12345?h=abc'), 'https://vimeo.com/12345?h=abc');
   assert.equal(normalizeUrlLike('//player.vimeo.com/video/12345?h=abc'), 'https://vimeo.com/12345?h=abc');
+  // Provider parity: accept bare player.vimeo.com links (no scheme) in chat copy/paste.
+  assert.equal(normalizeUrlLike('player.vimeo.com/video/12345?h=abc'), 'https://vimeo.com/12345?h=abc');
+  assert.equal(normalizeUrlLike('[Vimeo](player.vimeo.com/video/12345?h=abc)'), 'https://vimeo.com/12345?h=abc');
   assert.equal(normalizeUrlLike('https://vimeo.com/12345/abcdef'), 'https://vimeo.com/12345?h=abcdef');
   assert.equal(normalizeUrlLike('https://player.vimeo.com/video/12345/abcdef'), 'https://vimeo.com/12345?h=abcdef');
   assert.equal(normalizeUrlLike('https://vimeo.com/12345#t=62'), 'https://vimeo.com/12345#t=62');
