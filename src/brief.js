@@ -62,7 +62,9 @@ export function normalizeUrlLike(s) {
 
     // Loom
     if (host === 'loom.com') {
-      const m = path.match(/^\/(?:share|embed)\/(?<id>[^/?#]+)/i);
+      // Loom supports multiple URL shapes (share, embed, v, recording). Normalize to /share/<id>
+      // so downstream provider detection can be consistent.
+      const m = path.match(/^\/(?:share|embed|v|recording)\/(?<id>[^/?#]+)/i);
       if (m?.groups?.id) {
         return `https://loom.com/share/${m.groups.id}`;
       }

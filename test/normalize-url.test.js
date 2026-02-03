@@ -67,6 +67,8 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
   assert.equal(normalizeUrlLike('https://youtube.com/shorts/abc123?si=xyz'), 'https://youtube.com/watch?v=abc123');
 
   assert.equal(normalizeUrlLike('https://loom.com/embed/1234abcd'), 'https://loom.com/share/1234abcd');
+  assert.equal(normalizeUrlLike('https://www.loom.com/v/abc-123'), 'https://loom.com/share/abc-123');
+  assert.equal(normalizeUrlLike('https://www.loom.com/recording/abc-123'), 'https://loom.com/share/abc-123');
 
   assert.equal(normalizeUrlLike('https://player.vimeo.com/video/12345?h=abc'), 'https://vimeo.com/12345?h=abc');
 });
