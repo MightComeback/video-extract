@@ -41,7 +41,13 @@ export function normalizeUrlLike(s) {
       if (!id) return raw;
       return `https://youtube.com/watch?v=${id}${youtubeTimeSuffix(url)}`;
     }
-    if (host === 'm.youtube.com' || host === 'music.youtube.com' || host === 'youtube.com') {
+    const isYoutubeHost =
+      host === 'youtube.com' ||
+      host.endsWith('.youtube.com') ||
+      host === 'youtube-nocookie.com' ||
+      host.endsWith('.youtube-nocookie.com');
+
+    if (isYoutubeHost) {
       // Normalize host.
       url.hostname = 'youtube.com';
 
