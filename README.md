@@ -77,6 +77,22 @@ video-brief --version
 video-brief "https://fathom.video/share/<TOKEN>" --max-timestamps 0 --max-teaser 0
 ```
 
+### 1) Extract transcript + media (video-extract / vdxtr)
+
+```bash
+# extract metadata + transcript (JSON)
+video-extract "https://fathom.video/share/<TOKEN>" --pretty
+
+# download video (requires ffmpeg)
+video-extract "https://www.youtube.com/watch?v=..." --out-dir ./artifacts --download
+
+# short alias
+vdxtr "https://vimeo.com/..." --out-dir ./artifacts --download
+
+# see all flags
+video-extract --help
+```
+
 ### Compatibility (legacy commands)
 
 These are kept for older scripts, but new usage should prefer `video-brief` / `video-extract` / `vdxtr`.
