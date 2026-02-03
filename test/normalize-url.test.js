@@ -71,6 +71,14 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
     ),
     `https://youtube.com/watch?v=${id}&t=30s`
   );
+
+  // Some mobile shares double-encode the inner URL.
+  assert.equal(
+    normalizeUrlLike(
+      `https://www.youtube.com/attribution_link?u=%252Fwatch%253Fv%253D${id}%2526t%253D30s%2526feature%253Dshare&a=foo`
+    ),
+    `https://youtube.com/watch?v=${id}&t=30s`
+  );
   assert.equal(normalizeUrlLike(`https://youtube.com/shorts/${id}?si=xyz`), `https://youtube.com/watch?v=${id}`);
   assert.equal(normalizeUrlLike(`https://www.youtube-nocookie.com/embed/${id}`), `https://youtube.com/watch?v=${id}`);
   assert.equal(normalizeUrlLike(`youtube-nocookie.com/embed/${id}`), `https://youtube.com/watch?v=${id}`);

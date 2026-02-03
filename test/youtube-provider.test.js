@@ -53,6 +53,10 @@ test('extractYoutubeId extracts 11-char ID', () => {
     extractYoutubeId('https://www.youtube.com/attribution_link?a=1&u=%2Fwatch%3Fv%3DdQw4w9WgXcQ%26feature%3Dshare'),
     'dQw4w9WgXcQ'
   );
+  assert.strictEqual(
+    extractYoutubeId('https://www.youtube.com/attribution_link?a=1&u=%252Fwatch%253Fv%253DdQw4w9WgXcQ%2526feature%253Dshare'),
+    'dQw4w9WgXcQ'
+  );
 });
 
 test('extractYoutubeMetadataFromHtml parses initial player response', () => {

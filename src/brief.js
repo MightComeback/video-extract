@@ -72,7 +72,14 @@ export function normalizeUrlLike(s) {
         const encoded = url.searchParams.get('u') || '';
         if (encoded) {
           try {
-            const decoded = decodeURIComponent(encoded);
+            // Some shares double-encode the inner URL/path (e.g. %252Fwatch%253Fv%253D...).
+            // Decode up to 2 times to be resilient.
+            let decoded = encoded;
+            for (let i = 0; i < 2; i++) {
+              if (!/%[0-9a-fA-F]{2}/.test(decoded)) break;
+              decoded = decodeURIComponent(decoded);
+            }
+
             const inner = decoded.startsWith('http')
               ? decoded
               : `https://youtube.com${decoded.startsWith('/') ? '' : '/'}${decoded}`;
