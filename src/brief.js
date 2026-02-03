@@ -22,6 +22,12 @@ export function normalizeUrlLike(s) {
     let raw = String(u || '').trim();
     if (!raw) return raw;
 
+    // Provider parity: HTML copy/paste can escape query separators as entities.
+    // Example: https://youtube.com/watch?v=...&amp;t=30
+    raw = raw
+      .replace(/&amp;/gi, '&')
+      .replace(/&#0*38;/gi, '&');
+
     // Accept protocol-relative URLs (e.g. //youtube.com/watch?v=...).
     // These frequently show up in HTML/markdown copy/paste.
     if (raw.startsWith('//')) raw = `https:${raw}`;

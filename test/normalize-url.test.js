@@ -79,6 +79,8 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
   assert.equal(normalizeUrlLike(`https://www.youtube.com/watch?v=${id}&feature=youtu.be`), `https://youtube.com/watch?v=${id}`);
   // Provider parity: accept /watch/ (some share flows include a trailing slash).
   assert.equal(normalizeUrlLike(`https://www.youtube.com/watch/?v=${id}&feature=share`), `https://youtube.com/watch?v=${id}`);
+  // Provider parity: tolerate HTML-escaped query separators from copy/paste.
+  assert.equal(normalizeUrlLike(`https://www.youtube.com/watch?v=${id}&amp;t=30`), `https://youtube.com/watch?v=${id}&t=30`);
 
   // Clip URLs: normalize host + strip tracking params (even though we can't resolve a stable video id).
   assert.equal(
@@ -144,6 +146,7 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
   assert.equal(normalizeUrlLike('https://player.vimeo.com/video/12345/abcdef'), 'https://vimeo.com/12345?h=abcdef');
   assert.equal(normalizeUrlLike('https://vimeo.com/12345#t=62'), 'https://vimeo.com/12345#t=62');
   assert.equal(normalizeUrlLike('https://vimeo.com/12345?t=1m2s'), 'https://vimeo.com/12345#t=1m2s');
+  assert.equal(normalizeUrlLike('https://vimeo.com/12345?start=62&amp;foo=bar'), 'https://vimeo.com/12345#t=62');
   assert.equal(normalizeUrlLike('https://vimeo.com/12345?start=62'), 'https://vimeo.com/12345#t=62');
   assert.equal(normalizeUrlLike('https://vimeo.com/12345#start=62'), 'https://vimeo.com/12345#t=62');
   assert.equal(normalizeUrlLike('https://vimeo.com/channels/staffpicks/12345'), 'https://vimeo.com/12345');
