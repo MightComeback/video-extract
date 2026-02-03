@@ -5,7 +5,10 @@ export function extractYoutubeId(url) {
   if (!s) return null;
 
   // Ensure we can parse even if the user omitted scheme.
-  const withScheme = /^(?:https?:)?\/\//i.test(s) ? s : `https://${s}`;
+  // Also accept protocol-relative URLs like "//youtube.com/watch?v=...".
+  const withScheme = /^(?:https?:)?\/\//i.test(s)
+    ? (s.startsWith('//') ? `https:${s}` : s)
+    : `https://${s}`;
 
   let u;
   try {
@@ -73,7 +76,10 @@ export function isYoutubeClipUrl(url) {
   if (!s) return false;
 
   // Ensure we can parse even if the user omitted scheme.
-  const withScheme = /^(?:https?:)?\/\//i.test(s) ? s : `https://${s}`;
+  // Also accept protocol-relative URLs like "//youtube.com/clip/...".
+  const withScheme = /^(?:https?:)?\/\//i.test(s)
+    ? (s.startsWith('//') ? `https:${s}` : s)
+    : `https://${s}`;
 
   let u;
   try {

@@ -7,6 +7,9 @@ test('isYoutubeUrl identifies valid YouTube URLs', () => {
     'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     'http://youtube.com/v/dQw4w9WgXcQ',
     'https://youtu.be/dQw4w9WgXcQ',
+    // Protocol-relative URLs (common in HTML/markdown)
+    '//youtu.be/dQw4w9WgXcQ',
+    '//www.youtube.com/watch?v=dQw4w9WgXcQ',
     'https://www.youtube.com/embed/dQw4w9WgXcQ',
     'https://youtube.com/shorts/dQw4w9WgXcQ',
     'https://www.youtube.com/live/dQw4w9WgXcQ',
@@ -41,6 +44,8 @@ test('isYoutubeUrl rejects invalid URLs', () => {
 test('isYoutubeClipUrl identifies clip URLs', () => {
   assert.strictEqual(isYoutubeClipUrl('https://www.youtube.com/clip/UgkxyZKk3VwzExampleClipId'), true);
   assert.strictEqual(isYoutubeClipUrl('https://youtube.com/clip/UgkxyZKk3VwzExampleClipId?feature=share'), true);
+  // Protocol-relative URLs (common in embedded HTML)
+  assert.strictEqual(isYoutubeClipUrl('//youtube.com/clip/UgkxyZKk3VwzExampleClipId'), true);
   assert.strictEqual(isYoutubeClipUrl('https://youtu.be/dQw4w9WgXcQ'), false);
   assert.strictEqual(isYoutubeClipUrl('https://vimeo.com/123'), false);
 });
