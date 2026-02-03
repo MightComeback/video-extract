@@ -485,94 +485,99 @@ async function bestEffortExtract({ url, cookie, referer, userAgent }) {
       if (meta?.mediaUrl && !mediaUrl) mediaUrl = resolveUrl(meta.mediaUrl, url);
 
       if (meta?.transcriptUrl && (!text || text === normalizedText)) {
-        const tUrl = resolveUrl(meta.transcriptUrl, url);
-        const { body } = await fetchText(tUrl, { headers });
-
-        // Vimeo text_tracks can be VTT, but we've also seen JSON cue lists.
-        // Try JSON first, then fall back to VTT parsing.
+        // Best-effort only: transcript extraction shouldn't block media URL resolution.
         try {
-          const json = JSON.parse(body);
+          const tUrl = resolveUrl(meta.transcriptUrl, url);
+          const { body } = await fetchText(tUrl, { headers });
 
-          const candidates = [
-            // Some endpoints return a raw array.
-            Array.isArray(json) ? json : null,
-            // Common shapes.
-            Array.isArray(json?.transcript) ? json.transcript : null,
-            Array.isArray(json?.captions) ? json.captions : null,
-            // Alternate shapes we've seen in the wild.
-            Array.isArray(json?.cues) ? json.cues : null,
-            Array.isArray(json?.subtitles) ? json.subtitles : null,
-            Array.isArray(json?.entries) ? json.entries : null,
-            // Nested variants.
-            Array.isArray(json?.data?.transcript) ? json.data.transcript : null,
-            Array.isArray(json?.data?.captions) ? json.data.captions : null,
-          ].filter((x) => Array.isArray(x) && x.length);
+          // Vimeo text_tracks can be VTT, but we've also seen JSON cue lists.
+          // Try JSON first, then fall back to VTT parsing.
+          try {
+            const json = JSON.parse(body);
 
-          const items = candidates[0] || [];
+            const candidates = [
+              // Some endpoints return a raw array.
+              Array.isArray(json) ? json : null,
+              // Common shapes.
+              Array.isArray(json?.transcript) ? json.transcript : null,
+              Array.isArray(json?.captions) ? json.captions : null,
+              // Alternate shapes we've seen in the wild.
+              Array.isArray(json?.cues) ? json.cues : null,
+              Array.isArray(json?.subtitles) ? json.subtitles : null,
+              Array.isArray(json?.entries) ? json.entries : null,
+              // Nested variants.
+              Array.isArray(json?.data?.transcript) ? json.data.transcript : null,
+              Array.isArray(json?.data?.captions) ? json.data.captions : null,
+            ].filter((x) => Array.isArray(x) && x.length);
 
-          const parsed = items
-            .map((it, idx) => {
-              if (typeof it === 'string') {
-                return { idx, start: null, text: it.trim() };
-              }
+            const items = candidates[0] || [];
 
-              // Vimeo transcript JSON has shown up in a few shapes. Be generous:
-              //  - { text: "..." }
-              //  - { caption: "..." }
-              //  - { line: "..." }
-              //  - { value: "..." }
-              //  - { content: "..." } or { content: { text: "..." } }
-              //  - { data: { text: "..." } }
-              //  - { payload: { text: "..." } }
-              const rawText =
-                it?.text ||
-                it?.caption ||
-                it?.line ||
-                it?.value ||
-                (typeof it?.content === 'string' ? it.content : '') ||
-                it?.content?.text ||
-                it?.data?.text ||
-                it?.payload?.text ||
-                '';
+            const parsed = items
+              .map((it, idx) => {
+                if (typeof it === 'string') {
+                  return { idx, start: null, text: it.trim() };
+                }
 
-              const startRaw =
-                it?.start ??
-                it?.startTime ??
-                it?.begin ??
-                it?.time ??
-                it?.timestamp ??
-                it?.data?.start ??
-                it?.data?.startTime ??
-                it?.payload?.start ??
-                it?.payload?.startTime ??
-                null;
+                // Vimeo transcript JSON has shown up in a few shapes. Be generous:
+                //  - { text: "..." }
+                //  - { caption: "..." }
+                //  - { line: "..." }
+                //  - { value: "..." }
+                //  - { content: "..." } or { content: { text: "..." } }
+                //  - { data: { text: "..." } }
+                //  - { payload: { text: "..." } }
+                const rawText =
+                  it?.text ||
+                  it?.caption ||
+                  it?.line ||
+                  it?.value ||
+                  (typeof it?.content === 'string' ? it.content : '') ||
+                  it?.content?.text ||
+                  it?.data?.text ||
+                  it?.payload?.text ||
+                  '';
 
-              const start = startRaw == null ? null : Number(startRaw);
-              return {
-                idx,
-                start: Number.isFinite(start) ? start : null,
-                text: String(rawText).trim(),
-              };
-            })
-            .filter((x) => Boolean(x.text));
+                const startRaw =
+                  it?.start ??
+                  it?.startTime ??
+                  it?.begin ??
+                  it?.time ??
+                  it?.timestamp ??
+                  it?.data?.start ??
+                  it?.data?.startTime ??
+                  it?.payload?.start ??
+                  it?.payload?.startTime ??
+                  null;
 
-          // Some Vimeo transcript/cue endpoints don't guarantee ordering.
-          // If we have start times, sort by time; otherwise preserve input order.
-          const hasAnyStart = parsed.some((x) => x.start != null);
-          if (hasAnyStart) {
-            parsed.sort((a, b) => {
-              if (a.start == null && b.start == null) return a.idx - b.idx;
-              if (a.start == null) return 1;
-              if (b.start == null) return -1;
-              if (a.start !== b.start) return a.start - b.start;
-              return a.idx - b.idx;
-            });
+                const start = startRaw == null ? null : Number(startRaw);
+                return {
+                  idx,
+                  start: Number.isFinite(start) ? start : null,
+                  text: String(rawText).trim(),
+                };
+              })
+              .filter((x) => Boolean(x.text));
+
+            // Some Vimeo transcript/cue endpoints don't guarantee ordering.
+            // If we have start times, sort by time; otherwise preserve input order.
+            const hasAnyStart = parsed.some((x) => x.start != null);
+            if (hasAnyStart) {
+              parsed.sort((a, b) => {
+                if (a.start == null && b.start == null) return a.idx - b.idx;
+                if (a.start == null) return 1;
+                if (b.start == null) return -1;
+                if (a.start !== b.start) return a.start - b.start;
+                return a.idx - b.idx;
+              });
+            }
+
+            const joined = parsed.map((x) => x.text).join(' ').trim();
+            text = joined || parseSimpleVtt(body);
+          } catch {
+            text = parseSimpleVtt(body);
           }
-
-          const joined = parsed.map((x) => x.text).join(' ').trim();
-          text = joined || parseSimpleVtt(body);
         } catch {
-          text = parseSimpleVtt(body);
+          // ignore and fall back to the existing text
         }
       }
     }

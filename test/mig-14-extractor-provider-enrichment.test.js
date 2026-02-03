@@ -269,6 +269,49 @@ test('extractFromUrl sorts Vimeo JSON cues by start time when out of order', asy
   assert.equal(res.text, 'first second third');
 });
 
+test('extractFromUrl does not fail when Vimeo transcript fetch fails', async (t) => {
+  const mockConfig = {
+    clip: { name: 'Vimeo Transcript Fetch Failure Test' },
+    request: { text_tracks: [{ url: 'https://cdn.vimeo.com/missing.json', lang: 'en' }] },
+  };
+
+  const vimeoHtml = `
+    <html>
+      <body>Fallback body text</body>
+      <script>
+        window.vimeo = window.vimeo || {};
+        window.vimeo.clip_page_config = ${JSON.stringify(mockConfig)};
+      </script>
+    </html>
+  `;
+
+  const oldFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = oldFetch;
+  });
+
+  globalThis.fetch = async (input, init = {}) => {
+    const url = String(typeof input === 'string' ? input : input?.url || '');
+    const method = String(init?.method || 'GET').toUpperCase();
+
+    if (method === 'HEAD') return mkResponse('', { status: 405 });
+
+    if (/^https:\/\/vimeo\.com\/666666666\b/i.test(url)) {
+      return mkResponse(vimeoHtml, { status: 200, headers: { 'content-type': 'text/html' } });
+    }
+
+    if (/cdn\.vimeo\.com\/missing\.json/i.test(url)) {
+      return mkResponse('not found', { status: 404 });
+    }
+
+    return mkResponse('not found', { status: 404 });
+  };
+
+  const res = await extractFromUrl('https://vimeo.com/666666666', { noDownload: true, noSplit: true });
+  assert.equal(res.ok, true);
+  assert.match(res.text, /Fallback body text/);
+});
+
 test('extractFromUrl falls back to Vimeo oEmbed title when clip_page_config is missing', async (t) => {
   const vimeoHtml = `<html><body>no config</body></html>`;
 
