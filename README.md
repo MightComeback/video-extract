@@ -1,6 +1,6 @@
 # video-extract
 
-Turn a Fathom, Loom, YouTube, or Vimeo link into an **actionable bug report brief** (`video-brief` / `vbrief`), and optionally extract the **transcript + video** (`video-extract` / `vdxtr`).
+Turn a Fathom, Loom, YouTube, or Vimeo link into an **actionable bug report brief** (`video-brief`), and optionally extract the **transcript + video** (`video-extract` / `vdxtr`).
 
 ## Install
 
@@ -53,8 +53,9 @@ video-brief "https://www.youtube.com/watch?v=..."
 # Vimeo
 video-brief "https://vimeo.com/..."
 
-# short alias
-vbrief "https://vimeo.com/..."
+# legacy compat commands (older names)
+fathom2action "https://fathom.video/share/<TOKEN>"
+fathom-extract "https://fathom.video/share/<TOKEN>" --out-dir ./artifacts --pretty
 
 # (optional) copy the brief directly to your clipboard
 video-brief "https://fathom.video/share/<TOKEN>" --copy
