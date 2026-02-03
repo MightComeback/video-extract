@@ -82,6 +82,40 @@ test('extractVimeoMetadataFromHtml normalizes scheme-less and relative asset URL
   assert.strictEqual(result.transcriptUrl, 'https://vimeo.com/texttrack/subs.vtt');
 });
 
+test('extractVimeoMetadataFromHtml falls back to HLS manifest when progressive MP4 is missing', () => {
+  const mockConfig = {
+    clip: {
+      name: 'Vimeo HLS Only',
+      duration: { raw: 10 },
+      poster: { display_src: 'https://cdn.vimeo.com/poster.jpg' },
+    },
+    request: {
+      files: {
+        hls: {
+          default_cdn: 'fastly_skyfire',
+          cdns: {
+            fastly_skyfire: { url: 'https://cdn.vimeo.com/manifest.m3u8' },
+          },
+        },
+      },
+    },
+  };
+
+  const html = `
+    <html>
+      <script>
+        window.vimeo = window.vimeo || {};
+        window.vimeo.clip_page_config = ${JSON.stringify(mockConfig)};
+      </script>
+    </html>
+  `;
+
+  const result = extractVimeoMetadataFromHtml(html);
+  assert.ok(result);
+  assert.strictEqual(result.title, 'Vimeo HLS Only');
+  assert.strictEqual(result.mediaUrl, 'https://cdn.vimeo.com/manifest.m3u8');
+});
+
 test('extractVimeoMetadataFromHtml returns null if config missing', () => {
   assert.strictEqual(extractVimeoMetadataFromHtml('<html></html>'), null);
 });

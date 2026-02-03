@@ -51,6 +51,20 @@ function pickBestTextTrack(textTracks = []) {
   return en || textTracks[0];
 }
 
+function pickBestHlsUrl(hls) {
+  // Vimeo clip_page_config may include HLS manifests at:
+  //   request.files.hls.default_cdn + request.files.hls.cdns[cdn].url
+  // We prefer the default_cdn if present, otherwise the first CDN entry.
+  const cdns = hls?.cdns;
+  if (!cdns || typeof cdns !== 'object') return '';
+
+  const defaultKey = typeof hls?.default_cdn === 'string' ? hls.default_cdn : '';
+  const preferred = defaultKey && cdns[defaultKey] ? cdns[defaultKey] : null;
+  const first = preferred || cdns[Object.keys(cdns)[0] || ''] || null;
+  const url = typeof first?.url === 'string' ? first.url : '';
+  return url;
+}
+
 function normalizeVimeoAssetUrl(url, base = 'https://vimeo.com') {
   const v = String(url || '').trim();
   if (!v) return '';
@@ -140,7 +154,11 @@ export function extractVimeoMetadataFromHtml(html) {
 
   const progressive = cfg?.request?.files?.progressive || [];
   const best = pickBestProgressive(progressive);
-  const mediaUrl = normalizeVimeoAssetUrl(best?.url) || undefined;
+
+  // Prefer direct MP4 URLs when available, but fall back to HLS manifests.
+  // This improves parity with providers like Fathom/Loom where we often have a stream URL.
+  const hlsUrl = pickBestHlsUrl(cfg?.request?.files?.hls);
+  const mediaUrl = normalizeVimeoAssetUrl(best?.url || hlsUrl) || undefined;
 
   const tt = pickBestTextTrack(cfg?.request?.text_tracks || []);
   const transcriptUrl = normalizeVimeoAssetUrl(tt?.url) || undefined;
