@@ -218,6 +218,7 @@ export function normalizeUrlLike(s) {
         'apps',
         'categories',
         'event',
+        'events',
       ]);
       if (blockedTopLevel.has(first)) return raw;
 
