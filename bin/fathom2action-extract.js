@@ -31,6 +31,10 @@ Options:
   --referer <url>        Override Referer header for fetch + ffmpeg
   --user-agent <ua>      Override User-Agent header for fetch + ffmpeg
   --split-seconds <n>    Segment size in seconds (default: FATHOM_SPLIT_SECONDS or 300)
+  --clip-from <ts>       Extract a clip starting at timestamp (mm:ss or hh:mm:ss)
+  --clip-to <ts>         Extract a clip ending at timestamp (mm:ss or hh:mm:ss)
+  --clip-seconds <n>     Clip duration in seconds (alternative to --clip-to)
+  --clip-out <path>      Override clip output path
   --no-download          Skip media download
   --no-split             Download media but do not split into segments
   --download-media <p>   Override mp4 output path
@@ -51,6 +55,10 @@ const cookieFile = parseValue('--cookie-file') || process.env.FATHOM_COOKIE_FILE
 const referer = parseValue('--referer') || process.env.FATHOM_REFERER || '';
 const userAgent = parseValue('--user-agent') || process.env.FATHOM_USER_AGENT || '';
 const splitSeconds = parseValue('--split-seconds') || process.env.FATHOM_SPLIT_SECONDS || null;
+const clipFrom = parseValue('--clip-from') || null;
+const clipTo = parseValue('--clip-to') || null;
+const clipSeconds = parseValue('--clip-seconds') || null;
+const clipOutPath = parseValue('--clip-out') || null;
 const noDownload = args.includes('--no-download');
 const noSplit = args.includes('--no-split');
 const mediaOutPath = parseValue('--download-media') || null;
@@ -68,7 +76,7 @@ if (cookieFile) {
 const positionals = args.filter((a, i) => {
   if (a.startsWith('--')) return false;
   const prev = args[i - 1];
-  if (['--out-dir', '--cookie', '--cookie-file', '--referer', '--user-agent', '--split-seconds', '--download-media'].includes(prev)) return false;
+  if (['--out-dir', '--cookie', '--cookie-file', '--referer', '--user-agent', '--split-seconds', '--download-media', '--clip-from', '--clip-to', '--clip-seconds', '--clip-out'].includes(prev)) return false;
   return true;
 });
 
@@ -89,6 +97,10 @@ async function main() {
       noDownload,
       noSplit,
       mediaOutPath,
+      clipFrom,
+      clipTo,
+      clipSeconds,
+      clipOutPath,
       version: pkg.version,
     });
   } else {

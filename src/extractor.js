@@ -213,6 +213,85 @@ function ffmpegDownload({ url, outPath, cookie, referer, userAgent }) {
   });
 }
 
+function parseTimestampToSeconds(input) {
+  if (input === null || input === undefined) return null;
+  const s = String(input).trim();
+  if (!s) return null;
+
+  // Accept plain seconds ("90"), or hh:mm:ss, or mm:ss
+  const m = s.match(/^(\d+):(\d{2})(?::(\d{2}))?$/);
+  if (m) {
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    const c = m[3] !== undefined ? Number(m[3]) : null;
+    if (c === null) {
+      // mm:ss
+      return a * 60 + b;
+    }
+    // hh:mm:ss
+    return a * 3600 + b * 60 + c;
+  }
+
+  const n = Number(s.replace(/s$/i, ''));
+  if (Number.isFinite(n)) return n;
+  return null;
+}
+
+function ffmpegClip({ inPath, outPath, fromSeconds, toSeconds, durationSeconds }) {
+  return new Promise((resolve, reject) => {
+    const start = Math.max(0, Number(fromSeconds) || 0);
+    let dur = durationSeconds !== undefined && durationSeconds !== null ? Number(durationSeconds) : null;
+    if ((dur === null || !Number.isFinite(dur) || dur <= 0) && toSeconds !== undefined && toSeconds !== null) {
+      const end = Number(toSeconds);
+      if (Number.isFinite(end) && end > start) dur = end - start;
+    }
+    if (!Number.isFinite(dur) || dur <= 0) return reject(new Error('Invalid clip duration (use --clip-to or --clip-seconds)'));
+
+    const tryCopy = () => {
+      const args = ['-y', '-loglevel', 'error', '-ss', String(start), '-i', inPath, '-t', String(dur), '-c', 'copy', outPath];
+      const child = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] });
+      let err = '';
+      child.stderr.on('data', (d) => (err += String(d)));
+      child.on('error', reject);
+      child.on('close', (code) => {
+        if (code === 0) return resolve(outPath);
+        // Fallback: re-encode for accuracy when start isn't a keyframe.
+        const args2 = [
+          '-y',
+          '-loglevel',
+          'error',
+          '-ss',
+          String(start),
+          '-i',
+          inPath,
+          '-t',
+          String(dur),
+          '-c:v',
+          'libx264',
+          '-preset',
+          'veryfast',
+          '-crf',
+          '23',
+          '-pix_fmt',
+          'yuv420p',
+          '-an',
+          outPath,
+        ];
+        const child2 = spawn('ffmpeg', args2, { stdio: ['ignore', 'ignore', 'pipe'] });
+        let err2 = '';
+        child2.stderr.on('data', (d) => (err2 += String(d)));
+        child2.on('error', reject);
+        child2.on('close', (code2) => {
+          if (code2 === 0) resolve(outPath);
+          else reject(new Error(`ffmpeg clip failed (code ${code2}): ${(err2 || err).trim()}`));
+        });
+      });
+    };
+
+    tryCopy();
+  });
+}
+
 function ffmpegSplit({ inPath, outDir, segmentSeconds }) {
   return new Promise((resolve, reject) => {
     ensureDir(outDir);
@@ -375,6 +454,11 @@ export async function extractFromUrl(rawUrl, options = {}) {
   const noSplit = !!options.noSplit;
   const splitSeconds = Number.isFinite(Number(options.splitSeconds)) ? Number(options.splitSeconds) : Number(process.env.FATHOM_SPLIT_SECONDS || 300);
 
+  const clipFromSeconds = parseTimestampToSeconds(options.clipFrom || options.clipFromSeconds);
+  const clipToSeconds = parseTimestampToSeconds(options.clipTo || options.clipToSeconds);
+  const clipSeconds = parseTimestampToSeconds(options.clipSeconds);
+  const wantsClip = clipFromSeconds !== null || clipToSeconds !== null || clipSeconds !== null;
+
   const result = {
     ok: false,
     sourceUrl: url,
@@ -390,6 +474,11 @@ export async function extractFromUrl(rawUrl, options = {}) {
     mediaSegmentsListPath: '',
     segmentSeconds: splitSeconds,
     mediaDownloadError: '',
+    clipFromSeconds: clipFromSeconds ?? null,
+    clipToSeconds: clipToSeconds ?? null,
+    clipSeconds: clipSeconds ?? null,
+    clipPath: '',
+    clipError: '',
   };
 
   // Ensure output dir exists early (so we can write stub artifacts even on fetch failures)
@@ -444,6 +533,24 @@ export async function extractFromUrl(rawUrl, options = {}) {
           result.mediaSegments = segments;
           result.mediaSegmentsListPath = path.join(outDir, 'segments.txt');
           fs.writeFileSync(result.mediaSegmentsListPath, segments.join('\n') + (segments.length ? '\n' : ''), 'utf8');
+        }
+
+        // Optional precise clip extraction (works for any provider as long as mediaUrl was resolved)
+        if (wantsClip) {
+          try {
+            const from = clipFromSeconds ?? 0;
+            const clipOut = options.clipOutPath || options.clipOut || path.join(outDir, `clip_${Math.floor(from)}s.mp4`);
+            await ffmpegClip({
+              inPath: mediaPath,
+              outPath: clipOut,
+              fromSeconds: from,
+              toSeconds: clipToSeconds,
+              durationSeconds: clipSeconds,
+            });
+            result.clipPath = clipOut;
+          } catch (e) {
+            result.clipError = e?.message || String(e);
+          }
         }
       } catch (e) {
         result.mediaDownloadError = e?.message || String(e);
@@ -583,7 +690,14 @@ export function extractFromStdin({ content, source } = {}) {
     }
 
     // Bare URL on its own line (common copy/paste)
-    if (!src && (/^https?:\/\//i.test(l) || /\bfathom\.video\//i.test(l) || /\bloom\.com\//i.test(l))) {
+    if (!src && (
+      /^https?:\/\//i.test(l) ||
+      /\bfathom\.video\//i.test(l) ||
+      /\bloom\.com\//i.test(l) ||
+      /\b(?:youtube\.com|youtu\.be)\//i.test(l) ||
+      /\bvimeo\.com\//i.test(l) ||
+      /\bplayer\.vimeo\.com\//i.test(l)
+    )) {
       const n = normalizeUrlLike(l);
       if (n && (/^https?:\/\//i.test(n) || /^data:/i.test(n))) {
         src = n;
