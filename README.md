@@ -2,7 +2,7 @@
 
 Turn a Fathom, Loom, YouTube, or Vimeo link into an **actionable bug report brief** (`video-brief`), and optionally extract the **transcript + video** (`video-extract`).
 
-(Backward compatible: the legacy commands `fathom2action` and `fathom-extract` still work.)
+(Backward compatible: the legacy commands `video-brief` and `video-extract` still work.)
 
 ## Install
 
@@ -28,10 +28,10 @@ bun link
 
 ```bash
 # brief generator
-node ./bin/fathom2action-brief.js --help
+node ./bin/video-brief.js --help
 
 # extractor
-node ./bin/fathom2action-extract.js --help
+node ./bin/video-extract.js --help
 ```
 
 ## Requirements
@@ -44,52 +44,55 @@ node ./bin/fathom2action-extract.js --help
 
 ```bash
 # Fathom
-fathom2action "https://fathom.video/share/<TOKEN>"
+video-brief "https://fathom.video/share/<TOKEN>"
 
 # Loom
-fathom2action "https://www.loom.com/share/..."
+video-brief "https://www.loom.com/share/..."
 
 # YouTube
-fathom2action "https://www.youtube.com/watch?v=..."
+video-brief "https://www.youtube.com/watch?v=..."
 
 # Vimeo
-fathom2action "https://vimeo.com/..."
+video-brief "https://vimeo.com/..."
+
+# short alias
+vbrief "https://vimeo.com/..."
 
 # (optional) copy the brief directly to your clipboard
-fathom2action "https://fathom.video/share/<TOKEN>" --copy
+video-brief "https://fathom.video/share/<TOKEN>" --copy
 
 # see all flags
-fathom2action --help
+video-brief --help
 
 # output JSON ({source,title,brief})
-fathom2action "https://fathom.video/share/<TOKEN>" --json
+video-brief "https://fathom.video/share/<TOKEN>" --json
 
 # copy *only* the rendered brief (useful with --json)
-fathom2action "https://fathom.video/share/<TOKEN>" --json --copy-brief
+video-brief "https://fathom.video/share/<TOKEN>" --json --copy-brief
 
 # print version
-fathom2action --version
+video-brief --version
 
 # hide timestamps/teaser sections (useful when you want a very compact brief)
-fathom2action "https://fathom.video/share/<TOKEN>" --max-timestamps 0 --max-teaser 0
+video-brief "https://fathom.video/share/<TOKEN>" --max-timestamps 0 --max-teaser 0
 ```
 
 If the link is auth-gated (401/403) or otherwise not fetchable, paste transcript/notes:
 
 ```bash
-pbpaste | fathom2action --stdin
+pbpaste | video-brief --stdin
 
 # Windows PowerShell
-Get-Clipboard | fathom2action --stdin
+Get-Clipboard | video-brief --stdin
 ```
 
 If you just want a blank brief to fill in manually (no URL fetch / no stdin):
 
 ```bash
-fathom2action --template --copy
+video-brief --template --copy
 
 # optionally pre-fill Source/Title
-fathom2action --template --source "https://fathom.video/share/<TOKEN>" --title "Login breaks on Safari" --copy
+video-brief --template --source "https://fathom.video/share/<TOKEN>" --title "Login breaks on Safari" --copy
 ```
 
 You can also paste a small “envelope” for better output (copy/paste friendly):
@@ -112,7 +115,7 @@ https://fathom.video/share/<TOKEN>
 
 ### Example Output
 
-By default, `fathom2action` produces a markdown brief ready to paste into Linear or GitHub:
+By default, `video-brief` produces a markdown brief ready to paste into Linear or GitHub:
 
 ```markdown
 # Bug report brief
@@ -124,8 +127,8 @@ Title: Login breaks on Safari
 - Fathom: https://fathom.video/share/...
 
 ## How to update this brief
-- If you can access the Fathom link: re-run \`fathom2action "<link>"\`
-- If the link is auth-gated: copy the transcript and pipe it into \`fathom2action --stdin\`
+- If you can access the Fathom link: re-run \`video-brief "<link>"\`
+- If the link is auth-gated: copy the transcript and pipe it into \`video-brief --stdin\`
 ...
 
 ## 1-sentence summary
@@ -165,7 +168,7 @@ Title: Login breaks on Safari
 ### 1) Auth-gated Fathom link → transcript + video.mp4 + 5-min segments
 
 ```bash
-fathom-extract "https://fathom.video/share/<TOKEN>" \
+video-extract "https://fathom.video/share/<TOKEN>" \
   --cookie-file ./cookie.txt \
   --out-dir ./artifacts \
   --split-seconds 300 \
@@ -181,7 +184,7 @@ Outputs in `./artifacts/`:
 ### 2) Transcript-only (skip video download)
 
 ```bash
-fathom-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt --no-download --pretty
+video-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt --no-download --pretty
 ```
 
 ### 3) Control segment size
@@ -190,7 +193,7 @@ fathom-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt -
 # default split size when --split-seconds isn't provided
 export FATHOM_SPLIT_SECONDS=300
 
-fathom-extract "https://..." --cookie-file ./cookie.txt --out-dir ./artifacts --pretty
+video-extract "https://..." --cookie-file ./cookie.txt --out-dir ./artifacts --pretty
 ```
 
 ### 4) Cookie options
@@ -202,7 +205,7 @@ Any of these work:
 - `FATHOM_COOKIE_FILE=...`
 
 Optional:
-- `FATHOM_USER_AGENT=...` (override the default `fathom-extract/<version>` user-agent)
+- `FATHOM_USER_AGENT=...` (override the default `video-extract/<version>` user-agent)
 
 `--cookie-file` supports:
 - Netscape cookies.txt
@@ -230,7 +233,7 @@ echo "<name=value; other=value>" > cookie.txt
 Then run:
 
 ```bash
-fathom-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt --out-dir ./artifacts --pretty
+video-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt --out-dir ./artifacts --pretty
 ```
 
 ## What this repo does
@@ -242,7 +245,7 @@ fathom-extract "https://fathom.video/share/<TOKEN>" --cookie-file ./cookie.txt -
 ## What this repo does NOT do
 - No LLM processing
 
-## CLI flags (brief generator: `fathom2action`)
+## CLI flags (brief generator: `video-brief`)
 - `--stdin` / `-`: read transcript/notes from stdin (use this when the share link is auth-gated)
 - `--template`: generate a blank brief template (no URL fetch / no stdin required)
 - `--copy`: copy the output to clipboard (best-effort; tries `pbcopy`, `clip.exe`/`clip`, `wl-copy`, `xclip`, or `xsel`)
@@ -270,7 +273,7 @@ Env defaults (flags win):
 - `F2A_CMD=<name>` (behave as if `--cmd <name>` was passed)
 - `F2A_NO_NOTE=1` (behave as if `--no-note` was passed)
 
-## CLI flags (extractor: `fathom-extract`)
+## CLI flags (extractor: `video-extract`)
 - `--out-dir <dir>`: write `transcript.txt` + `extracted.json` + media artifacts
 - `--cookie <cookie>` / `--cookie-file <path>`
 - `--referer <url>` / `FATHOM_REFERER=...`: set an explicit `Referer` header (some auth flows/CDNs require this)
