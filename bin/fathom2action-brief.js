@@ -27,10 +27,47 @@ async function readStdin() {
       resolve('');
       return;
     }
+
+    // When invoked via execFile/spawn without piping, stdin is often a pipe that
+    // never ends, which would otherwise hang forever. We treat "no data within a
+    // short grace period" as empty stdin.
     let data = '';
+    let resolved = false;
+
+    const onData = (c) => {
+      data += c;
+      // If we got any data, wait for end.
+      clearTimeout(timer);
+    };
+
+    const onEnd = () => {
+      clearTimeout(timer);
+      done(data);
+    };
+
+    const done = (v) => {
+      if (resolved) return;
+      resolved = true;
+
+      // Cleanup so the process can exit promptly when stdin is a never-ending pipe.
+      try {
+        process.stdin.off('data', onData);
+        process.stdin.off('end', onEnd);
+        process.stdin.pause();
+      } catch {
+        // ignore
+      }
+
+      resolve(v);
+    };
+
+    const timer = setTimeout(() => {
+      if (!data) done('');
+    }, 25);
+
     process.stdin.setEncoding('utf8');
-    process.stdin.on('data', (c) => (data += c));
-    process.stdin.on('end', () => resolve(data));
+    process.stdin.on('data', onData);
+    process.stdin.on('end', onEnd);
   });
 }
 
