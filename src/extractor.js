@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { normalizeUrlLike } from './brief.js';
 import { parseSimpleVtt } from './utils.js';
 import { extractFathomTranscriptUrl } from './providers/fathom.js';
-import { isYoutubeUrl, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
+import { isYoutubeUrl, isYoutubeClipUrl, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
 import { isVimeoUrl, extractVimeoMetadataFromHtml } from './providers/vimeo.js';
 import { isLoomUrl, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript } from './providers/loom.js';
 
@@ -577,6 +577,14 @@ export async function extractFromUrl(rawUrl, options = {}) {
   if (outDir) ensureDir(outDir);
 
   try {
+    // YouTube clip URLs (youtube.com/clip/...) don't include a stable 11-char video id.
+    // Treat them as an unsupported URL shape and guide the user toward a canonical watch URL.
+    if (isYoutubeClipUrl(url)) {
+      throw new Error(
+        'YouTube clip URLs are not supported. Open the clip and copy the full video URL (https://youtube.com/watch?v=...) instead.'
+      );
+    }
+
     const ex = await bestEffortExtract({ url, cookie, referer, userAgent });
     result.ok = true;
     result.title = ex.title || '';

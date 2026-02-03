@@ -54,6 +54,29 @@ export function extractYoutubeId(url) {
   return null;
 }
 
+export function isYoutubeClipUrl(url) {
+  const s = String(url || '').trim();
+  if (!s) return false;
+
+  // Ensure we can parse even if the user omitted scheme.
+  const withScheme = /^(?:https?:)?\/\//i.test(s) ? s : `https://${s}`;
+
+  let u;
+  try {
+    u = new URL(withScheme);
+  } catch {
+    return false;
+  }
+
+  const host = u.hostname.replace(/^www\./i, '').toLowerCase();
+  if (!/(^|\.)youtube\.com$/i.test(host)) return false;
+
+  // YouTube clip links look like:
+  //   https://www.youtube.com/clip/<clipId>
+  // They do not contain a stable 11-char video id without an additional fetch.
+  return /^\/clip\//i.test(u.pathname || '');
+}
+
 export function isYoutubeUrl(url) {
   return !!extractYoutubeId(url);
 }

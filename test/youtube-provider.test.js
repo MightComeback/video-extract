@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { isYoutubeUrl, extractYoutubeId, extractYoutubeMetadataFromHtml } from '../src/providers/youtube.js';
+import { isYoutubeUrl, isYoutubeClipUrl, extractYoutubeId, extractYoutubeMetadataFromHtml } from '../src/providers/youtube.js';
 
 test('isYoutubeUrl identifies valid YouTube URLs', () => {
   const valid = [
@@ -28,12 +28,21 @@ test('isYoutubeUrl rejects invalid URLs', () => {
     'https://youtube.com/watch?v=short', // too short ID
     'youtube.com', // no protocol/path (though my regex might handle this, let's see implementation)
     // The implementation requires strict 11 char ID match for now
-    'https://www.youtube.com/about/'
+    'https://www.youtube.com/about/',
+    // Clips are a distinct URL shape (no stable 11-char id embedded).
+    'https://www.youtube.com/clip/UgkxyZKk3VwzExampleClipId'
   ];
-  
+
   invalid.forEach(url => {
     assert.strictEqual(isYoutubeUrl(url), false, `Should reject ${url}`);
   });
+});
+
+test('isYoutubeClipUrl identifies clip URLs', () => {
+  assert.strictEqual(isYoutubeClipUrl('https://www.youtube.com/clip/UgkxyZKk3VwzExampleClipId'), true);
+  assert.strictEqual(isYoutubeClipUrl('https://youtube.com/clip/UgkxyZKk3VwzExampleClipId?feature=share'), true);
+  assert.strictEqual(isYoutubeClipUrl('https://youtu.be/dQw4w9WgXcQ'), false);
+  assert.strictEqual(isYoutubeClipUrl('https://vimeo.com/123'), false);
 });
 
 test('extractYoutubeId extracts 11-char ID', () => {
