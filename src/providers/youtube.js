@@ -71,6 +71,75 @@ export function extractYoutubeId(url) {
   return null;
 }
 
+export function isYoutubeDomain(url) {
+  const s = String(url || '').trim();
+  if (!s) return false;
+
+  const withScheme = /^(?:https?:)?\/\//i.test(s)
+    ? (s.startsWith('//') ? `https:${s}` : s)
+    : `https://${s}`;
+
+  let u;
+  try {
+    u = new URL(withScheme);
+  } catch {
+    return false;
+  }
+
+  const host = u.hostname.replace(/^www\./i, '').toLowerCase();
+  return /(^|\.)youtube\.com$/i.test(host) || /(^|\.)youtube-nocookie\.com$/i.test(host) || host === 'youtu.be';
+}
+
+export function youtubeNonVideoReason(url) {
+  const s = String(url || '').trim();
+  if (!s) return '';
+
+  const withScheme = /^(?:https?:)?\/\//i.test(s)
+    ? (s.startsWith('//') ? `https:${s}` : s)
+    : `https://${s}`;
+
+  let u;
+  try {
+    u = new URL(withScheme);
+  } catch {
+    return '';
+  }
+
+  const host = u.hostname.replace(/^www\./i, '').toLowerCase();
+  if (!/(^|\.)youtube\.com$/i.test(host) && !/(^|\.)youtube-nocookie\.com$/i.test(host) && host !== 'youtu.be') return '';
+
+  const path = String(u.pathname || '').toLowerCase();
+
+  // If it already looks like a clip or a direct video URL, don't flag it here.
+  if (
+    path.startsWith('/watch') ||
+    path.startsWith('/shorts/') ||
+    path.startsWith('/embed/') ||
+    path.startsWith('/live/') ||
+    path.startsWith('/v/') ||
+    path.startsWith('/clip/')
+  ) {
+    return '';
+  }
+
+  // Playlists: /playlist?list=... (no video id)
+  if (path === '/playlist' && (u.searchParams.get('list') || '')) {
+    return 'YouTube playlist URLs are not supported. Please provide a direct video URL like https://youtube.com/watch?v=... instead.';
+  }
+
+  // Channels / handles / user pages.
+  if (path.startsWith('/channel/') || path.startsWith('/@') || path.startsWith('/c/') || path.startsWith('/user/')) {
+    return 'YouTube channel/handle URLs are not supported. Please provide a direct video URL like https://youtube.com/watch?v=... instead.';
+  }
+
+  // Other common non-video routes.
+  if (path.startsWith('/feed') || path.startsWith('/results') || path.startsWith('/hashtag/') || path.startsWith('/signin')) {
+    return 'This YouTube URL does not appear to be a direct video link. Please provide a direct video URL like https://youtube.com/watch?v=... instead.';
+  }
+
+  return '';
+}
+
 export function isYoutubeClipUrl(url) {
   const s = String(url || '').trim();
   if (!s) return false;

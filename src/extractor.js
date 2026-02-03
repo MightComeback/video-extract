@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { normalizeUrlLike } from './brief.js';
 import { parseSimpleVtt } from './utils.js';
 import { extractFathomTranscriptUrl } from './providers/fathom.js';
-import { isYoutubeUrl, isYoutubeClipUrl, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
+import { isYoutubeUrl, isYoutubeClipUrl, isYoutubeDomain, youtubeNonVideoReason, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
 import { isVimeoUrl, isVimeoDomain, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript } from './providers/vimeo.js';
 import { isLoomUrl, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript } from './providers/loom.js';
 
@@ -606,6 +606,15 @@ export async function extractFromUrl(rawUrl, options = {}) {
     const vimeoReason = vimeoNonVideoReason(url);
     if (vimeoReason) {
       throw new Error(vimeoReason);
+    }
+
+    // Helpful failure mode: some YouTube URLs (playlist/channel/etc) are not direct video pages.
+    // Detect these early so we can avoid confusing fetch errors and show actionable guidance.
+    if (isYoutubeDomain(url) && !isYoutubeUrl(url) && !isYoutubeClipUrl(url)) {
+      const ytReason = youtubeNonVideoReason(url);
+      if (ytReason) {
+        throw new Error(ytReason);
+      }
     }
 
     // YouTube clip URLs (youtube.com/clip/...) don't include a stable 11-char video id.
