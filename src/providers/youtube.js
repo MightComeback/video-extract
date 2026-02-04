@@ -318,6 +318,13 @@ export function extractYoutubeIdFromClipHtml(html) {
   const m3 = h.match(/watch\?v=(?<id>[a-zA-Z0-9_-]{11})\b/);
   if (m3?.groups?.id) return m3.groups.id;
 
+  // Provider parity: clip pages sometimes expose the underlying watch URL via
+  // a canonicalBaseUrl field (often JSON-escaped), e.g.:
+  //   "canonicalBaseUrl":"\/watch?v=<id>"
+  // Handle both escaped and unescaped forms.
+  const m4 = h.match(/canonicalBaseUrl\"\s*:\s*\"(?:\\\/)?watch\?v=(?<id>[a-zA-Z0-9_-]{11})\b/);
+  if (m4?.groups?.id) return m4.groups.id;
+
   return null;
 }
 

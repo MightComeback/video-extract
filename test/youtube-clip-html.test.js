@@ -30,3 +30,14 @@ test('extractYoutubeIdFromClipHtml tolerates nested objects inside watchEndpoint
 
   assert.equal(extractYoutubeIdFromClipHtml(html), id);
 });
+
+test('extractYoutubeIdFromClipHtml extracts id from canonicalBaseUrl (JSON-escaped)', () => {
+  const id = 'dQw4w9WgXcQ';
+  const html = `<!doctype html><html><head></head><body>
+    <script>
+      window.__data = {"canonicalBaseUrl":"\\/watch?v=${id}"};
+    </script>
+  </body></html>`;
+
+  assert.equal(extractYoutubeIdFromClipHtml(html), id);
+});
