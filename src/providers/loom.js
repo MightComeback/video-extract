@@ -1,7 +1,83 @@
 import { parseSimpleVtt } from '../utils.js';
 
+function withScheme(s) {
+  const v = String(s || '').trim();
+  if (!v) return '';
+
+  // Accept protocol-relative URLs like "//loom.com/share/...".
+  if (v.startsWith('//')) return `https:${v}`;
+
+  if (/^https?:\/\//i.test(v)) return v;
+  return `https://${v}`;
+}
+
 export function isLoomUrl(url) {
   return !!extractLoomId(url);
+}
+
+export function isLoomDomain(url) {
+  const s = withScheme(url);
+  if (!s) return false;
+
+  try {
+    const u = new URL(s);
+    const host = u.hostname.toLowerCase();
+    return /(^|\.)loom\.com$/i.test(host);
+  } catch {
+    return false;
+  }
+}
+
+// Some Loom URLs are not direct video pages (pricing/login/etc).
+// Return a short actionable reason when we can detect this.
+export function loomNonVideoReason(url) {
+  const s = withScheme(url);
+  if (!s) return '';
+
+  let u;
+  try {
+    u = new URL(s);
+  } catch {
+    return '';
+  }
+
+  const host = u.hostname.toLowerCase();
+  if (!/(^|\.)loom\.com$/i.test(host)) return '';
+
+  // If it's a valid Loom video URL, don't flag it.
+  if (extractLoomId(s)) return '';
+
+  const segs = (u.pathname || '/').split('/').map((x) => x.trim()).filter(Boolean);
+  const first = String(segs[0] || '').toLowerCase();
+
+  // Common non-video sections.
+  const nonVideo = new Set([
+    '',
+    'login',
+    'logout',
+    'signup',
+    'sign-up',
+    'pricing',
+    'enterprise',
+    'teams',
+    'features',
+    'integrations',
+    'security',
+    'careers',
+    'blog',
+    'help',
+    'support',
+    'settings',
+    'terms',
+    'privacy',
+  ]);
+
+  if (nonVideo.has(first)) {
+    return 'This Loom URL does not appear to be a direct video link. Please provide a Loom share URL like https://loom.com/share/<id> instead.';
+  }
+
+  // Generic Loom domain but not a recognized video path.
+  return 'This Loom URL does not appear to be a direct video link. Please provide a Loom share URL like https://loom.com/share/<id> instead.';
 }
 
 function isVttUrl(u) {
@@ -23,16 +99,12 @@ function normalizeLoomAssetUrl(url, base = 'https://www.loom.com') {
 }
 
 export function extractLoomId(url) {
-  const s = String(url || '').trim();
+  const s = withScheme(url);
   if (!s) return null;
-
-  // Ensure we can parse even if the user omitted scheme.
-  // Also accept protocol-relative URLs like "//loom.com/(?:share|embed)/...".
-  const withScheme = /^(?:https?:)?\/\//i.test(s) ? (s.startsWith('//') ? `https:${s}` : s) : `https://${s}`;
 
   let u;
   try {
-    u = new URL(withScheme);
+    u = new URL(s);
   } catch {
     return null;
   }

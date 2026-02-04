@@ -8,7 +8,7 @@ import { parseSimpleVtt } from './utils.js';
 import { extractFathomTranscriptUrl } from './providers/fathom.js';
 import { isYoutubeUrl, isYoutubeClipUrl, isYoutubeDomain, youtubeNonVideoReason, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
 import { isVimeoUrl, isVimeoDomain, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript } from './providers/vimeo.js';
-import { isLoomUrl, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript } from './providers/loom.js';
+import { isLoomUrl, isLoomDomain, loomNonVideoReason, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript } from './providers/loom.js';
 
 function oneLine(s) {
   return String(s || '')
@@ -614,6 +614,14 @@ export async function extractFromUrl(rawUrl, options = {}) {
       const ytReason = youtubeNonVideoReason(url);
       if (ytReason) {
         throw new Error(ytReason);
+      }
+    }
+
+    // Helpful failure mode: some Loom URLs (pricing/login/etc) are not direct video pages.
+    if (isLoomDomain(url) && !isLoomUrl(url)) {
+      const loomReason = loomNonVideoReason(url);
+      if (loomReason) {
+        throw new Error(loomReason);
       }
     }
 
