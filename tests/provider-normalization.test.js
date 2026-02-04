@@ -34,6 +34,10 @@ describe('provider url detection + normalization', () => {
     expect(extractVimeoId('https://player.vimeo.com/video/123456789')).toBe('123456789');
   });
 
+  test('Vimeo: url detection tolerates smart quotes + trailing punctuation', () => {
+    expect(extractVimeoId('“https://vimeo.com/123456789?foo=bar”,')).toBe('123456789');
+  });
+
   test('Vimeo: normalizeVimeoUrl preserves review token path', () => {
     const u = normalizeVimeoUrl('https://player.vimeo.com/video/123456789/review/abcdef/1a2b3c4d');
     expect(u).toBe('https://vimeo.com/123456789/review/abcdef/1a2b3c4d?h=1a2b3c4d');
@@ -46,6 +50,10 @@ describe('provider url detection + normalization', () => {
 
   test('Loom: extractLoomId supports bare /<id> urls', () => {
     expect(extractLoomId('https://loom.com/abcdef12345')).toBe('abcdef12345');
+  });
+
+  test('Loom: url detection tolerates angle wrappers + trailing punctuation', () => {
+    expect(extractLoomId('(<https://loom.com/share/abcdef12345?sid=s1>).')).toBe('abcdef12345');
   });
 
   test('Loom: normalizeLoomUrl keeps sid + deep-link time', () => {

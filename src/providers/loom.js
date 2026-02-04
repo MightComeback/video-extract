@@ -13,49 +13,35 @@ function cleanUrlInput(url) {
   const angle = s.match(/^<\s*([^>\s]+)\s*>$/i);
   if (angle) s = String(angle[1] || '').trim();
 
-  // Provider parity: users often paste URLs wrapped in backticks or quotes.
-  // Example: `https://loom.com/share/...` or "https://loom.com/share/..."
-  for (let i = 0; i < 4; i++) {
-    const startsTick = s.startsWith('`');
-    const endsTick = s.endsWith('`');
-    const startsDq = s.startsWith('"');
-    const endsDq = s.endsWith('"');
-    const startsSq = s.startsWith("'");
-    const endsSq = s.endsWith("'");
-
-    if (startsTick && endsTick && s.length >= 2) {
-      s = s.slice(1, -1).trim();
-      continue;
+  // Provider parity: URLs pasted in chat are often wrapped in quotes.
+  // Examples:
+  //  - “https://loom.com/share/<id>”
+  //  - «https://loom.com/share/<id>?sid=...»,
+  for (let i = 0; i < 2; i++) {
+    const first = s.slice(0, 1);
+    const last = s.slice(-1);
+    const q = ['"', "'", '`', '“', '”', '‘', '’', '«', '»', '‹', '›'];
+    let changed = false;
+    if (q.includes(first)) {
+      s = s.slice(1).trim();
+      changed = true;
     }
-    if (startsDq && endsDq && s.length >= 2) {
-      s = s.slice(1, -1).trim();
-      continue;
+    if (q.includes(last)) {
+      s = s.slice(0, -1).trim();
+      changed = true;
     }
-    if (startsSq && endsSq && s.length >= 2) {
-      s = s.slice(1, -1).trim();
-      continue;
-    }
-    break;
+    if (!changed) break;
   }
 
-  // Provider parity: URLs pasted in chat are often wrapped or followed by punctuation.
-  // Do a small amount of cleanup in a stable order:
-  //  1) strip trailing punctuation
-  //  2) unwrap (), [], {}
-  //  3) strip trailing punctuation again (covers cases like "(https://... ).")
-  const stripTrailingPunctuation = () => {
-    for (let i = 0; i < 4; i++) {
-      const last = s.slice(-1);
-      if (!last) break;
-      if (!['.', ',', ';', '!', '?'].includes(last)) break;
-      s = s.slice(0, -1).trim();
-    }
-  };
-
-  stripTrailingPunctuation();
+  // Strip lightweight trailing punctuation first so wrappers like "(https://...)\." can be unwrapped.
+  for (let i = 0; i < 4; i++) {
+    const stripped = s.replace(/[.,;:!?…。！，？。､、]+$/g, '').trim();
+    if (stripped.length === s.length) break;
+    s = stripped;
+  }
 
   const unwrap = [
-    [/^\((.*)\)$/, 1],
+    [/^\((.*)[)）]$/, 1],
     [/^\[(.*)\]$/, 1],
     [/^\{(.*)\}$/, 1],
   ];
@@ -67,14 +53,29 @@ function cleanUrlInput(url) {
     }
   }
 
-  stripTrailingPunctuation();
+  // After unwrapping parentheses, re-handle angle-bracket wrappers (e.g. "(<https://...>)").
+  const slack2 = s.match(/^<\s*([^|>\s]+)\s*\|[^>]*>$/i);
+  if (slack2) s = String(slack2[1] || '').trim();
+  const angle2 = s.match(/^<\s*([^>\s]+)\s*>$/i);
+  if (angle2) s = String(angle2[1] || '').trim();
 
-  // Also trim any remaining closing wrapper chars (e.g. a stray ")" after stripping ".")
+  // Common copy/paste pattern: "https://... (Loom)".
+  s = s.replace(/\s+\([^)]*\)\s*$/g, '');
+
   for (let i = 0; i < 3; i++) {
-    const last = s.slice(-1);
-    if (!last) break;
-    if (![')', ']', '}'].includes(last)) break;
-    s = s.slice(0, -1).trim();
+    const stripped = s.replace(/[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』}]+$/g, '').trim();
+    if (stripped.length === s.length) break;
+
+    if (s.endsWith(')') && stripped.length < s.length) {
+      const openCount = (stripped.match(/\(/g) || []).length;
+      const closeCount = (stripped.match(/\)/g) || []).length;
+      if (openCount > closeCount && s.slice(stripped.length).startsWith(')')) {
+        s = (stripped + ')').trim();
+        continue;
+      }
+    }
+
+    s = stripped;
   }
 
   return s;

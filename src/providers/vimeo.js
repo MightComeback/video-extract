@@ -13,45 +13,40 @@ function cleanUrlInput(url) {
   const angle = s.match(/^<\s*([^>\s]+)\s*>$/i);
   if (angle) s = String(angle[1] || '').trim();
 
-  // Provider parity: users often paste URLs wrapped in backticks or quotes.
-  for (let i = 0; i < 4; i++) {
-    const startsTick = s.startsWith('`');
-    const endsTick = s.endsWith('`');
-    const startsDq = s.startsWith('"');
-    const endsDq = s.endsWith('"');
-    const startsSq = s.startsWith("'");
-    const endsSq = s.endsWith("'");
-
-    if (startsTick && endsTick && s.length >= 2) {
-      s = s.slice(1, -1).trim();
-      continue;
+  // Provider parity: URLs pasted in chat are often wrapped in quotes.
+  // Examples:
+  //  - “https://vimeo.com/<id>”
+  //  - «https://vimeo.com/<id>?h=...»,
+  // Be conservative: only strip a small set of leading/trailing quote wrappers.
+  for (let i = 0; i < 2; i++) {
+    const first = s.slice(0, 1);
+    const last = s.slice(-1);
+    const q = ['"', "'", '`', '“', '”', '‘', '’', '«', '»', '‹', '›'];
+    let changed = false;
+    if (q.includes(first)) {
+      s = s.slice(1).trim();
+      changed = true;
     }
-    if (startsDq && endsDq && s.length >= 2) {
-      s = s.slice(1, -1).trim();
-      continue;
+    if (q.includes(last)) {
+      s = s.slice(0, -1).trim();
+      changed = true;
     }
-    if (startsSq && endsSq && s.length >= 2) {
-      s = s.slice(1, -1).trim();
-      continue;
-    }
-    break;
+    if (!changed) break;
   }
 
   // Provider parity: URLs pasted in chat are often wrapped or followed by punctuation.
-  // Order matters: strip trailing punctuation, unwrap, then strip again.
-  const stripTrailingPunctuation = () => {
-    for (let i = 0; i < 4; i++) {
-      const last = s.slice(-1);
-      if (!last) break;
-      if (!['.', ',', ';', '!', '?'].includes(last)) break;
-      s = s.slice(0, -1).trim();
-    }
-  };
-
-  stripTrailingPunctuation();
+  // Examples:
+  //  - (https://vimeo.com/<id>?h=...).
+  //  - https://vimeo.com/<id>,
+  // Strip lightweight trailing punctuation first so wrappers like "(https://...)\." can be unwrapped.
+  for (let i = 0; i < 4; i++) {
+    const stripped = s.replace(/[.,;:!?…。！，？。､、]+$/g, '').trim();
+    if (stripped.length === s.length) break;
+    s = stripped;
+  }
 
   const unwrap = [
-    [/^\((.*)\)$/, 1],
+    [/^\((.*)[)）]$/, 1],
     [/^\[(.*)\]$/, 1],
     [/^\{(.*)\}$/, 1],
   ];
@@ -63,13 +58,33 @@ function cleanUrlInput(url) {
     }
   }
 
-  stripTrailingPunctuation();
+  // After unwrapping parentheses, re-handle angle-bracket wrappers (e.g. "(<https://...>)").
+  const slack2 = s.match(/^<\s*([^|>\s]+)\s*\|[^>]*>$/i);
+  if (slack2) s = String(slack2[1] || '').trim();
+  const angle2 = s.match(/^<\s*([^>\s]+)\s*>$/i);
+  if (angle2) s = String(angle2[1] || '').trim();
 
+  // Common copy/paste pattern: "https://... (Vimeo)".
+  // Only strip parenthetical suffixes when separated by whitespace.
+  s = s.replace(/\s+\([^)]*\)\s*$/g, '');
+
+  // Strip a conservative set of trailing chat punctuation, including common Unicode variants.
+  // Keep roughly aligned with the YouTube provider's cleanUrlInput behavior.
   for (let i = 0; i < 3; i++) {
-    const last = s.slice(-1);
-    if (!last) break;
-    if (![')', ']', '}'].includes(last)) break;
-    s = s.slice(0, -1).trim();
+    const stripped = s.replace(/[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』}]+$/g, '').trim();
+    if (stripped.length === s.length) break;
+
+    // Avoid stripping a closing paren when it appears to balance an open paren in the URL.
+    if (s.endsWith(')') && stripped.length < s.length) {
+      const openCount = (stripped.match(/\(/g) || []).length;
+      const closeCount = (stripped.match(/\)/g) || []).length;
+      if (openCount > closeCount && s.slice(stripped.length).startsWith(')')) {
+        s = (stripped + ')').trim();
+        continue;
+      }
+    }
+
+    s = stripped;
   }
 
   return s;
