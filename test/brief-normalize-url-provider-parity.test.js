@@ -12,6 +12,24 @@ describe('normalizeUrlLike - provider parity', () => {
     );
   });
 
+  test('canonicalizes YouTube attribution_link URLs (decodes inner watch URL + keeps time)', () => {
+    assert.equal(
+      normalizeUrlLike(
+        'https://www.youtube.com/attribution_link?u=%2Fwatch%3Fv%3DdQw4w9WgXcQ%26t%3D30s%26feature%3Dshare'
+      ),
+      'https://youtube.com/watch?v=dQw4w9WgXcQ&t=30s'
+    );
+  });
+
+  test('canonicalizes double-encoded YouTube attribution_link URLs', () => {
+    assert.equal(
+      normalizeUrlLike(
+        'https://www.youtube.com/attribution_link?u=%252Fwatch%253Fv%253DdQw4w9WgXcQ%2526t%253D1m2s'
+      ),
+      'https://youtube.com/watch?v=dQw4w9WgXcQ&t=1m2s'
+    );
+  });
+
   test('canonicalizes Vimeo player embed URLs (preserves unlisted hash + time)', () => {
     assert.equal(
       normalizeUrlLike(
@@ -27,6 +45,13 @@ describe('normalizeUrlLike - provider parity', () => {
         'https://www.loom.com/embed/abcdEFGHijk?sid=deadbeef#t=30s'
       ),
       'https://loom.com/share/abcdEFGHijk?sid=deadbeef&t=30s'
+    );
+  });
+
+  test('canonicalizes bare Loom share URLs (normalizes to /share/<id>)', () => {
+    assert.equal(
+      normalizeUrlLike('https://loom.com/abcdEFGHijk'),
+      'https://loom.com/share/abcdEFGHijk'
     );
   });
 
