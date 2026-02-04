@@ -208,6 +208,18 @@ export function normalizeYoutubeUrl(url) {
     return out.toString();
   }
 
+  // /v/<id> (old embed-style URLs)
+  const vPath = u.pathname.match(/^\/v\/([^/?#]+)/);
+  if (/^[a-zA-Z0-9_-]{11}$/.test(vPath?.[1] || '')) {
+    const out = new URL('https://www.youtube.com/watch');
+    out.searchParams.set('v', vPath[1]);
+    for (const [k, v] of u.searchParams.entries()) out.searchParams.set(k, v);
+    if (hashTime && !out.searchParams.has('t') && !out.searchParams.has('start') && !out.searchParams.has('time_continue')) {
+      out.searchParams.set('t', hashTime);
+    }
+    return out.toString();
+  }
+
   // /embed/<id>
   const embed = u.pathname.match(/^\/embed\/([^/?#]+)/);
   if (/^[a-zA-Z0-9_-]{11}$/.test(embed?.[1] || '')) {

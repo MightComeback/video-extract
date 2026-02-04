@@ -65,6 +65,13 @@ test('normalizeYoutubeUrl normalizes embed URLs', () => {
   );
 });
 
+test('normalizeYoutubeUrl normalizes /v/ URLs', () => {
+  assert.strictEqual(
+    normalizeYoutubeUrl('https://www.youtube.com/v/dQw4w9WgXcQ?start=10'),
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ&start=10',
+  );
+});
+
 test('normalizeYoutubeUrl normalizes attribution_link share URLs', () => {
   assert.strictEqual(
     normalizeYoutubeUrl(
