@@ -14,6 +14,11 @@ describe("provider URL normalization", () => {
     assert.match(u, /^https:\/\//);
   });
 
+  test("normalizes YouTube links when wrapped in punctuation (chat/markdown)", () => {
+    const u = normalizeUrlLike("(https://youtu.be/dQw4w9WgXcQ?t=43).");
+    assert.equal(u, "https://youtube.com/watch?v=dQw4w9WgXcQ&t=43");
+  });
+
   test("accepts Vimeo player URLs", () => {
     const u = normalizeUrlLike("https://player.vimeo.com/video/76979871");
     assert.ok(u);

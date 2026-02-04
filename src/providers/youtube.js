@@ -10,9 +10,34 @@ function cleanUrlInput(url) {
 
   // Provider parity: accept angle-wrapped links (common in markdown/chat), including Slack-style <url|label>.
   const slack = s.match(/^<\s*([^|>\s]+)\s*\|[^>]*>$/i);
-  if (slack) return String(slack[1] || '').trim();
+  if (slack) s = String(slack[1] || '').trim();
   const angle = s.match(/^<\s*([^>\s]+)\s*>$/i);
-  if (angle) return String(angle[1] || '').trim();
+  if (angle) s = String(angle[1] || '').trim();
+
+  // Provider parity: URLs pasted in chat are often wrapped or followed by punctuation.
+  // Examples:
+  //  - (https://youtu.be/<id>?t=43).
+  //  - https://youtube.com/watch?v=<id>,
+  // Be conservative: only strip common trailing punctuation characters.
+  const unwrap = [
+    [/^\((.*)\)$/, 1],
+    [/^\[(.*)\]$/, 1],
+    [/^\{(.*)\}$/, 1],
+  ];
+  for (const [re] of unwrap) {
+    const m = s.match(re);
+    if (m && m[1]) {
+      s = String(m[1]).trim();
+      break;
+    }
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const last = s.slice(-1);
+    if (!last) break;
+    if (!['.', ',', ';', '!', '?', ')', ']', '}'].includes(last)) break;
+    s = s.slice(0, -1).trim();
+  }
 
   return s;
 }
