@@ -62,6 +62,14 @@ test('normalizeUrlLike handles copy-paste quotes', () => {
   assert.equal(normalizeUrlLike('>>> Source: https://example.com'), 'https://example.com');
 });
 
+test('normalizeUrlLike handles code formatting (backticks)', () => {
+  assert.equal(normalizeUrlLike('`https://example.com`'), 'https://example.com');
+  assert.equal(normalizeUrlLike('``https://example.com``'), 'https://example.com');
+  assert.equal(normalizeUrlLike('```https://example.com```'), 'https://example.com');
+  // Common chat paste: backticks + trailing punctuation.
+  assert.equal(normalizeUrlLike('(`https://example.com`),'), 'https://example.com');
+});
+
 test('normalizeUrlLike handles unusual brackets', () => {
   assert.equal(normalizeUrlLike('{https://example.com}'), 'https://example.com');
   assert.equal(normalizeUrlLike('{{https://example.com}}'), 'https://example.com');
