@@ -18,6 +18,20 @@ test('renderBrief includes source and title', () => {
   assert.ok(output.includes('- Fathom: https://fathom.video/share/12345'));
 });
 
+test('renderBrief labels the source link by provider (provider parity)', () => {
+  assert.ok(
+    renderBrief({ source: 'https://loom.com/share/1234abcd', title: 'x' }).includes('- Loom: https://loom.com/share/1234abcd')
+  );
+  assert.ok(
+    renderBrief({ source: 'https://youtube.com/watch?v=dQw4w9WgXcQ', title: 'x' }).includes(
+      '- YouTube: https://youtube.com/watch?v=dQw4w9WgXcQ'
+    )
+  );
+  assert.ok(
+    renderBrief({ source: 'https://vimeo.com/12345', title: 'x' }).includes('- Vimeo: https://vimeo.com/12345')
+  );
+});
+
 test('renderBrief includes transcript teaser', () => {
   const transcript = `
 00:01 Hello

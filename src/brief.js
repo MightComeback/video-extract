@@ -1,5 +1,9 @@
 // Deterministic markdown brief generator
 
+import { isFathomUrl } from './providers/fathom.js';
+import { isLoomUrl } from './providers/loom.js';
+import { isYoutubeUrl } from './providers/youtube.js';
+import { isVimeoUrl, isVimeoDomain } from './providers/vimeo.js';
 
 // MIG-14: extraction pipeline expected to be resilient to missing optional fields.
 function oneLine(s) {
@@ -1551,15 +1555,24 @@ export function renderBrief({
   }
 
   const links = ['## Links'];
+  const linkLabel = (() => {
+    if (!src) return 'Link';
+    if (isFathomUrl(src)) return 'Fathom';
+    if (isLoomUrl(src)) return 'Loom';
+    if (isYoutubeUrl(src)) return 'YouTube';
+    if (isVimeoUrl(src) || isVimeoDomain(src)) return 'Vimeo';
+    return 'Link';
+  })();
+
   if (src) {
-    links.push(`- Fathom: ${src}`);
+    links.push(`- ${linkLabel}: ${src}`);
   } else {
-    links.push('- (add Fathom link)');
+    links.push('- (add link)');
   }
 
   const howToUpdate = [
     '## How to update this brief',
-    `- If you can access the Fathom link: re-run \`${cmdName} "<link>"\``,
+    `- If you can access the link: re-run \`${cmdName} "<link>"\``,
     `- If the link is auth-gated: copy the transcript and pipe it into \`${cmdName} --stdin\``,
     `- Example (macOS): \`pbpaste | ${cmdName} --stdin\``,
     `- Example (Wayland): \`wl-paste | ${cmdName} --stdin\``,
