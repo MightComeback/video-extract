@@ -34,4 +34,29 @@ describe("provider URL normalization", () => {
     assert.ok(u);
     assert.match(u, /^https:\/\//);
   });
+
+  test("normalizes bare Loom share URLs (loom.com/<id>)", () => {
+    const u = normalizeUrlLike("https://loom.com/0123456789abcdef0123456789abcdef");
+    assert.equal(u, "https://loom.com/share/0123456789abcdef0123456789abcdef");
+  });
+
+  test("normalizes YouTube mobile attribution_link shares", () => {
+    const u = normalizeUrlLike(
+      "https://www.youtube.com/attribution_link?u=%2Fwatch%3Fv%3DdQw4w9WgXcQ%26t%3D43s%26feature%3Dshare"
+    );
+    assert.equal(u, "https://youtube.com/watch?v=dQw4w9WgXcQ&t=43s");
+  });
+
+  test("normalizes YouTube shorts URLs (including handle-based paths)", () => {
+    const u1 = normalizeUrlLike("https://youtube.com/shorts/dQw4w9WgXcQ?feature=share");
+    assert.equal(u1, "https://youtube.com/watch?v=dQw4w9WgXcQ");
+
+    const u2 = normalizeUrlLike("https://www.youtube.com/@SomeChannel/shorts/dQw4w9WgXcQ");
+    assert.equal(u2, "https://youtube.com/watch?v=dQw4w9WgXcQ");
+  });
+
+  test("normalizes Vimeo manage URLs", () => {
+    const u = normalizeUrlLike("https://vimeo.com/manage/videos/76979871");
+    assert.equal(u, "https://vimeo.com/76979871");
+  });
 });
