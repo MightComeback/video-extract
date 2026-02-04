@@ -54,6 +54,9 @@ export function extractVimeoId(url) {
     'categories',
     'event',
     'events',
+    // Provider parity: on-demand pages are not stable clip URLs (often paywalled).
+    // We want these to fall through so vimeoNonVideoReason can produce a clear actionable error.
+    'ondemand',
   ]);
 
   const first = (segs[0] || '').toLowerCase();

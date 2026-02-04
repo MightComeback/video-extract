@@ -276,6 +276,9 @@ export function normalizeUrlLike(s) {
         'categories',
         'event',
         'events',
+        // Provider parity: Vimeo on-demand pages are not stable clip URLs (often paywalled).
+        // Do not canonicalize them to https://vimeo.com/<id>; let vimeoNonVideoReason handle them.
+        'ondemand',
       ]);
       if (blockedTopLevel.has(first)) return raw;
 

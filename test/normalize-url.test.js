@@ -191,7 +191,8 @@ test('normalizeUrlLike canonicalizes common provider URL variants', () => {
   assert.equal(normalizeUrlLike('https://vimeo.com/showcase/12345/video/67890'), 'https://vimeo.com/67890');
   assert.equal(normalizeUrlLike('https://staffpicks.vimeo.com/12345'), 'https://vimeo.com/12345');
   assert.equal(normalizeUrlLike('staffpicks.vimeo.com/12345'), 'https://vimeo.com/12345');
-  assert.equal(normalizeUrlLike('https://vimeo.com/ondemand/somefilm/987654321'), 'https://vimeo.com/987654321');
+  // On-demand pages are not stable clip URLs; keep as-is so the extractor can surface a clear actionable error.
+  assert.equal(normalizeUrlLike('https://vimeo.com/ondemand/somefilm/987654321'), 'https://vimeo.com/ondemand/somefilm/987654321');
   assert.equal(normalizeUrlLike('https://vimeo.com/manage/videos/987654321'), 'https://vimeo.com/987654321');
   assert.equal(normalizeUrlLike('https://vimeo.com/manage/video/987654321'), 'https://vimeo.com/987654321');
   assert.equal(normalizeUrlLike('https://vimeo.com/manage/videos/987654321/advanced'), 'https://vimeo.com/987654321');
