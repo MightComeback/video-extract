@@ -121,6 +121,19 @@ export function isFathomUrl(url) {
   return !!extractFathomId(url);
 }
 
+// Provider parity: check if URL is a Fathom domain (similar to isLoomDomain/isVimeoDomain/isYoutubeDomain).
+export function isFathomDomain(url) {
+  const s = withScheme(url);
+  if (!s) return false;
+  try {
+    const u = new URL(s);
+    const host = u.hostname.replace(/^www\./i, '').toLowerCase();
+    return /(^|\.)fathom\.video$/i.test(host);
+  } catch {
+    return false;
+  }
+}
+
 // Normalize common Fathom URL shapes to a canonical share URL.
 // Provider parity: similar to Loom/YouTube/Vimeo normalization.
 export function normalizeFathomUrl(url) {

@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { normalizeUrlLike } from './brief.js';
 import { parseSimpleVtt } from './utils.js';
 import { ProgressBar, parseFfmpegProgress } from './progress.js';
-import { extractFathomTranscriptUrl, extractFathomMetadataFromHtml, normalizeFathomUrl, isFathomUrl } from './providers/fathom.js';
+import { extractFathomTranscriptUrl, extractFathomMetadataFromHtml, normalizeFathomUrl, isFathomUrl, isFathomDomain, fathomNonVideoReason } from './providers/fathom.js';
 import { isYoutubeUrl, isYoutubeClipUrl, isYoutubeDomain, normalizeYoutubeUrl, youtubeNonVideoReason, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl, extractYoutubeTranscriptUrl } from './providers/youtube.js';
 import { isVimeoUrl, isVimeoDomain, normalizeVimeoUrl, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript, extractVimeoTranscriptUrl } from './providers/vimeo.js';
 import { isLoomUrl, isLoomDomain, loomNonVideoReason, normalizeLoomUrl, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript, extractLoomTranscriptUrl } from './providers/loom.js';
@@ -805,6 +805,14 @@ export async function extractFromUrl(rawUrl, options = {}) {
       const loomReason = loomNonVideoReason(url);
       if (loomReason) {
         throw new Error(loomReason);
+      }
+    }
+
+    // Helpful failure mode: some Fathom URLs (pricing/login/etc) are not direct video pages.
+    if (isFathomDomain(url) && !isFathomUrl(url)) {
+      const fathomReason = fathomNonVideoReason(url);
+      if (fathomReason) {
+        throw new Error(fathomReason);
       }
     }
 
