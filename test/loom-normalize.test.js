@@ -42,3 +42,16 @@ test('normalizeLoomUrl preserves sid for private links', () => {
     'https://www.loom.com/share/1234567890abcdef?sid=xyz'
   );
 });
+
+test('normalizeLoomUrl drops tracking params but preserves deep-link timestamps', () => {
+  assert.strictEqual(
+    normalizeLoomUrl('https://www.loom.com/share/1234567890abcdef?sid=xyz&utm_source=foo&t=30s'),
+    'https://www.loom.com/share/1234567890abcdef?sid=xyz&t=30s'
+  );
+
+  // Hash deep-links should also be preserved.
+  assert.strictEqual(
+    normalizeLoomUrl('https://www.loom.com/share/1234567890abcdef?utm_medium=bar#t=45'),
+    'https://www.loom.com/share/1234567890abcdef?t=45'
+  );
+});

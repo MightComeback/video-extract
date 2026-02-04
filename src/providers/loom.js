@@ -41,10 +41,17 @@ export function normalizeLoomUrl(url) {
   const sid = u.searchParams.get('sid');
   if (sid) out.searchParams.set('sid', sid);
 
-  // Preserve other useful params if present.
-  for (const [k, v] of u.searchParams.entries()) {
-    if (k === 'sid') continue;
-    out.searchParams.set(k, v);
+  // Provider parity: Loom share URLs often include extra tracking params.
+  // Only preserve parameters that affect access (sid) or deep-linking (t/start).
+  const t = u.searchParams.get('t') || u.searchParams.get('start');
+  if (t) out.searchParams.set('t', t);
+
+  // Some share flows use hash deep-links (e.g. #t=30s). Preserve those too.
+  const hash = String(u.hash || '').replace(/^#/, '').trim();
+  if (hash) {
+    const hp = new URLSearchParams(hash);
+    const ht = hp.get('t') || hp.get('start');
+    if (ht && !out.searchParams.get('t')) out.searchParams.set('t', ht);
   }
 
   return out.toString();
