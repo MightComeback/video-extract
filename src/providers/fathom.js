@@ -459,6 +459,28 @@ export async function fetchFathomOembed(url) {
   return null;
 }
 
+// Provider parity: fetch media URL for Fathom videos (similar to fetchLoomMediaUrl/fetchVimeoMediaUrl/fetchYoutubeMediaUrl)
+// Fetches the Fathom page and extracts the direct video URL from JSON blobs in the HTML.
+export async function fetchFathomMediaUrl(url) {
+  try {
+    const normalized = normalizeFathomUrl(String(url || ''));
+    if (!normalized) return null;
+
+    const res = await fetch(normalized, {
+      headers: {
+        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+    });
+    if (!res.ok) return null;
+
+    const html = await res.text();
+    const meta = extractFathomMetadataFromHtml(html);
+    return meta?.mediaUrl || null;
+  } catch {
+    return null;
+  }
+}
+
 // NOTE: full fathom extraction is implemented in src/extractor.js. This provider module
 // keeps compatibility exports used by unit tests.
 export async function extractFathom(url, page) {
