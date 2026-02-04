@@ -234,6 +234,218 @@ export function extractFathomTranscriptUrl(html) {
   return null;
 }
 
+function safeJsonParse(s) {
+  try {
+    return JSON.parse(s);
+  } catch {
+    return null;
+  }
+}
+
+function extractBalancedJsonObject(source, startIndex) {
+  let depth = 0;
+  let inStr = false;
+  let quote = '';
+  let escaped = false;
+
+  for (let i = startIndex; i < source.length; i++) {
+    const ch = source[i];
+
+    if (inStr) {
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (ch === '\\') {
+        escaped = true;
+        continue;
+      }
+      if (ch === quote) {
+        inStr = false;
+        quote = '';
+      }
+      continue;
+    }
+
+    if (ch === '"' || ch === "'") {
+      inStr = true;
+      quote = ch;
+      continue;
+    }
+
+    if (ch === '{') {
+      depth++;
+      continue;
+    }
+    if (ch === '}') {
+      depth--;
+      if (depth === 0) return source.slice(startIndex, i + 1);
+    }
+  }
+  return '';
+}
+
+function unescapeJsonSlashes(s) {
+  return String(s || '')
+    .replace(/\\u([0-9a-fA-F]{4})/g, (m, hex) => {
+      try {
+        const n = Number.parseInt(String(hex), 16);
+        if (!Number.isFinite(n)) return m;
+        return String.fromCharCode(n);
+      } catch {
+        return m;
+      }
+    })
+    .replace(/\\\//g, '/');
+}
+
+function normalizeFathomAssetUrl(url, base = 'https://fathom.video') {
+  const v = String(url || '').trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  if (v.startsWith('//')) return `https:${v}`;
+  if (v.startsWith('/')) return `${base}${v}`;
+  return v;
+}
+
+// Extract any JSON URL by key from HTML (for mediaUrl, downloadUrl, etc.)
+function extractAnyJsonUrls(html, keys = []) {
+  const h = String(html || '');
+  const hScan = unescapeJsonSlashes(h);
+
+  const decodeJsonStringLiteral = (literal) => {
+    const raw = String(literal || '').trim();
+    if (!raw) return '';
+    const q = raw[0];
+    if ((q === '"' || q === "'") && raw.endsWith(q)) {
+      const inner = raw.slice(1, -1);
+      try {
+        const safe = `"${inner.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+        return JSON.parse(safe);
+      } catch {
+        return inner;
+      }
+    }
+    return raw;
+  };
+
+  for (const k of keys) {
+    // Quoted JSON/JS strings
+    const reQuoted = new RegExp(
+      `(?:["']?${k}["']?)\\s*[:=]\\s*(\\"(?:\\\\.|[^\\\"])*\\"|'(?:\\\\.|[^'])*')`,
+      'i'
+    );
+    const mQ = h.match(reQuoted);
+    if (mQ) {
+      const decoded = decodeJsonStringLiteral(mQ[1]);
+      return unescapeJsonSlashes(decoded);
+    }
+
+    // Unquoted/bare URL tokens
+    const reBare = new RegExp(
+      `(?:["']?${k}["']?)\\s*[:=]\\s*(?<u>(?:https?:\/\/|\/\/)[^\\"'\\s\\r\\n;,)\\]}>]+)`,
+      'i'
+    );
+    const mB = hScan.match(reBare);
+    if (mB?.groups?.u) {
+      const raw = String(mB.groups.u || '').trim();
+      return raw.startsWith('//') ? `https:${raw}` : raw;
+    }
+  }
+  return '';
+}
+
+// Provider parity: extract metadata from Fathom HTML similar to YouTube/Vimeo/Loom
+export function extractFathomMetadataFromHtml(html) {
+  const h = String(html || '');
+  if (!h.trim()) return {};
+
+  const result = {
+    title: undefined,
+    description: undefined,
+    author: undefined,
+    duration: undefined,
+    thumbnailUrl: undefined,
+    mediaUrl: undefined,
+    transcriptUrl: undefined,
+    date: undefined,
+  };
+
+  // Try to extract from meta tags first (OpenGraph/Twitter Card)
+  const ogTitle = h.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']*)["'][^>]*>/i)?.[1];
+  const ogDesc = h.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']*)["'][^>]*>/i)?.[1];
+  const ogImage = h.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']*)["'][^>]*>/i)?.[1];
+  const twitterTitle = h.match(/<meta\s+name=["']twitter:title["']\s+content=["']([^"']*)["'][^>]*>/i)?.[1];
+  const twitterDesc = h.match(/<meta\s+name=["']twitter:description["']\s+content=["']([^"']*)["'][^>]*>/i)?.[1];
+
+  // Try JSON-LD structured data
+  let ldData = null;
+  const ldMatch = h.match(/<script\s+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i);
+  if (ldMatch) {
+    ldData = safeJsonParse(ldMatch[1]);
+  }
+
+  // Set title from various sources
+  result.title = ogTitle || twitterTitle || ldData?.name || undefined;
+
+  // Set description
+  result.description = ogDesc || twitterDesc || ldData?.description || undefined;
+
+  // Set thumbnail
+  result.thumbnailUrl = ogImage || ldData?.thumbnailUrl || ldData?.image || undefined;
+
+  // Set author from JSON-LD
+  if (ldData?.author?.name) {
+    result.author = ldData.author.name;
+  }
+
+  // Set date from JSON-LD
+  if (ldData?.uploadDate) {
+    result.date = ldData.uploadDate;
+  }
+
+  // Extract transcript URL
+  const transcriptUrl = extractFathomTranscriptUrl(h);
+  if (transcriptUrl) {
+    result.transcriptUrl = normalizeFathomAssetUrl(transcriptUrl);
+  }
+
+  // Extract media URL from JSON blobs (common keys used by Fathom)
+  const mediaUrl = extractAnyJsonUrls(h, ['downloadUrl', 'mediaUrl', 'videoUrl', 'playbackUrl', 'sourceUrl']);
+  if (mediaUrl) {
+    result.mediaUrl = normalizeFathomAssetUrl(mediaUrl);
+  }
+
+  // Try to extract duration from JSON-LD or common patterns
+  if (ldData?.duration) {
+    // ISO 8601 duration format: PT1H2M3S
+    const isoMatch = String(ldData.duration).match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/i);
+    if (isoMatch) {
+      const hours = Number(isoMatch[1] || 0);
+      const mins = Number(isoMatch[2] || 0);
+      const secs = Number(isoMatch[3] || 0);
+      result.duration = hours * 3600 + mins * 60 + secs;
+    } else {
+      const numeric = Number(ldData.duration);
+      if (Number.isFinite(numeric)) {
+        result.duration = numeric;
+      }
+    }
+  }
+
+  return result;
+}
+
+// Provider parity: fetch oEmbed data for Fathom videos
+// Fathom doesn't have a public oEmbed endpoint, but this function provides API parity
+// with YouTube/Vimeo/Loom providers. It returns null gracefully.
+export async function fetchFathomOembed(url) {
+  // Fathom does not currently expose a public oEmbed endpoint.
+  // This function exists for provider API parity and returns null.
+  // Future: If Fathom adds oEmbed support, implement the fetch here.
+  return null;
+}
+
 // NOTE: full fathom extraction is implemented in src/extractor.js. This provider module
 // keeps compatibility exports used by unit tests.
 export async function extractFathom(url, page) {
