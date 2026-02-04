@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { normalizeUrlLike } from './brief.js';
 import { parseSimpleVtt } from './utils.js';
 import { ProgressBar, parseFfmpegProgress } from './progress.js';
-import { extractFathomTranscriptUrl } from './providers/fathom.js';
+import { extractFathomTranscriptUrl, extractFathomMetadataFromHtml, normalizeFathomUrl, isFathomUrl } from './providers/fathom.js';
 import { isYoutubeUrl, isYoutubeClipUrl, isYoutubeDomain, normalizeYoutubeUrl, youtubeNonVideoReason, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl, extractYoutubeTranscriptUrl } from './providers/youtube.js';
 import { isVimeoUrl, isVimeoDomain, normalizeVimeoUrl, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript, extractVimeoTranscriptUrl } from './providers/vimeo.js';
 import { isLoomUrl, isLoomDomain, loomNonVideoReason, normalizeLoomUrl, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript, extractLoomTranscriptUrl } from './providers/loom.js';
@@ -622,6 +622,16 @@ async function bestEffortExtract({ url, cookie, referer, userAgent }) {
           // ignore and fall back to the existing text
         }
       }
+    } else if (isFathomUrl(url)) {
+      // Normalize Fathom URLs to a stable share form for consistency.
+      const fathomUrl = normalizeFathomUrl(url) || url;
+
+      const meta = extractFathomMetadataFromHtml(html) || {};
+      if (meta.title && !title) title = meta.title;
+      if (meta.description && !text) text = meta.description;
+      if (meta.mediaUrl && !mediaUrl) mediaUrl = resolveUrl(meta.mediaUrl, fathomUrl);
+
+      // Fathom transcript URL extraction is handled separately below using copy_transcript endpoint
     }
   } catch {
     // Best effort only.
