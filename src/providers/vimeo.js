@@ -184,7 +184,30 @@ export function normalizeVimeoUrl(url) {
   const id = extractVimeoId(u.toString());
   if (!id) return u.toString();
 
-  const out = new URL(`https://vimeo.com/${id}`);
+  // Provider parity: Some videos are shared via showcases. In those cases the showcase
+  // context may be required to access the clip, so preserve the showcase path when present.
+  // Example:
+  //   https://vimeo.com/showcase/<showcaseId>/video/<videoId>
+  // Canonical output:
+  //   https://vimeo.com/showcase/<showcaseId>/video/<videoId>?h=...&t=...
+  let out;
+  try {
+    const segs = (u.pathname || '/').split('/').map((x) => x.trim()).filter(Boolean);
+    const showcaseIdx = segs.findIndex((x) => String(x || '').toLowerCase() === 'showcase');
+    const videoIdx = segs.findIndex((x) => String(x || '').toLowerCase() === 'video');
+
+    const showcaseId = showcaseIdx !== -1 ? String(segs[showcaseIdx + 1] || '').trim() : '';
+    const videoId = videoIdx !== -1 ? String(segs[videoIdx + 1] || '').trim() : '';
+
+    const looksVideoId = String(videoId) === String(id);
+    if (showcaseId && looksVideoId) {
+      out = new URL(`https://vimeo.com/showcase/${encodeURIComponent(showcaseId)}/video/${encodeURIComponent(id)}`);
+    } else {
+      out = new URL(`https://vimeo.com/${id}`);
+    }
+  } catch {
+    out = new URL(`https://vimeo.com/${id}`);
+  }
 
   // Provider parity: Vimeo "review" links (private review pages) require the review token
   // to access the clip. Preserve the /review/<token>/<hash?> path segments when present.

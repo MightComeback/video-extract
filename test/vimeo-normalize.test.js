@@ -12,6 +12,18 @@ test('normalizeVimeoUrl canonicalizes common Vimeo URL shapes', () => {
   );
 });
 
+test('normalizeVimeoUrl preserves showcase context when present', () => {
+  assert.equal(
+    normalizeVimeoUrl('https://vimeo.com/showcase/9999999/video/123456789'),
+    'https://vimeo.com/showcase/9999999/video/123456789'
+  );
+
+  assert.equal(
+    normalizeVimeoUrl('https://vimeo.com/showcase/9999999/video/123456789?h=abcdef1234&t=30'),
+    'https://vimeo.com/showcase/9999999/video/123456789?h=abcdef1234&t=30'
+  );
+});
+
 test('normalizeVimeoUrl preserves unlisted hash and deep-link timestamps', () => {
   assert.equal(
     normalizeVimeoUrl('https://vimeo.com/123456789?h=abcdef1234&t=90'),
