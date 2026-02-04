@@ -36,3 +36,29 @@ test('normalizeVimeoUrl preserves unlisted hash and deep-link timestamps', () =>
     'https://vimeo.com/123456789?h=abcdef1234&t=30s'
   );
 });
+
+test('normalizeVimeoUrl tolerates chat wrappers and punctuation (provider parity)', () => {
+  // Slack-style <url|label>
+  assert.equal(
+    normalizeVimeoUrl('<https://vimeo.com/123456789/abcdef1234|Vimeo>'),
+    'https://vimeo.com/123456789?h=abcdef1234'
+  );
+
+  // Angle-wrapped
+  assert.equal(
+    normalizeVimeoUrl('<https://player.vimeo.com/video/12345>'),
+    'https://vimeo.com/12345'
+  );
+
+  // Trailing punctuation / parentheses (common in prose)
+  assert.equal(
+    normalizeVimeoUrl('(https://vimeo.com/123456789/abcdef1234#t=30s).'),
+    'https://vimeo.com/123456789?h=abcdef1234&t=30s'
+  );
+
+  // HTML entity escapes in query params
+  assert.equal(
+    normalizeVimeoUrl('https://vimeo.com/123456789/abcdef1234?h=abcdef1234&amp;t=90'),
+    'https://vimeo.com/123456789?h=abcdef1234&t=90'
+  );
+});

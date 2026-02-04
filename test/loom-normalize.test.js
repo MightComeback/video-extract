@@ -70,3 +70,29 @@ test('normalizeLoomUrl drops tracking params but preserves deep-link timestamps'
     'https://loom.com/share/1234567890abcdef?t=45'
   );
 });
+
+test('normalizeLoomUrl tolerates chat wrappers and punctuation (provider parity)', () => {
+  // Slack-style <url|label>
+  assert.strictEqual(
+    normalizeLoomUrl('<https://www.loom.com/share/1234567890abcdef|Loom>'),
+    'https://loom.com/share/1234567890abcdef'
+  );
+
+  // Angle-wrapped
+  assert.strictEqual(
+    normalizeLoomUrl('<https://share.loom.com/share/1234567890abcdef?sid=xyz>'),
+    'https://loom.com/share/1234567890abcdef?sid=xyz'
+  );
+
+  // Trailing punctuation / parentheses
+  assert.strictEqual(
+    normalizeLoomUrl('(https://www.loom.com/share/1234567890abcdef?utm_source=a#t=45).'),
+    'https://loom.com/share/1234567890abcdef?t=45'
+  );
+
+  // HTML entity escapes
+  assert.strictEqual(
+    normalizeLoomUrl('https://www.loom.com/share/1234567890abcdef?sid=xyz&amp;t=30s'),
+    'https://loom.com/share/1234567890abcdef?sid=xyz&t=30s'
+  );
+});

@@ -1,7 +1,58 @@
 import { parseSimpleVtt } from '../utils.js';
 
+function cleanUrlInput(url) {
+  let s = String(url || '').trim();
+  if (!s) return '';
+
+  // Provider parity: HTML copy/paste often escapes query separators.
+  s = s.replace(/&amp;/gi, '&').replace(/&#0*38;/gi, '&');
+
+  // Provider parity: accept angle-wrapped links (common in markdown/chat), including Slack-style <url|label>.
+  const slack = s.match(/^<\s*([^|>\s]+)\s*\|[^>]*>$/i);
+  if (slack) s = String(slack[1] || '').trim();
+  const angle = s.match(/^<\s*([^>\s]+)\s*>$/i);
+  if (angle) s = String(angle[1] || '').trim();
+
+  // Provider parity: URLs pasted in chat are often wrapped or followed by punctuation.
+  // Order matters: strip trailing punctuation, unwrap, then strip again.
+  const stripTrailingPunctuation = () => {
+    for (let i = 0; i < 4; i++) {
+      const last = s.slice(-1);
+      if (!last) break;
+      if (!['.', ',', ';', '!', '?'].includes(last)) break;
+      s = s.slice(0, -1).trim();
+    }
+  };
+
+  stripTrailingPunctuation();
+
+  const unwrap = [
+    [/^\((.*)\)$/, 1],
+    [/^\[(.*)\]$/, 1],
+    [/^\{(.*)\}$/, 1],
+  ];
+  for (const [re] of unwrap) {
+    const m = s.match(re);
+    if (m && m[1]) {
+      s = String(m[1]).trim();
+      break;
+    }
+  }
+
+  stripTrailingPunctuation();
+
+  for (let i = 0; i < 3; i++) {
+    const last = s.slice(-1);
+    if (!last) break;
+    if (![')', ']', '}'].includes(last)) break;
+    s = s.slice(0, -1).trim();
+  }
+
+  return s;
+}
+
 function withScheme(s) {
-  const v = String(s || '').trim();
+  const v = cleanUrlInput(s);
   if (!v) return '';
 
   // Accept protocol-relative URLs like "//player.vimeo.com/video/...".
