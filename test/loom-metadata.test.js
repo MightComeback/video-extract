@@ -43,6 +43,23 @@ test('extractLoomMetadataFromHtml - Basic', () => {
   assert.strictEqual(meta.date, '2023-01-01T00:00:00Z');
 });
 
+test('extractLoomMetadataFromHtml - Video typename prefix (provider parity)', () => {
+  const mockState = {
+    "Video:v1": {
+      "__typename": "Video",
+      "id": "v1",
+      "name": "Demo Video",
+      "nullableRawCdnUrl({\"type\":\"MP4\"})": { "url": "//cdn.loom/video.mp4" },
+    }
+  };
+
+  const html = `window.__APOLLO_STATE__ = ${JSON.stringify(mockState)};`;
+  const meta = extractLoomMetadataFromHtml(html);
+
+  assert.strictEqual(meta.title, 'Demo Video');
+  assert.strictEqual(meta.mediaUrl, 'https://cdn.loom/video.mp4');
+});
+
 test('extractLoomMetadataFromHtml - Transcript Object', () => {
   const mockState = {
     "RegularUserVideo:v1": { "id": "v1", "name": "T" },

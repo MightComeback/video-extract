@@ -200,7 +200,13 @@ export function extractLoomMetadataFromHtml(html) {
       if (state && typeof state === 'object') {
 
       // Find the main video object
-      const videoKey = Object.keys(state).find((k) => k.startsWith('RegularUserVideo:') || k.startsWith('LoomVideo:'));
+      const videoKey = Object.keys(state).find((k) =>
+        k.startsWith('RegularUserVideo:') ||
+        k.startsWith('LoomVideo:') ||
+        // Provider parity: Loom has used different typename prefixes over time.
+        // Keep this permissive to avoid breaking when the Apollo cache key changes.
+        k.startsWith('Video:')
+      );
       if (videoKey && state[videoKey]) {
         const vid = state[videoKey];
         meta.title = vid.name;
