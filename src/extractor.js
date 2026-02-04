@@ -559,7 +559,6 @@ async function bestEffortExtract({ url, cookie, referer, userAgent }) {
 
 export async function extractFromUrl(rawUrl, options = {}) {
   const url = normalizeUrlLike(rawUrl);
-  if (!looksLikeUrl(url)) throw new Error('Invalid URL');
 
   const cookie = options.cookie || '';
   const referer = options.referer || '';
@@ -601,6 +600,13 @@ export async function extractFromUrl(rawUrl, options = {}) {
   if (outDir) ensureDir(outDir);
 
   try {
+    if (!looksLikeUrl(url)) {
+      throw new Error('Invalid URL (expected a Fathom/Loom/YouTube/Vimeo link)');
+    }
+
+    // Note: this tool can best-effort scrape arbitrary URLs, but has special support for a few providers.
+    //
+
     // Helpful failure mode: some Vimeo URLs (event/blog/etc) are not actually video pages.
     // Detect these early so we can avoid confusing "fetch" errors and show actionable guidance.
     const vimeoReason = vimeoNonVideoReason(url);

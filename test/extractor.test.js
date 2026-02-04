@@ -9,9 +9,8 @@ test('extractFathomData exists', () => {
   assert.equal(typeof extractFathomData, 'function');
 });
 
-test('extractFathomData fails on invalid URL', async () => {
-  await assert.rejects(
-    async () => await extractFathomData('not-a-url'),
-    /Error/
-  );
+test('extractFathomData fails gracefully on invalid URL', async () => {
+  const res = await extractFathomData('not-a-url');
+  assert.equal(res.ok, false);
+  assert.match(res.fetchError, /Invalid URL/i);
 });
