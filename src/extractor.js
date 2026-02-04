@@ -6,9 +6,9 @@ import { spawn } from 'node:child_process';
 import { normalizeUrlLike } from './brief.js';
 import { parseSimpleVtt } from './utils.js';
 import { extractFathomTranscriptUrl } from './providers/fathom.js';
-import { isYoutubeUrl, isYoutubeClipUrl, isYoutubeDomain, normalizeYoutubeUrl, youtubeNonVideoReason, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
-import { isVimeoUrl, isVimeoDomain, normalizeVimeoUrl, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript } from './providers/vimeo.js';
-import { isLoomUrl, isLoomDomain, loomNonVideoReason, normalizeLoomUrl, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript } from './providers/loom.js';
+import { isYoutubeUrl, isYoutubeClipUrl, isYoutubeDomain, normalizeYoutubeUrl, youtubeNonVideoReason, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl, extractYoutubeTranscriptUrl } from './providers/youtube.js';
+import { isVimeoUrl, isVimeoDomain, normalizeVimeoUrl, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript, extractVimeoTranscriptUrl } from './providers/vimeo.js';
+import { isLoomUrl, isLoomDomain, loomNonVideoReason, normalizeLoomUrl, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript, extractLoomTranscriptUrl } from './providers/loom.js';
 
 function oneLine(s) {
   return String(s || '')
@@ -570,11 +570,12 @@ async function bestEffortExtract({ url, cookie, referer, userAgent }) {
     // Best effort only.
   }
 
-  // Prefer Fathom's copy_transcript if present
-  const copyTranscriptUrl = extractFathomTranscriptUrl(html);
-  if (copyTranscriptUrl) {
+  // Provider parity: use dedicated transcript URL extractors (Fathom/YouTube/Vimeo/Loom)
+  // Fathom uses a special copy_transcript endpoint
+  const fathomTranscriptUrl = extractFathomTranscriptUrl(html);
+  if (fathomTranscriptUrl) {
     try {
-      const { body } = await fetchText(copyTranscriptUrl, { headers });
+      const { body } = await fetchText(fathomTranscriptUrl, { headers });
       const json = JSON.parse(body);
       const transcriptHtml = json?.html || '';
       if (transcriptHtml) {
@@ -582,6 +583,45 @@ async function bestEffortExtract({ url, cookie, referer, userAgent }) {
       }
     } catch {
       // ignore and fallback to page content
+    }
+  }
+
+  // YouTube/Vimeo/Loom: extract transcript URL from their respective player configs
+  if (!text) {
+    const ytTranscriptUrl = extractYoutubeTranscriptUrl(html);
+    if (ytTranscriptUrl) {
+      try {
+        const { body } = await fetchText(ytTranscriptUrl, { headers });
+        text = parseSimpleVtt(body);
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  if (!text) {
+    const vimeoTranscriptUrl = extractVimeoTranscriptUrl(html);
+    if (vimeoTranscriptUrl) {
+      try {
+        const tUrl = resolveUrl(vimeoTranscriptUrl, url);
+        const { body } = await fetchText(tUrl, { headers });
+        text = parseVimeoTranscript(body);
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  if (!text) {
+    const loomTranscriptUrl = extractLoomTranscriptUrl(html);
+    if (loomTranscriptUrl) {
+      try {
+        const tUrl = resolveUrl(loomTranscriptUrl, url);
+        const { body } = await fetchText(tUrl, { headers });
+        text = /\.vtt(?:\?|#|$)/i.test(tUrl) ? parseSimpleVtt(body) : parseLoomTranscript(body);
+      } catch {
+        // ignore
+      }
     }
   }
 

@@ -809,3 +809,10 @@ export function extractVimeoMetadataFromHtml(html) {
     transcriptUrl,
   };
 }
+
+// Provider parity: dedicated transcript URL extraction (similar to Fathom's extractFathomTranscriptUrl)
+// Extracts the best caption track URL from Vimeo HTML by scanning clip_page_config.
+export function extractVimeoTranscriptUrl(html) {
+  const meta = extractVimeoMetadataFromHtml(html);
+  return meta?.transcriptUrl || null;
+}

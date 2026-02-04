@@ -664,6 +664,13 @@ export function extractYoutubeMetadataFromHtml(html) {
   };
 }
 
+// Provider parity: dedicated transcript URL extraction (similar to Fathom's extractFathomTranscriptUrl)
+// Extracts the best caption track URL from YouTube HTML by scanning ytInitialPlayerResponse.
+export function extractYoutubeTranscriptUrl(html) {
+  const meta = extractYoutubeMetadataFromHtml(html);
+  return meta?.transcriptUrl || null;
+}
+
 export async function fetchYoutubeOembed(url) {
   try {
     // For parity with other normalization logic, we call oEmbed with a stable, non-www watch URL.
