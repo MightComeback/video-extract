@@ -7,7 +7,7 @@ import { normalizeUrlLike } from './brief.js';
 import { parseSimpleVtt } from './utils.js';
 import { extractFathomTranscriptUrl } from './providers/fathom.js';
 import { isYoutubeUrl, isYoutubeClipUrl, isYoutubeDomain, normalizeYoutubeUrl, youtubeNonVideoReason, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
-import { isVimeoUrl, isVimeoDomain, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript } from './providers/vimeo.js';
+import { isVimeoUrl, isVimeoDomain, normalizeVimeoUrl, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript } from './providers/vimeo.js';
 import { isLoomUrl, isLoomDomain, loomNonVideoReason, normalizeLoomUrl, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript } from './providers/loom.js';
 
 function oneLine(s) {
@@ -480,21 +480,25 @@ async function bestEffortExtract({ url, cookie, referer, userAgent }) {
         }
       }
     } else if (isVimeoUrl(url)) {
+      // Normalize to a stable Vimeo clip URL (preserving unlisted hash/timestamps)
+      // to reduce redirects and keep provider behavior consistent.
+      const vimeoUrl = normalizeVimeoUrl(url) || url;
+
       const meta = extractVimeoMetadataFromHtml(html) || {};
       if (meta?.title && !title) title = meta.title;
 
       // Fallback: Vimeo oEmbed can provide title/author/thumbnail even when clip_page_config is missing.
       if (!title) {
-        const o = await fetchVimeoOembed(url);
+        const o = await fetchVimeoOembed(vimeoUrl);
         if (o?.title) title = String(o.title);
       }
 
-      if (meta?.mediaUrl && !mediaUrl) mediaUrl = resolveUrl(meta.mediaUrl, url);
+      if (meta?.mediaUrl && !mediaUrl) mediaUrl = resolveUrl(meta.mediaUrl, vimeoUrl);
 
       if (meta?.transcriptUrl && (!text || text === normalizedText)) {
         // Best-effort only: transcript extraction shouldn't block media URL resolution.
         try {
-          const tUrl = resolveUrl(meta.transcriptUrl, url);
+          const tUrl = resolveUrl(meta.transcriptUrl, vimeoUrl);
           const { body } = await fetchText(tUrl, { headers });
 
           text = parseVimeoTranscript(body);

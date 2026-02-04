@@ -157,6 +157,79 @@ export function isVimeoDomain(url) {
   }
 }
 
+// Normalize common Vimeo URL shapes to a canonical clip URL.
+//
+// Provider parity goals:
+//  - Treat player/manage/review/unlisted URLs as the same clip
+//  - Preserve the unlisted hash (h=...) when present
+//  - Preserve deep-link timestamps (t/start) when present
+export function normalizeVimeoUrl(url) {
+  const s = withScheme(url);
+  if (!s) return '';
+
+  let u;
+  try {
+    u = new URL(s);
+  } catch {
+    return String(url || '').trim();
+  }
+
+  const host = u.hostname.replace(/^www\./i, '').toLowerCase();
+  const isVimeoHost = /(^|\.)vimeo\.com$/i.test(host) || host === 'player.vimeo.com';
+  if (!isVimeoHost) return u.toString();
+
+  const id = extractVimeoId(u.toString());
+  if (!id) return u.toString();
+
+  const out = new URL(`https://vimeo.com/${id}`);
+
+  // Unlisted videos: Vimeo commonly uses either:
+  //  - https://vimeo.com/<id>/<hash>
+  //  - https://vimeo.com/<id>?h=<hash>
+  // Preserve/convert into ?h=... form.
+  const existingH = u.searchParams.get('h') || '';
+  let hashToken = existingH;
+
+  if (!hashToken) {
+    const segs = (u.pathname || '/').split('/').map((x) => x.trim()).filter(Boolean);
+
+    // /<id>/<hash>
+    if (segs.length >= 2 && String(segs[0]) === String(id)) {
+      const maybe = String(segs[1] || '');
+      const looksHashy = /^[a-z0-9]+$/i.test(maybe) && maybe.length >= 6;
+      const isKnownKeyword = /^(?:review|manage|video|videos|channels|groups|album|showcase)$/i.test(maybe);
+      if (looksHashy && !isKnownKeyword) {
+        hashToken = maybe;
+      }
+    }
+
+    // Review URLs may include a token segment and a hash segment; the final segment is often the unlisted hash.
+    if (!hashToken) {
+      const reviewIdx = segs.findIndex((x) => String(x || '').toLowerCase() === 'review');
+      if (reviewIdx !== -1 && segs.length >= reviewIdx + 3) {
+        const last = String(segs[segs.length - 1] || '');
+        const looksHashy = /^[a-z0-9]+$/i.test(last) && last.length >= 6;
+        if (looksHashy) hashToken = last;
+      }
+    }
+  }
+
+  if (hashToken) out.searchParams.set('h', hashToken);
+
+  // Preserve deep-link timestamps.
+  const t = u.searchParams.get('t') || u.searchParams.get('start') || '';
+  if (t) out.searchParams.set('t', t);
+
+  const hash = String(u.hash || '').replace(/^#/, '').trim();
+  if (hash) {
+    const hp = new URLSearchParams(hash);
+    const ht = hp.get('t') || hp.get('start') || '';
+    if (ht && !out.searchParams.get('t')) out.searchParams.set('t', ht);
+  }
+
+  return out.toString();
+}
+
 // Some Vimeo URLs are not directly extractable as videos (events/blog/etc).
 // Return a short actionable reason when we can detect this.
 export function vimeoNonVideoReason(url) {
