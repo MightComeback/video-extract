@@ -138,6 +138,8 @@ const opts = {
   compactJson: args.includes('--compact-json') || !!process.env.F2A_COMPACT_JSON,
   out: parseValue('--out') || process.env.F2A_OUT || null,
   template: args.includes('--template'),
+  source: parseValue('--source') || null,
+  title: parseValue('--title') || null,
 };
 
 async function outputResult(briefMarkdown, data, opts) {
@@ -198,7 +200,7 @@ import os from 'node:os';
 async function main() {
   // Handle --template mode (no input required)
   if (opts.template) {
-    const stubData = { source: '', url: '', title: '' };
+    const stubData = { source: opts.source || '', url: opts.source || '', title: opts.title || '' };
     const stubBrief = renderBrief({
       cmd: opts.cmd,
       ...stubData,

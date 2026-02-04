@@ -71,7 +71,7 @@ test.skip('brief CLI documents --template in --help output', async () => {
   assert.match(stdout, /--template/);
 });
 
-test.skip('brief CLI supports --template (no fetch required)', async () => {
+test('brief CLI supports --template (no fetch required)', async () => {
   const { stdout, stderr } = await runBrief(['--template', '--source', 'https://fathom.video/share/abc', '--title', 'Test']);
   assert.match(stdout, /# Bug report brief/);
   assert.match(stdout, /Source: https:\/\/fathom\.video\/share\/abc/);
@@ -79,7 +79,7 @@ test.skip('brief CLI supports --template (no fetch required)', async () => {
   assert.doesNotMatch(stderr, /NOTE: Unable to fetch this link/i);
 });
 
-test.skip('brief CLI supports --cmd to override the command name shown in the brief', async () => {
+test('brief CLI supports --cmd to override the command name shown in the brief', async () => {
   const { stdout, stderr } = await runBrief([
     '--template',
     '--cmd',
@@ -288,7 +288,7 @@ test('brief CLI treats --out - as stdout (does not create a file named "-")', as
   assert.equal(fs.existsSync(path.join(dir, '-')), false);
 });
 
-test.skip('brief CLI supports env vars to hide teaser/timestamps (F2A_MAX_*)', async () => {
+test('brief CLI supports env vars to hide teaser/timestamps (F2A_MAX_*)', async () => {
   const { stdout } = await runBrief(['<http://localhost:1/share/abc>'], {
     env: { F2A_MAX_TEASER: '0', F2A_MAX_TIMESTAMPS: '0' },
   });
