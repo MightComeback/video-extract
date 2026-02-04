@@ -973,6 +973,9 @@ export function extractFromStdin({ content, source } = {}) {
       /^https?:\/\//i.test(l) ||
       /\bfathom\.video\//i.test(l) ||
       /\bloom\.com\//i.test(l) ||
+      /\buseloom\.com\//i.test(l) ||
+      /\bshare\.useloom\.com\//i.test(l) ||
+      /\bplayer\.useloom\.com\//i.test(l) ||
       /\b(?:(?:m\.|music\.)?youtube\.com|youtube-nocookie\.com|youtu\.be)\//i.test(l) ||
       /\bvimeo\.com\//i.test(l) ||
       /\bplayer\.vimeo\.com\//i.test(l)

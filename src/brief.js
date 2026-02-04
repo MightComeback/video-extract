@@ -480,7 +480,7 @@ export function normalizeUrlLike(s) {
   //   [label](fathom.video/share/...) or [label](www.fathom.video/share/...)
   // Also tolerate trailing punctuation after the wrapper.
   const md = v0.match(
-    /^\[[^\]]*\]\(\s*(?<u>(?:(?:https?:\/\/|data:)[^)\s]+)|(?:(?:www\.)?(?:fathom\.video|loom\.com|share\.loom\.com|player\.loom\.com|youtu\.be|(?:[a-z0-9-]+\.)*youtube\.com|(?:[a-z0-9-]+\.)*youtube-nocookie\.com|(?:player\.vimeo\.com|(?:[a-z0-9-]+\.)*vimeo\.com))\/[^)\s]+))\s*\)\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』}]*$/i
+    /^\[[^\]]*\]\(\s*(?<u>(?:(?:https?:\/\/|data:)[^)\s]+)|(?:(?:www\.)?(?:fathom\.video|loom\.com|useloom\.com|share\.loom\.com|player\.loom\.com|share\.useloom\.com|player\.useloom\.com|youtu\.be|(?:[a-z0-9-]+\.)*youtube\.com|(?:[a-z0-9-]+\.)*youtube-nocookie\.com|(?:player\.vimeo\.com|(?:[a-z0-9-]+\.)*vimeo\.com))\/[^)\s]+))\s*\)\s*[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』}]*$/i
   );
   if (md) {
     const u = String(md.groups?.u || '').trim();

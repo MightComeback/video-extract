@@ -50,6 +50,12 @@ test('normalizeUrlLike handles markdown', () => {
     normalizeUrlLike('[Loom](https://share.useloom.com/share/1234abcd)'),
     'https://loom.com/share/1234abcd'
   );
+
+  // Provider parity: accept bare useloom.com URLs inside markdown links (no scheme).
+  assert.equal(
+    normalizeUrlLike('[Loom](share.useloom.com/share/1234abcd)'),
+    'https://loom.com/share/1234abcd'
+  );
 });
 
 test('normalizeUrlLike handles trailing punctuation on bare URLs', () => {
