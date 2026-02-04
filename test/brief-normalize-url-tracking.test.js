@@ -17,6 +17,15 @@ describe("normalizeUrlLike - tracking params", () => {
     );
   });
 
+  test("strips Vimeo share params (share/dnt/app_id) while preserving hash + time", () => {
+    assert.equal(
+      normalizeUrlLike(
+        "https://player.vimeo.com/video/12345/abcdef?share=copy&dnt=1&app_id=122963#t=1m2s",
+      ),
+      "https://vimeo.com/12345?h=abcdef#t=1m2s",
+    );
+  });
+
   test("strips utm_* for YouTube watch URLs (preserves t)", () => {
     assert.equal(
       normalizeUrlLike(

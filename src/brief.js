@@ -57,6 +57,11 @@ export function normalizeUrlLike(s) {
       "mc_cid",
       "mc_eid",
       "igshid",
+      // Provider parity: common share/copy params that don't affect the canonical video.
+      // These show up on multiple providers (Vimeo, YouTube, etc.).
+      "share",
+      "dnt",
+      "app_id",
       // Common YouTube share/copy params that don't affect the canonical video.
       "feature",
       "ab_channel",
