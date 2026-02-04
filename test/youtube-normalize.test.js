@@ -37,10 +37,24 @@ test('normalizeYoutubeUrl normalizes shorts URLs', () => {
   );
 });
 
+test('normalizeYoutubeUrl normalizes handle-based shorts URLs', () => {
+  assert.strictEqual(
+    normalizeYoutubeUrl('https://www.youtube.com/@RickAstley/shorts/dQw4w9WgXcQ?feature=share'),
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=share',
+  );
+});
+
 test('normalizeYoutubeUrl normalizes live URLs', () => {
   assert.strictEqual(
     normalizeYoutubeUrl('https://www.youtube.com/live/dQw4w9WgXcQ?si=abc'),
     'https://www.youtube.com/watch?v=dQw4w9WgXcQ&si=abc',
+  );
+});
+
+test('normalizeYoutubeUrl normalizes handle-based live URLs', () => {
+  assert.strictEqual(
+    normalizeYoutubeUrl('https://www.youtube.com/@SomeChannel/live/dQw4w9WgXcQ#t=62'),
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=62',
   );
 });
 

@@ -160,11 +160,35 @@ export function normalizeYoutubeUrl(url) {
     }
   }
 
+  // /@Channel/shorts/<id> (common when sharing from a channel profile)
+  const handleShorts = u.pathname.match(/^\/@[^/]+\/shorts\/([^/?#]+)/);
+  if (handleShorts?.[1]) {
+    const out = new URL('https://www.youtube.com/watch');
+    out.searchParams.set('v', handleShorts[1]);
+    for (const [k, v] of u.searchParams.entries()) out.searchParams.set(k, v);
+    if (hashTime && !out.searchParams.has('t') && !out.searchParams.has('start') && !out.searchParams.has('time_continue')) {
+      out.searchParams.set('t', hashTime);
+    }
+    return out.toString();
+  }
+
   // /shorts/<id>
   const shorts = u.pathname.match(/^\/shorts\/([^/?#]+)/);
   if (shorts?.[1]) {
     const out = new URL('https://www.youtube.com/watch');
     out.searchParams.set('v', shorts[1]);
+    for (const [k, v] of u.searchParams.entries()) out.searchParams.set(k, v);
+    if (hashTime && !out.searchParams.has('t') && !out.searchParams.has('start') && !out.searchParams.has('time_continue')) {
+      out.searchParams.set('t', hashTime);
+    }
+    return out.toString();
+  }
+
+  // /@Channel/live/<id>
+  const handleLive = u.pathname.match(/^\/@[^/]+\/live\/([^/?#]+)/);
+  if (handleLive?.[1]) {
+    const out = new URL('https://www.youtube.com/watch');
+    out.searchParams.set('v', handleLive[1]);
     for (const [k, v] of u.searchParams.entries()) out.searchParams.set(k, v);
     if (hashTime && !out.searchParams.has('t') && !out.searchParams.has('start') && !out.searchParams.has('time_continue')) {
       out.searchParams.set('t', hashTime);
