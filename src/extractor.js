@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { normalizeUrlLike } from './brief.js';
 import { parseSimpleVtt } from './utils.js';
 import { extractFathomTranscriptUrl } from './providers/fathom.js';
-import { isYoutubeUrl, isYoutubeClipUrl, isYoutubeDomain, youtubeNonVideoReason, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
+import { isYoutubeUrl, isYoutubeClipUrl, isYoutubeDomain, normalizeYoutubeUrl, youtubeNonVideoReason, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
 import { isVimeoUrl, isVimeoDomain, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript } from './providers/vimeo.js';
 import { isLoomUrl, isLoomDomain, loomNonVideoReason, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript } from './providers/loom.js';
 
@@ -428,19 +428,22 @@ async function bestEffortExtract({ url, cookie, referer, userAgent }) {
 
       if (meta.mediaUrl && !mediaUrl) mediaUrl = resolveUrl(meta.mediaUrl, url);
     } else if (isYoutubeUrl(url)) {
+      // Normalize share/shorts/live/embed URLs to canonical /watch?v=... to improve parity.
+      const ytUrl = normalizeYoutubeUrl(url) || url;
+
       const meta = extractYoutubeMetadataFromHtml(html) || {};
       if (meta.title && !title) title = meta.title;
 
       // Fallback: YouTube oEmbed can provide title/author even when ytInitialPlayerResponse isn't present.
       if (!title) {
-        const o = await fetchYoutubeOembed(url);
+        const o = await fetchYoutubeOembed(ytUrl);
         if (o?.title) title = String(o.title);
       }
 
       // Caption tracks are usually VTT.
       if (meta.transcriptUrl && (!text || text === normalizedText)) {
         try {
-          const tUrl = resolveUrl(meta.transcriptUrl, url);
+          const tUrl = resolveUrl(meta.transcriptUrl, ytUrl);
           const { body } = await fetchText(tUrl, { headers });
           text = parseSimpleVtt(body);
         } catch {
@@ -462,7 +465,7 @@ async function bestEffortExtract({ url, cookie, referer, userAgent }) {
       })();
 
       if (shouldResolveMediaUrl) {
-        const m = await fetchYoutubeMediaUrl(url);
+        const m = await fetchYoutubeMediaUrl(ytUrl);
         if (m) {
           mediaUrl = m;
         } else if (!mediaUrl) {

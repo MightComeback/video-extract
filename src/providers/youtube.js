@@ -90,6 +90,66 @@ export function isYoutubeDomain(url) {
   return /(^|\.)youtube\.com$/i.test(host) || /(^|\.)youtube-nocookie\.com$/i.test(host) || host === 'youtu.be';
 }
 
+// Normalize common YouTube share URLs to a canonical /watch?v=... form.
+// Keeps query params (t/start/si/etc) so downstream logic can preserve timestamps.
+export function normalizeYoutubeUrl(url) {
+  const s = String(url || '').trim();
+  if (!s) return '';
+
+  const withScheme = /^(?:https?:)?\/\//i.test(s)
+    ? (s.startsWith('//') ? `https:${s}` : s)
+    : `https://${s}`;
+
+  let u;
+  try {
+    u = new URL(withScheme);
+  } catch {
+    return s;
+  }
+
+  const host = u.hostname.replace(/^www\./i, '').toLowerCase();
+
+  // youtu.be/<id>
+  if (host === 'youtu.be') {
+    const id = u.pathname.split('/').filter(Boolean)[0];
+    if (id) {
+      const out = new URL('https://www.youtube.com/watch');
+      out.searchParams.set('v', id);
+      for (const [k, v] of u.searchParams.entries()) out.searchParams.set(k, v);
+      return out.toString();
+    }
+  }
+
+  // /shorts/<id>
+  const shorts = u.pathname.match(/^\/shorts\/([^/?#]+)/);
+  if (shorts?.[1]) {
+    const out = new URL('https://www.youtube.com/watch');
+    out.searchParams.set('v', shorts[1]);
+    for (const [k, v] of u.searchParams.entries()) out.searchParams.set(k, v);
+    return out.toString();
+  }
+
+  // /live/<id>
+  const live = u.pathname.match(/^\/live\/([^/?#]+)/);
+  if (live?.[1]) {
+    const out = new URL('https://www.youtube.com/watch');
+    out.searchParams.set('v', live[1]);
+    for (const [k, v] of u.searchParams.entries()) out.searchParams.set(k, v);
+    return out.toString();
+  }
+
+  // /embed/<id>
+  const embed = u.pathname.match(/^\/embed\/([^/?#]+)/);
+  if (embed?.[1]) {
+    const out = new URL('https://www.youtube.com/watch');
+    out.searchParams.set('v', embed[1]);
+    for (const [k, v] of u.searchParams.entries()) out.searchParams.set(k, v);
+    return out.toString();
+  }
+
+  return u.toString();
+}
+
 export function youtubeNonVideoReason(url) {
   const s = String(url || '').trim();
   if (!s) return '';
