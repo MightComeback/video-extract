@@ -257,8 +257,18 @@ export function youtubeNonVideoReason(url) {
   const path = String(u.pathname || '').toLowerCase();
 
   // If it already looks like a clip or a direct video URL, don't flag it here.
+  // BUT: /watch without a valid v=... param is very common (copying the wrong URL),
+  // and it's better to surface a clear actionable error than to attempt a fetch.
+  if (path.startsWith('/watch')) {
+    const v = String(u.searchParams.get('v') || '').trim();
+    const valid = /^[a-zA-Z0-9_-]{11}$/.test(v);
+    if (!valid) {
+      return 'This YouTube URL does not appear to be a direct video link. Please provide a direct video URL like https://youtube.com/watch?v=... instead.';
+    }
+    return '';
+  }
+
   if (
-    path.startsWith('/watch') ||
     path.startsWith('/shorts/') ||
     path.startsWith('/embed/') ||
     path.startsWith('/live/') ||

@@ -45,3 +45,14 @@ test('MIG-14: YouTube search results pages fail with a clear actionable error', 
   assert.match(res.fetchError, /watch\?v=/i);
   assert.match(res.text, /Unable to fetch this link\./i);
 });
+
+test('MIG-14: YouTube watch pages without v=... fail with a clear actionable error', async (t) => {
+  // Ensure we never hit the network: this should fail before any fetch.
+  preventFetch(t);
+
+  const res = await extractFromUrl('https://www.youtube.com/watch');
+  assert.equal(res.ok, false);
+  assert.match(res.fetchError, /does not appear to be a direct video link/i);
+  assert.match(res.fetchError, /watch\?v=/i);
+  assert.match(res.text, /Unable to fetch this link\./i);
+});
