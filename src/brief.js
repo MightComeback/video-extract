@@ -186,8 +186,9 @@ export function normalizeUrlLike(s) {
 
     // Loom
     // Loom links can come from subdomains (e.g. share.loom.com).
+    // Provider parity: older Loom links sometimes use useloom.com.
     // Normalize everything to https://loom.com/share/<id> for downstream provider parity.
-    if (host === 'loom.com' || host.endsWith('.loom.com')) {
+    if (host === 'loom.com' || host.endsWith('.loom.com') || host === 'useloom.com' || host.endsWith('.useloom.com')) {
       // Loom supports multiple URL shapes. Normalize to /share/<id>
       // so downstream provider detection can be consistent.
       // Common:
@@ -402,7 +403,7 @@ export function normalizeUrlLike(s) {
     // Convenience: accept bare provider URLs (no scheme) from chat copy/paste.
     // Keep this intentionally narrow (well-known hosts only).
     const m = s.match(
-      /^(?:www\.)?(?<host>(?:fathom\.video|loom\.com|share\.loom\.com|player\.loom\.com|youtu\.be|(?:[a-z0-9-]+\.)*youtube\.com|(?:[a-z0-9-]+\.)*youtube-nocookie\.com|(?:player\.vimeo\.com|(?:[a-z0-9-]+\.)*vimeo\.com)))\/(?<rest>\S+)/i
+      /^(?:www\.)?(?<host>(?:fathom\.video|loom\.com|useloom\.com|share\.loom\.com|player\.loom\.com|share\.useloom\.com|player\.useloom\.com|youtu\.be|(?:[a-z0-9-]+\.)*youtube\.com|(?:[a-z0-9-]+\.)*youtube-nocookie\.com|(?:player\.vimeo\.com|(?:[a-z0-9-]+\.)*vimeo\.com)))\/(?<rest>\S+)/i
     );
     if (!m) return '';
 
@@ -425,6 +426,11 @@ export function normalizeUrlLike(s) {
 
     if (normalizedHost === 'share.loom.com') normalizedHost = 'loom.com';
     if (normalizedHost === 'player.loom.com') normalizedHost = 'loom.com';
+
+    // Provider parity: older Loom links sometimes use useloom.com.
+    if (normalizedHost === 'useloom.com' || normalizedHost.endsWith('.useloom.com')) normalizedHost = 'loom.com';
+    if (normalizedHost === 'share.useloom.com') normalizedHost = 'loom.com';
+    if (normalizedHost === 'player.useloom.com') normalizedHost = 'loom.com';
 
     return `https://${normalizedHost}/${rest}`;
   }
