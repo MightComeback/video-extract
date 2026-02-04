@@ -96,7 +96,18 @@ Options:
   --copy-brief          Copy output to clipboard (macOS only)
   --teaser <n>          Web teaser line count (default: 6)
   --timestamps <n>      Timestamp count (default: 6)
+  --json                Output JSON {source,title,brief} instead of markdown
+  --compact-json        Single-line JSON (useful with --json)
+  --out <path>          Write output to file (use "-" for stdout)
+  --template            Generate a blank brief template (no fetch required)
   --version             Show version info
+
+Environment:
+  F2A_COPY              Set to 1 to enable --copy-brief by default
+  F2A_MAX_TEASER        Default max teaser lines (overridden by --teaser)
+  F2A_MAX_TIMESTAMPS    Default max timestamps (overridden by --timestamps)
+  F2A_COMPACT_JSON      Set to 1 for compact JSON by default
+  F2A_OUT               Default output path (overridden by --out)
 `);
   process.exit(0);
 }
@@ -109,14 +120,95 @@ function parseValue(key) {
   return null;
 }
 
+function parseMaxEnv(val) {
+  // Treat empty/whitespace-only string as unset (return null)
+  if (val == null) return null;
+  const trimmed = String(val).trim();
+  if (trimmed === '') return null;
+  const n = Number(trimmed);
+  return Number.isNaN(n) ? null : n;
+}
+
 const opts = {
   cmd: parseValue('--cmd') || 'video-extract',
-  teaserMax: parseValue('--teaser'),
-  timestampsMax: parseValue('--timestamps'),
+  teaserMax: parseValue('--teaser') != null ? parseMaxEnv(parseValue('--teaser')) : parseMaxEnv(process.env.F2A_MAX_TEASER),
+  timestampsMax: parseValue('--timestamps') != null ? parseMaxEnv(parseValue('--timestamps')) : parseMaxEnv(process.env.F2A_MAX_TIMESTAMPS),
   copy: args.includes('--copy-brief') || !!process.env.F2A_COPY,
+  json: args.includes('--json'),
+  compactJson: args.includes('--compact-json') || !!process.env.F2A_COMPACT_JSON,
+  out: parseValue('--out') || process.env.F2A_OUT || null,
+  template: args.includes('--template'),
 };
 
+async function outputResult(briefMarkdown, data, opts) {
+  // Build JSON payload if requested
+  const payload = opts.json ? {
+    source: data.source || data.url || data.mediaUrl || '',
+    title: data.title || data.suggestedTitle || '',
+    brief: briefMarkdown,
+  } : null;
+
+  const output = opts.json
+    ? (opts.compactJson ? JSON.stringify(payload) : JSON.stringify(payload, null, 2))
+    : briefMarkdown;
+
+  // Handle clipboard copy (only copies the brief, not JSON wrapper)
+  if (opts.copy) {
+    try {
+      await copyToClipboard(briefMarkdown);
+      console.error('Copied brief to clipboard.');
+    } catch (e) {
+      console.error(`Failed to copy: ${e.message}`);
+    }
+  }
+
+  // Handle file output
+  if (opts.out && opts.out !== '-') {
+    const outPath = opts.out;
+    // Check if outPath is a directory
+    let isDir = false;
+    try {
+      const stats = fs.statSync(outPath);
+      isDir = stats.isDirectory();
+    } catch {
+      // Path doesn't exist, treat as file
+    }
+
+    const finalPath = isDir
+      ? path.join(outPath, opts.json ? 'bug-report-brief.json' : 'bug-report-brief.md')
+      : outPath;
+
+    // Expand ~ to home directory
+    const expandedPath = finalPath.startsWith('~')
+      ? path.join(os.homedir(), finalPath.slice(1))
+      : finalPath;
+
+    fs.writeFileSync(expandedPath, output, 'utf8');
+    console.error(`Wrote output to ${expandedPath}`);
+    return;
+  }
+
+  // Default: stdout
+  console.log(output);
+}
+
+import path from 'node:path';
+import os from 'node:os';
+
 async function main() {
+  // Handle --template mode (no input required)
+  if (opts.template) {
+    const stubData = { source: '', url: '', title: '' };
+    const stubBrief = renderBrief({
+      cmd: opts.cmd,
+      ...stubData,
+      teaserMax: opts.teaserMax,
+      timestampsMax: opts.timestampsMax,
+    });
+    await outputResult(stubBrief, stubData, opts);
+    return;
+  }
+
   const input = await readStdin();
   if (!input.trim()) {
     // If user passed a URL as arg 1, maybe they want us to just print a stub?
@@ -132,18 +224,9 @@ async function main() {
          console.error('NOTE: Unable to fetch this link (CLI only generates briefs from JSON/text stdin). To fetch content, pipe from `fathom-extract`.');
        }
 
-       const brief = renderBrief({ url, ...opts });
-       if (opts.copy) {
-         try {
-           await copyToClipboard(brief);
-           console.error('Copied brief to clipboard.');
-         } catch (e) {
-           console.error(`Failed to copy: ${e.message}`);
-           console.log(brief);
-         }
-       } else {
-         console.log(brief);
-       }
+       const urlData = { source: url, url, title: '' };
+       const brief = renderBrief({ ...urlData, ...opts });
+       await outputResult(brief, urlData, opts);
        return;
     }
     console.error('Error: no input provided via stdin.');
@@ -181,17 +264,7 @@ async function main() {
     timestampsMax: opts.timestampsMax,
   });
 
-  if (opts.copy) {
-    try {
-      await copyToClipboard(brief);
-      console.error('Copied brief to clipboard.');
-    } catch (e) {
-      console.error(`Failed to copy: ${e.message}`);
-      console.log(brief);
-    }
-  } else {
-    console.log(brief);
-  }
+  await outputResult(brief, data, opts);
 }
 
 main().catch(e => {
