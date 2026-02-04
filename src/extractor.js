@@ -5,6 +5,7 @@ import { spawn } from 'node:child_process';
 
 import { normalizeUrlLike } from './brief.js';
 import { parseSimpleVtt } from './utils.js';
+import { ProgressBar, parseFfmpegProgress } from './progress.js';
 import { extractFathomTranscriptUrl } from './providers/fathom.js';
 import { isYoutubeUrl, isYoutubeClipUrl, isYoutubeDomain, normalizeYoutubeUrl, youtubeNonVideoReason, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl, extractYoutubeTranscriptUrl } from './providers/youtube.js';
 import { isVimeoUrl, isVimeoDomain, normalizeVimeoUrl, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript, extractVimeoTranscriptUrl } from './providers/vimeo.js';
@@ -199,17 +200,45 @@ function ffmpegDownload({ url, outPath, cookie, referer, userAgent }) {
     // ffmpeg expects CRLF between header lines.
     const headerStr = headers.length ? headers.join('\r\n') + '\r\n' : '';
 
-    const args = ['-y', '-loglevel', 'error'];
+    // Use info loglevel to get progress output on stderr
+    const args = ['-y', '-loglevel', 'info', '-stats'];
     if (headerStr) args.push('-headers', headerStr);
     args.push('-i', url, '-c', 'copy', outPath);
 
     const child = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] });
 
     let err = '';
-    child.stderr.on('data', (d) => (err += String(d)));
+    let progressBar = null;
+
+    child.stderr.on('data', (d) => {
+      const line = String(d);
+      err += line;
+
+      // Parse progress info from ffmpeg stats
+      const progress = parseFfmpegProgress(line);
+      if (progress.timeSeconds != null) {
+        if (!progressBar) {
+          progressBar = new ProgressBar({
+            label: 'Downloading video',
+            showBytes: true,
+            showSpeed: true,
+          });
+        }
+        progressBar.update(progress.timeSeconds, {
+          bytes: progress.sizeBytes,
+        });
+      }
+    });
 
     child.on('error', reject);
     child.on('close', (code) => {
+      if (progressBar) {
+        if (code === 0) {
+          progressBar.finish('Download complete');
+        } else {
+          progressBar.finish('Download failed');
+        }
+      }
       if (code === 0) resolve(outPath);
       else reject(new Error(`ffmpeg download failed (code ${code}): ${err.trim()}`));
     });
@@ -304,7 +333,8 @@ function ffmpegSplit({ inPath, outDir, segmentSeconds }) {
     const args = [
       '-y',
       '-loglevel',
-      'error',
+      'info',
+      '-stats',
       '-i',
       inPath,
       '-c',
@@ -322,10 +352,37 @@ function ffmpegSplit({ inPath, outDir, segmentSeconds }) {
 
     const child = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] });
     let err = '';
-    child.stderr.on('data', (d) => (err += String(d)));
+    let progressBar = null;
+
+    child.stderr.on('data', (d) => {
+      const line = String(d);
+      err += line;
+
+      // Parse progress info from ffmpeg stats
+      const progress = parseFfmpegProgress(line);
+      if (progress.timeSeconds != null) {
+        if (!progressBar) {
+          progressBar = new ProgressBar({
+            label: 'Splitting video',
+            showBytes: true,
+          });
+        }
+        progressBar.update(progress.timeSeconds, {
+          bytes: progress.sizeBytes,
+        });
+      }
+    });
 
     child.on('error', reject);
     child.on('close', (code) => {
+      if (progressBar) {
+        if (code === 0) {
+          progressBar.finish('Split complete');
+        } else {
+          progressBar.finish('Split failed');
+        }
+      }
+
       if (code !== 0) return reject(new Error(`ffmpeg split failed (code ${code}): ${err.trim()}`));
 
       const files = fs
