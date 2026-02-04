@@ -63,4 +63,18 @@ describe('normalizeUrlLike - provider parity', () => {
       'https://vimeo.com/123456789/review/abcdef123456/abcdef1234#t=10s'
     );
   });
+
+  test('canonicalizes Vimeo dashboard manage/videos URLs', () => {
+    assert.equal(
+      normalizeUrlLike('https://vimeo.com/manage/videos/12345/advanced?utm_source=x'),
+      'https://vimeo.com/12345'
+    );
+  });
+
+  test('canonicalizes Vimeo dashboard manage/video URLs', () => {
+    assert.equal(
+      normalizeUrlLike('https://vimeo.com/manage/video/12345?utm_source=x'),
+      'https://vimeo.com/12345'
+    );
+  });
 });
