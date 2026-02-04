@@ -15,6 +15,41 @@ export function isLoomUrl(url) {
   return !!extractLoomId(url);
 }
 
+// Normalize common Loom URL shapes to a canonical share URL.
+// Preserves the Loom session id (?sid=...) when present so private shares keep working.
+export function normalizeLoomUrl(url) {
+  const s = withScheme(url);
+  if (!s) return '';
+
+  let u;
+  try {
+    u = new URL(s);
+  } catch {
+    return String(url || '').trim();
+  }
+
+  // Only normalize loom.com domains.
+  const host = u.hostname.toLowerCase();
+  if (!/(^|\.)loom\.com$/i.test(host)) return u.toString();
+
+  const id = extractLoomId(u.toString());
+  if (!id) return u.toString();
+
+  const out = new URL(`https://www.loom.com/share/${id}`);
+
+  // Preserve session id for private Loom links.
+  const sid = u.searchParams.get('sid');
+  if (sid) out.searchParams.set('sid', sid);
+
+  // Preserve other useful params if present.
+  for (const [k, v] of u.searchParams.entries()) {
+    if (k === 'sid') continue;
+    out.searchParams.set(k, v);
+  }
+
+  return out.toString();
+}
+
 export function isLoomDomain(url) {
   const s = withScheme(url);
   if (!s) return false;

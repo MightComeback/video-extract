@@ -8,7 +8,7 @@ import { parseSimpleVtt } from './utils.js';
 import { extractFathomTranscriptUrl } from './providers/fathom.js';
 import { isYoutubeUrl, isYoutubeClipUrl, isYoutubeDomain, normalizeYoutubeUrl, youtubeNonVideoReason, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl } from './providers/youtube.js';
 import { isVimeoUrl, isVimeoDomain, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript } from './providers/vimeo.js';
-import { isLoomUrl, isLoomDomain, loomNonVideoReason, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript } from './providers/loom.js';
+import { isLoomUrl, isLoomDomain, loomNonVideoReason, normalizeLoomUrl, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript } from './providers/loom.js';
 
 function oneLine(s) {
   return String(s || '')
@@ -406,12 +406,16 @@ async function bestEffortExtract({ url, cookie, referer, userAgent }) {
   // Provider-aware enrichment (Loom/YouTube/Vimeo) for better parity with Fathom.
   try {
     if (isLoomUrl(url)) {
+      // Normalize Loom URLs (share/v/embed/bare) to a stable share form to reduce redirects
+      // and keep provider behavior consistent.
+      const loomUrl = normalizeLoomUrl(url) || url;
+
       const meta = extractLoomMetadataFromHtml(html) || {};
       if (meta.title && !title) title = meta.title;
 
       // Fallback: oEmbed is lightweight and often works even when the HTML is behind auth/consent walls.
       if (!title) {
-        const o = await fetchLoomOembed(url);
+        const o = await fetchLoomOembed(loomUrl);
         if (o?.title) title = String(o.title);
       }
 
@@ -421,12 +425,12 @@ async function bestEffortExtract({ url, cookie, referer, userAgent }) {
       }
 
       if (meta.transcriptUrl && (!text || text === normalizedText)) {
-        const tUrl = resolveUrl(meta.transcriptUrl, url);
+        const tUrl = resolveUrl(meta.transcriptUrl, loomUrl);
         const { body } = await fetchText(tUrl, { headers });
         text = /\.vtt(?:\?|#|$)/i.test(tUrl) ? parseSimpleVtt(body) : parseLoomTranscript(body);
       }
 
-      if (meta.mediaUrl && !mediaUrl) mediaUrl = resolveUrl(meta.mediaUrl, url);
+      if (meta.mediaUrl && !mediaUrl) mediaUrl = resolveUrl(meta.mediaUrl, loomUrl);
     } else if (isYoutubeUrl(url)) {
       // Normalize share/shorts/live/embed URLs to canonical /watch?v=... to improve parity.
       const ytUrl = normalizeYoutubeUrl(url) || url;
