@@ -448,12 +448,24 @@ export function extractYoutubeMetadataFromHtml(html) {
 
 export async function fetchYoutubeOembed(url) {
   try {
+    // For parity with other normalization logic, we call oEmbed with a stable, non-www watch URL.
+    // (Some tests and downstream tooling expect youtube.com here.)
+    let target = String(url || '');
+    try {
+      const parsed = new URL(target);
+      parsed.protocol = 'https:';
+      parsed.hostname = parsed.hostname.replace(/^www\./i, '');
+      target = parsed.toString();
+    } catch {
+      // ignore; best-effort only
+    }
+
     const u = new URL('https://www.youtube.com/oembed');
-    u.searchParams.set('url', String(url || ''));
+    u.searchParams.set('url', target);
     u.searchParams.set('format', 'json');
 
     const res = await fetch(u.toString(), {
-      headers: { 'accept': 'application/json' },
+      headers: { accept: 'application/json' },
     });
     if (!res.ok) return null;
     return await res.json();
