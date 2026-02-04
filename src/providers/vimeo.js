@@ -416,6 +416,24 @@ export function parseVimeoTranscript(body) {
       });
     }
 
+    const formatTime = (seconds) => {
+      const s = Math.floor(Number(seconds) || 0);
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const r = s % 60;
+      if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+      return `${m}:${String(r).padStart(2, '0')}`;
+    };
+
+    // Provider parity: when we have cue start times, keep them.
+    // This matches Loom behavior and makes downstream briefs more actionable.
+    if (hasAnyStart) {
+      return parsed
+        .map((x) => `${formatTime(x.start ?? 0)} ${x.text}`)
+        .join('\n')
+        .trim();
+    }
+
     return parsed
       .map((x) => x.text)
       .join(' ')

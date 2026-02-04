@@ -121,7 +121,7 @@ test('extractFromUrl parses Vimeo JSON text tracks (non-VTT) when provided', asy
 
   const res = await extractFromUrl('https://vimeo.com/123456789', { noDownload: true, noSplit: true });
   assert.equal(res.ok, true);
-  assert.equal(res.text, 'Hello Vimeo');
+  assert.equal(res.text, '0:00 Hello\n0:01 Vimeo');
 });
 
 test('extractFromUrl parses Vimeo JSON text tracks from cues[] shape', async (t) => {
@@ -169,7 +169,7 @@ test('extractFromUrl parses Vimeo JSON text tracks from cues[] shape', async (t)
 
   const res = await extractFromUrl('https://vimeo.com/999999999', { noDownload: true, noSplit: true });
   assert.equal(res.ok, true);
-  assert.equal(res.text, 'Hello again');
+  assert.equal(res.text, '0:00 Hello\n0:01 again');
 });
 
 test('extractFromUrl parses Vimeo JSON text tracks with nested content.text fields', async (t) => {
@@ -217,7 +217,7 @@ test('extractFromUrl parses Vimeo JSON text tracks with nested content.text fiel
 
   const res = await extractFromUrl('https://vimeo.com/888888888', { noDownload: true, noSplit: true });
   assert.equal(res.ok, true);
-  assert.equal(res.text, 'Hello nested');
+  assert.equal(res.text, '0:00 Hello\n0:01 nested');
 });
 
 test('extractFromUrl sorts Vimeo JSON cues by start time when out of order', async (t) => {
@@ -266,7 +266,7 @@ test('extractFromUrl sorts Vimeo JSON cues by start time when out of order', asy
 
   const res = await extractFromUrl('https://vimeo.com/777777777', { noDownload: true, noSplit: true });
   assert.equal(res.ok, true);
-  assert.equal(res.text, 'first second third');
+  assert.equal(res.text, '0:00 first\n0:01 second\n0:02 third');
 });
 
 test('extractFromUrl does not fail when Vimeo transcript fetch fails', async (t) => {

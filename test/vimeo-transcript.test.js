@@ -13,7 +13,7 @@ test('parseVimeoTranscript parses JSON cue lists and sorts by start time when pr
   });
 
   const out = parseVimeoTranscript(body);
-  assert.equal(out, 'Intro Hello Next up');
+  assert.equal(out, '0:04 Intro\n0:12 Hello\n1:01 Next up');
 });
 
 test('parseVimeoTranscript joins JSON transcript items without timestamps when absent', () => {
@@ -34,5 +34,5 @@ test('parseVimeoTranscript strips lightweight HTML tags and decodes entities in 
     ],
   });
 
-  assert.equal(parseVimeoTranscript(body), "One & Two It's fine — really.");
+  assert.equal(parseVimeoTranscript(body), "0:00 One & Two\n0:01 It's fine — really.");
 });
