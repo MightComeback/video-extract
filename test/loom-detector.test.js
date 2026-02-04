@@ -56,6 +56,12 @@ test('extractLoomId works with protocol-relative URLs', (t) => {
   assert.strictEqual(isLoomUrl('//share.loom.com/share/1234567890abcdef'), true);
 });
 
+test('extractLoomId tolerates backticks and quotes (chat copy/paste)', (t) => {
+  assert.strictEqual(extractLoomId('`https://loom.com/share/abcdef123`'), 'abcdef123');
+  assert.strictEqual(extractLoomId('"https://loom.com/share/abcdef123"'), 'abcdef123');
+  assert.strictEqual(extractLoomId("'https://loom.com/share/abcdef123'"), 'abcdef123');
+});
+
 test('isLoomUrl allows IDs with underscores', (t) => {
   assert.strictEqual(isLoomUrl('https://www.loom.com/share/_start_with_underscore'), true);
 });

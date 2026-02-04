@@ -13,6 +13,31 @@ function cleanUrlInput(url) {
   const angle = s.match(/^<\s*([^>\s]+)\s*>$/i);
   if (angle) s = String(angle[1] || '').trim();
 
+  // Provider parity: users often paste URLs wrapped in backticks or quotes.
+  // Example: `https://loom.com/share/...` or "https://loom.com/share/..."
+  for (let i = 0; i < 4; i++) {
+    const startsTick = s.startsWith('`');
+    const endsTick = s.endsWith('`');
+    const startsDq = s.startsWith('"');
+    const endsDq = s.endsWith('"');
+    const startsSq = s.startsWith("'");
+    const endsSq = s.endsWith("'");
+
+    if (startsTick && endsTick && s.length >= 2) {
+      s = s.slice(1, -1).trim();
+      continue;
+    }
+    if (startsDq && endsDq && s.length >= 2) {
+      s = s.slice(1, -1).trim();
+      continue;
+    }
+    if (startsSq && endsSq && s.length >= 2) {
+      s = s.slice(1, -1).trim();
+      continue;
+    }
+    break;
+  }
+
   // Provider parity: URLs pasted in chat are often wrapped or followed by punctuation.
   // Do a small amount of cleanup in a stable order:
   //  1) strip trailing punctuation

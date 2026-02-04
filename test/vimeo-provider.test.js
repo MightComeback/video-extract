@@ -13,6 +13,12 @@ test('isVimeoUrl supports protocol-relative URLs', () => {
   assert.equal(isVimeoUrl('//vimeo.com/987654321'), true);
 });
 
+test('extractVimeoId tolerates backticks and quotes (chat copy/paste)', () => {
+  assert.equal(extractVimeoId('`https://vimeo.com/123456789`'), '123456789');
+  assert.equal(extractVimeoId('"https://vimeo.com/123456789"'), '123456789');
+  assert.equal(extractVimeoId("'https://vimeo.com/123456789'"), '123456789');
+});
+
 test('extractVimeoId rejects non-vimeo links', () => {
   assert.equal(extractVimeoId('//youtube.com/watch?v=dQw4w9WgXcQ'), null);
 });
