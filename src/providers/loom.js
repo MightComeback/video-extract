@@ -334,7 +334,14 @@ export function extractLoomMetadataFromHtml(html) {
               .filter((p) => p && p.text);
 
             if (paragraphs.length) {
-              meta.transcriptText = paragraphs.map((p) => `${formatTime(p.startTime || 0)} ${p.text}`).join('\n');
+              meta.transcriptText = paragraphs
+                .map((p) => {
+                  const text = cleanLoomCaptionText(p?.text);
+                  if (!text) return '';
+                  return `${formatTime(p?.startTime || 0)} ${text}`;
+                })
+                .filter(Boolean)
+                .join('\n');
             }
           }
         }
@@ -376,6 +383,48 @@ function formatTime(seconds) {
   return `${m}:${String(r).padStart(2, '0')}`;
 }
 
+function cleanLoomCaptionText(s) {
+  let v = String(s || '');
+  if (!v) return '';
+
+  // Loom transcript JSON sometimes contains lightweight markup similar to WebVTT.
+  v = v.replace(/<[^>]+>/g, '');
+
+  // Decode a small deterministic set of entities (mirrors utils.parseSimpleVtt behavior).
+  v = v
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&mdash;/gi, '—')
+    .replace(/&ndash;/gi, '–')
+    .replace(/&hellip;/gi, '…')
+    .replace(/&ldquo;/gi, '“')
+    .replace(/&rdquo;/gi, '”')
+    .replace(/&lsquo;/gi, '‘')
+    .replace(/&rsquo;/gi, '’')
+    .replace(/&lrm;/gi, '')
+    .replace(/&rlm;/gi, '')
+    .replace(/&apos;/gi, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/gi, "'");
+
+  // Decode numeric entities (e.g. &#8217; or &#x2019;).
+  v = v.replace(/&#(x?[0-9a-fA-F]+);/g, (m, rawNum) => {
+    try {
+      const isHex = String(rawNum).toLowerCase().startsWith('x');
+      const n = Number.parseInt(isHex ? String(rawNum).slice(1) : String(rawNum), isHex ? 16 : 10);
+      if (!Number.isFinite(n) || n < 0 || n > 0x10ffff) return m;
+      return String.fromCodePoint(n);
+    } catch {
+      return m;
+    }
+  });
+
+  return v.replace(/\s+/g, ' ').trim();
+}
+
 export function parseLoomTranscript(text) {
   const raw = String(text || '');
 
@@ -395,22 +444,50 @@ export function parseLoomTranscript(text) {
     //  - [{ startTime, text }, ...] (flat array)
 
     if (data && Array.isArray(data.paragraphs)) {
-      return data.paragraphs.map((p) => `${formatTime(p.startTime)} ${p.text}`).join('\n');
+      return data.paragraphs
+        .map((p) => {
+          const text = cleanLoomCaptionText(p?.text);
+          if (!text) return '';
+          return `${formatTime(p?.startTime)} ${text}`;
+        })
+        .filter(Boolean)
+        .join('\n');
     }
 
     // Some Loom exports use {segments:[{start,text}]}.
     if (data && Array.isArray(data.segments)) {
-      return data.segments.map((s) => `${formatTime(s.start)} ${s.text}`).join('\n');
+      return data.segments
+        .map((s) => {
+          const text = cleanLoomCaptionText(s?.text);
+          if (!text) return '';
+          return `${formatTime(s?.start)} ${text}`;
+        })
+        .filter(Boolean)
+        .join('\n');
     }
 
     // Some Loom transcript endpoints return {transcript:[{start,end,text}]}.
     if (data && Array.isArray(data.transcript)) {
-      return data.transcript.map((t) => `${formatTime(t.start ?? t.startTime)} ${t.text}`).join('\n');
+      return data.transcript
+        .map((t) => {
+          const text = cleanLoomCaptionText(t?.text);
+          if (!text) return '';
+          return `${formatTime(t?.start ?? t?.startTime)} ${text}`;
+        })
+        .filter(Boolean)
+        .join('\n');
     }
 
     // As a last resort, accept a flat array of objects.
     if (Array.isArray(data) && data.length && typeof data[0] === 'object') {
-      return data.map((t) => `${formatTime(t.start ?? t.startTime)} ${t.text}`).join('\n');
+      return data
+        .map((t) => {
+          const text = cleanLoomCaptionText(t?.text);
+          if (!text) return '';
+          return `${formatTime(t?.start ?? t?.startTime)} ${text}`;
+        })
+        .filter(Boolean)
+        .join('\n');
     }
   } catch {
     // ignore
