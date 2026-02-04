@@ -14,13 +14,34 @@ function cleanUrlInput(url) {
   const angle = s.match(/^<\s*([^>\s]+)\s*>$/i);
   if (angle) s = String(angle[1] || '').trim();
 
+  // Provider parity: URLs pasted in chat are often wrapped in quotes.
+  // Examples:
+  //  - “https://youtu.be/<id>?t=43”
+  //  - «https://youtube.com/watch?v=<id>»
+  // Be conservative: only strip a small set of leading/trailing quote wrappers.
+  for (let i = 0; i < 2; i++) {
+    const first = s.slice(0, 1);
+    const last = s.slice(-1);
+    const q = ['"', "'", '`', '“', '”', '‘', '’', '«', '»', '‹', '›'];
+    let changed = false;
+    if (q.includes(first)) {
+      s = s.slice(1).trim();
+      changed = true;
+    }
+    if (q.includes(last)) {
+      s = s.slice(0, -1).trim();
+      changed = true;
+    }
+    if (!changed) break;
+  }
+
   // Provider parity: URLs pasted in chat are often wrapped or followed by punctuation.
   // Examples:
   //  - (https://youtu.be/<id>?t=43).
   //  - https://youtube.com/watch?v=<id>,
-  // Be conservative: only strip common trailing punctuation characters.
   const unwrap = [
-    [/^\((.*)\)$/, 1],
+    // ASCII and fullwidth close paren are both common depending on keyboard/locale.
+    [/^\((.*)[)）]$/, 1],
     [/^\[(.*)\]$/, 1],
     [/^\{(.*)\}$/, 1],
   ];
@@ -32,11 +53,29 @@ function cleanUrlInput(url) {
     }
   }
 
+  // Common copy/paste pattern: "https://... (YouTube)".
+  // Only strip parenthetical suffixes when separated by whitespace to avoid mangling URLs
+  // that legitimately contain parentheses.
+  s = s.replace(/\s+\([^)]*\)\s*$/g, '');
+
+  // Provider parity: strip a conservative set of trailing chat punctuation, including common
+  // Unicode variants (guillemets, smart quotes, fullwidth punctuation, CJK punctuation).
+  // Keep this aligned (roughly) with normalizeUrlLike().
   for (let i = 0; i < 3; i++) {
-    const last = s.slice(-1);
-    if (!last) break;
-    if (!['.', ',', ';', '!', '?', ')', ']', '}'].includes(last)) break;
-    s = s.slice(0, -1).trim();
+    const stripped = s.replace(/[)\]>'\"`“”‘’»«›‹.,;:!?…。！，？。､、）】〉》」』}]+$/g, '').trim();
+    if (stripped.length === s.length) break;
+
+    // Avoid stripping a closing paren when it appears to balance an open paren in the URL.
+    if (s.endsWith(')') && stripped.length < s.length) {
+      const openCount = (stripped.match(/\(/g) || []).length;
+      const closeCount = (stripped.match(/\)/g) || []).length;
+      if (openCount > closeCount && s.slice(stripped.length).startsWith(')')) {
+        s = (stripped + ')').trim();
+        continue;
+      }
+    }
+
+    s = stripped;
   }
 
   return s;
