@@ -77,4 +77,18 @@ describe('normalizeUrlLike - provider parity', () => {
       'https://vimeo.com/12345'
     );
   });
+
+  test('canonicalizes Vimeo groups videos URLs', () => {
+    assert.equal(
+      normalizeUrlLike('https://vimeo.com/groups/somegroup/videos/12345?utm_source=x#t=1m2s'),
+      'https://vimeo.com/12345#t=1m2s'
+    );
+  });
+
+  test('canonicalizes Vimeo channels URLs that include an unlisted hash segment', () => {
+    assert.equal(
+      normalizeUrlLike('https://vimeo.com/channels/foo/12345/abcdef?utm_source=x#t=10s'),
+      'https://vimeo.com/12345?h=abcdef#t=10s'
+    );
+  });
 });
