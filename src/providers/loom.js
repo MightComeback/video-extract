@@ -635,3 +635,25 @@ export async function fetchLoomOembed(url) {
     return null;
   }
 }
+
+// Provider parity: fetch media URL for Loom videos (similar to fetchYoutubeMediaUrl)
+// Fetches the Loom page and extracts the direct video URL from Apollo state.
+export async function fetchLoomMediaUrl(url) {
+  try {
+    const normalized = normalizeLoomUrl(String(url || ''));
+    if (!normalized) return null;
+
+    const res = await fetch(normalized, {
+      headers: {
+        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+    });
+    if (!res.ok) return null;
+
+    const html = await res.text();
+    const meta = extractLoomMetadataFromHtml(html);
+    return meta?.mediaUrl || null;
+  } catch {
+    return null;
+  }
+}

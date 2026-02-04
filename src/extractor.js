@@ -8,8 +8,8 @@ import { parseSimpleVtt } from './utils.js';
 import { ProgressBar, parseFfmpegProgress } from './progress.js';
 import { extractFathomTranscriptUrl, extractFathomMetadataFromHtml, normalizeFathomUrl, isFathomUrl, isFathomDomain, fathomNonVideoReason } from './providers/fathom.js';
 import { isYoutubeUrl, isYoutubeClipUrl, isYoutubeDomain, normalizeYoutubeUrl, youtubeNonVideoReason, extractYoutubeIdFromClipHtml, extractYoutubeMetadataFromHtml, fetchYoutubeOembed, fetchYoutubeMediaUrl, extractYoutubeTranscriptUrl } from './providers/youtube.js';
-import { isVimeoUrl, isVimeoDomain, normalizeVimeoUrl, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript, extractVimeoTranscriptUrl } from './providers/vimeo.js';
-import { isLoomUrl, isLoomDomain, loomNonVideoReason, normalizeLoomUrl, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript, extractLoomTranscriptUrl } from './providers/loom.js';
+import { isVimeoUrl, isVimeoDomain, normalizeVimeoUrl, vimeoNonVideoReason, extractVimeoMetadataFromHtml, fetchVimeoOembed, parseVimeoTranscript, extractVimeoTranscriptUrl, fetchVimeoMediaUrl } from './providers/vimeo.js';
+import { isLoomUrl, isLoomDomain, loomNonVideoReason, normalizeLoomUrl, extractLoomMetadataFromHtml, fetchLoomOembed, parseLoomTranscript, extractLoomTranscriptUrl, fetchLoomMediaUrl } from './providers/loom.js';
 
 function oneLine(s) {
   return String(s || '')

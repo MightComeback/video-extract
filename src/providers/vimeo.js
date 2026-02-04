@@ -816,3 +816,25 @@ export function extractVimeoTranscriptUrl(html) {
   const meta = extractVimeoMetadataFromHtml(html);
   return meta?.transcriptUrl || null;
 }
+
+// Provider parity: fetch media URL for Vimeo videos (similar to fetchYoutubeMediaUrl)
+// Fetches the Vimeo page and extracts the direct video URL from clip_page_config.
+export async function fetchVimeoMediaUrl(url) {
+  try {
+    const normalized = normalizeVimeoUrl(String(url || ''));
+    if (!normalized) return null;
+
+    const res = await fetch(normalized, {
+      headers: {
+        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+    });
+    if (!res.ok) return null;
+
+    const html = await res.text();
+    const meta = extractVimeoMetadataFromHtml(html);
+    return meta?.mediaUrl || null;
+  } catch {
+    return null;
+  }
+}
