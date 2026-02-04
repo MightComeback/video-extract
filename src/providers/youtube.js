@@ -109,6 +109,33 @@ export function normalizeYoutubeUrl(url) {
 
   const host = u.hostname.replace(/^www\./i, '').toLowerCase();
 
+  // /attribution_link?...&u=/watch%3Fv%3D<id>%26...
+  // Common when sharing from mobile apps.
+  if (u.pathname.toLowerCase() === '/attribution_link') {
+    const encoded = u.searchParams.get('u');
+    if (encoded) {
+      try {
+        // Some shares double-encode the inner URL/path (e.g. %252Fwatch%253Fv%253D...).
+        // Decode up to 2 times to be resilient.
+        let decoded = encoded;
+        for (let i = 0; i < 2; i++) {
+          if (!/%[0-9a-fA-F]{2}/.test(decoded)) break;
+          decoded = decodeURIComponent(decoded);
+        }
+
+        const inner = decoded.startsWith('http')
+          ? decoded
+          : `https://youtube.com${decoded.startsWith('/') ? '' : '/'}${decoded}`;
+
+        // Re-enter normalization on the inner URL.
+        const out = normalizeYoutubeUrl(inner);
+        if (out) return out;
+      } catch {
+        // ignore
+      }
+    }
+  }
+
   // youtu.be/<id>
   if (host === 'youtu.be') {
     const id = u.pathname.split('/').filter(Boolean)[0];
@@ -145,6 +172,13 @@ export function normalizeYoutubeUrl(url) {
     out.searchParams.set('v', embed[1]);
     for (const [k, v] of u.searchParams.entries()) out.searchParams.set(k, v);
     return out.toString();
+  }
+
+  // Canonicalize all YouTube hosts to a stable output for provider parity.
+  // (m.youtube.com, music.youtube.com, youtube-nocookie.com, etc.)
+  if (/(^|\.)youtube\.com$/i.test(host) || /(^|\.)youtube-nocookie\.com$/i.test(host)) {
+    u.protocol = 'https:';
+    u.hostname = 'www.youtube.com';
   }
 
   return u.toString();

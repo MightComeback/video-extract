@@ -36,3 +36,19 @@ test('normalizeYoutubeUrl normalizes embed URLs', () => {
     'https://www.youtube.com/watch?v=dQw4w9WgXcQ&start=10',
   );
 });
+
+test('normalizeYoutubeUrl normalizes attribution_link share URLs', () => {
+  assert.strictEqual(
+    normalizeYoutubeUrl(
+      'https://www.youtube.com/attribution_link?u=%2Fwatch%3Fv%3DdQw4w9WgXcQ%26t%3D30s%26feature%3Dshare',
+    ),
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30s&feature=share',
+  );
+});
+
+test('normalizeYoutubeUrl canonicalizes subdomain watch URLs to www.youtube.com', () => {
+  assert.strictEqual(
+    normalizeYoutubeUrl('https://m.youtube.com/watch?v=dQw4w9WgXcQ&t=43'),
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=43',
+  );
+});
