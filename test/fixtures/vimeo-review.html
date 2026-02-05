@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Vimeo with Review Token - Vimeo</title>
+    <script>
+        window._vimeo_player_args = {
+            url: "https://player.vimeo.com/video/111222333?review_token=xyz789",
+            api: 1,
+            background: false
+        };
+    </script>
+    <script>
+        window.vimeo = {
+            app: {
+                config: {
+                    vimeo_api: {
+                        config: {
+                            player_config: {
+                                api: 1,
+                                background: false
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body></body>
+</html>

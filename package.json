@@ -11,9 +11,9 @@
     "fathom2action": "./bin/fathom2action-brief.js"
   },
   "scripts": {
-    "test": "node --test",
-    "test:unit": "node --test",
-    "test:ci": "node --test",
+    "test": "bun test",
+    "test:unit": "bun test",
+    "test:ci": "bun test",
     "check-status": "node scripts/linear.mjs issue-state-type MIG-14",
     "lint": "node --check bin/fathom2action-brief.js bin/fathom2action-extract.js bin/video-extract.js bin/video-brief.js bin/vdxtr.js src/brief.js src/extractor.js src/providers/*.js src/utils.js scripts/linear.mjs",
     "release": "./scripts/release.sh"

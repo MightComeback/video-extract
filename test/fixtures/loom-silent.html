@@ -1,0 +1,26 @@
+<html>
+<head>
+<script>
+// Simulates Loom API response for silent video (no audio)
+window.__APOLLO_STATE__ = {
+  "RegularUserVideo:54321": {
+    "__typename": "RegularUserVideo",
+    "name": "Silent Loom Video",
+    "description": "This video has no audio track.",
+    "duration": 60,
+    "posterUrl": "https://cdn.loom.com/silent.jpg",
+    "owner": { "__ref": "User:222" },
+    "nullableRawCdnUrlM3U8": null,
+    "nullableRawCdnUrlDASH": { "url": "https://cdn.loom.com/silent.mpd" }
+  },
+  "User:222": {
+    "__typename": "User",
+    "fullName": "User Without Voice",
+    "firstName": "User",
+    "lastName": "Without Voice"
+  }
+};
+</script>
+</head>
+<body></body>
+</html>
