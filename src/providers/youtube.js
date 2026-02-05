@@ -81,6 +81,13 @@ function cleanUrlInput(url) {
   return s;
 }
 
+// Helper: check if the extracted ID looks like a valid YouTube video ID
+function isValidYoutubeId(id) {
+  if (!id || typeof id !== 'string') return false;
+  if (!/^[a-zA-Z0-9_-]{11}$/.test(id)) return false;
+  return true;
+}
+
 export function extractYoutubeId(url) {
   const s = cleanUrlInput(url);
   if (!s) return null;
@@ -103,7 +110,7 @@ export function extractYoutubeId(url) {
   // youtu.be/<id>
   if (host === 'youtu.be') {
     const id = u.pathname.split('/').filter(Boolean)[0];
-    return /^[a-zA-Z0-9_-]{11}$/.test(id || '') ? id : null;
+    return isValidYoutubeId(id) ? id : null;
   }
 
   // Accept youtube.com subdomains (m., music., etc) and youtube-nocookie.com embeds.
@@ -157,23 +164,23 @@ export function extractYoutubeId(url) {
 
   // watch?v=<id>
   const v = u.searchParams.get('v');
-  if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return v;
+  if (v && isValidYoutubeId(v)) return v;
 
   // Provider parity: some share flows or intermediate redirects produce URLs like:
   //   https://www.youtube.com/watch/<id>
   // Treat these as direct video URLs too.
   const watchPath = u.pathname.match(/^\/watch\/([a-zA-Z0-9_-]{11})\b/);
-  if (watchPath) return watchPath[1];
+  if (watchPath && isValidYoutubeId(watchPath[1])) return watchPath[1];
 
   // /embed/<id>, /shorts/<id>, /live/<id>, /v/<id>
   // Also accept handle-based URLs like:
   //   /@SomeChannel/shorts/<id>
   //   /@SomeChannel/live/<id>
   const m = u.pathname.match(/\/(?:embed|shorts|live|v)\/([a-zA-Z0-9_-]{11})\b/);
-  if (m) return m[1];
+  if (m && isValidYoutubeId(m[1])) return m[1];
 
   const mHandle = u.pathname.match(/\/@[^/]+\/(?:shorts|live)\/([a-zA-Z0-9_-]{11})\b/);
-  if (mHandle) return mHandle[1];
+  if (mHandle && isValidYoutubeId(mHandle[1])) return mHandle[1];
 
   return null;
 }
@@ -701,7 +708,15 @@ export async function fetchYoutubeOembed(url) {
 
 export async function fetchYoutubeMediaUrl(url) {
   try {
-    const info = await ytdl.getInfo(String(url || ''));
+    const normalized = normalizeYoutubeUrl(String(url || ''));
+    if (!normalized) return null;
+
+    const info = await ytdl.getInfo(normalized);
+
+    // Check if video is available
+    if (!info.videoDetails || !info.videoDetails.videoId) {
+      throw new Error('Could not retrieve YouTube video information. The video may be private, unavailable, or blocked.');
+    }
 
     // Prefer a progressive MP4 where possible.
     const format = ytdl.chooseFormat(info.formats, {
@@ -714,8 +729,16 @@ export async function fetchYoutubeMediaUrl(url) {
       },
     });
 
-    return format?.url || null;
-  } catch {
-    return null;
+    if (!format?.url) {
+      throw new Error('No suitable video format found. The video may be restricted or not available for download.');
+    }
+
+    return format.url;
+  } catch (err) {
+    // Re-throw with context for the caller to provide helpful errors
+    if (err.message.includes('signing')) {
+      throw new Error('YouTube video requires signing. Use yt-dlp with a session cookie instead.');
+    }
+    throw err;
   }
 }

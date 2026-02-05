@@ -156,6 +156,14 @@ export function isLoomDomain(url) {
 
 // Some Loom URLs are not direct video pages (pricing/login/etc).
 // Return a short actionable reason when we can detect this.
+// Helper: check if the extracted ID looks like a valid Loom video ID
+function isValidLoomId(id) {
+  if (!id || typeof id !== 'string') return false;
+  if (!/^[a-zA-Z0-9_-]+$/.test(id)) return false;
+  // Loom IDs are typically 10+ characters
+  return id.length >= 10;
+}
+
 export function loomNonVideoReason(url) {
   const s = withScheme(url);
   if (!s) return '';
@@ -171,7 +179,7 @@ export function loomNonVideoReason(url) {
   if (!/(^|\.)loom\.com$/i.test(host) && !/(^|\.)useloom\.com$/i.test(host)) return '';
 
   // If it's a valid Loom video URL, don't flag it.
-  if (extractLoomId(s)) return '';
+  if (isValidLoomId(u.pathname.split('/').filter(Boolean).join(''))) return '';
 
   const segs = (u.pathname || '/').split('/').map((x) => x.trim()).filter(Boolean);
   const first = String(segs[0] || '').toLowerCase();
@@ -247,9 +255,8 @@ export function extractLoomId(url) {
   // Treat these as share URLs when the token looks like a Loom id.
   if (parts.length === 1) {
     const only = parts[0];
-    // Keep this conservative to avoid matching non-video paths.
-    if (/^[a-zA-Z0-9_-]{10,}$/.test(only || '')) return only;
-    return null;
+    // Use the helper function for consistent validation
+    return isValidLoomId(only) ? only : null;
   }
 
   if (parts.length < 2) return null;
@@ -267,7 +274,7 @@ export function extractLoomId(url) {
   if (!['share', 's', 'v', 'embed', 'recording', 'i'].includes(kind)) return null;
 
   const id = parts[1];
-  return /^[a-zA-Z0-9_-]+$/.test(id || '') ? id : null;
+  return isValidLoomId(id) ? id : null;
 }
 
 function extractBalancedJsonObject(source, startIndex) {
@@ -636,8 +643,6 @@ export async function fetchLoomOembed(url) {
   }
 }
 
-// Provider parity: fetch media URL for Loom videos (similar to fetchYoutubeMediaUrl)
-// Fetches the Loom page and extracts the direct video URL from Apollo state.
 export async function fetchLoomMediaUrl(url) {
   try {
     const normalized = normalizeLoomUrl(String(url || ''));
@@ -648,12 +653,26 @@ export async function fetchLoomMediaUrl(url) {
         accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       },
     });
-    if (!res.ok) return null;
+
+    if (!res.ok) {
+      // Provide a clear error for different HTTP status codes
+      if (res.status === 401) {
+        throw new Error('Loom link is auth-gated. Use --cookie to provide your session cookies.');
+      }
+      if (res.status === 404) {
+        throw new Error('Loom video not found. The link may be invalid or has expired.');
+      }
+      if (res.status >= 500) {
+        throw new Error(`Loom server error (${res.status}). Please try again later.`);
+      }
+      return null;
+    }
 
     const html = await res.text();
     const meta = extractLoomMetadataFromHtml(html);
     return meta?.mediaUrl || null;
-  } catch {
-    return null;
+  } catch (err) {
+    // Re-throw with context for the caller to provide helpful errors
+    throw err;
   }
 }

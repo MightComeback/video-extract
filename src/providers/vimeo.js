@@ -101,6 +101,17 @@ function withScheme(s) {
   return `https://${v}`;
 }
 
+// Helper: check if the extracted ID looks like a valid Vimeo video ID
+function isValidVimeoId(id) {
+  if (!id || typeof id !== 'string') return false;
+  // Vimeo IDs are at least 3 digits (short codes can be 3+)
+  const numId = String(id || '').trim();
+  return /^\d{3,}$/.test(numId);
+}
+
+// Helper: check if a segment looks like a Vimeo ID
+const isId = (x) => isValidVimeoId(x);
+
 export function extractVimeoId(url) {
   const s = withScheme(url);
   if (!s) return null;
@@ -829,12 +840,29 @@ export async function fetchVimeoMediaUrl(url) {
         accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       },
     });
-    if (!res.ok) return null;
+
+    if (!res.ok) {
+      // Provide a clear error for different HTTP status codes
+      if (res.status === 401) {
+        throw new Error('Vimeo video is private or requires authentication. Use --cookie to provide your session cookies.');
+      }
+      if (res.status === 404) {
+        throw new Error('Vimeo video not found. The link may be invalid, the video has been removed, or the account is disabled.');
+      }
+      if (res.status === 403) {
+        throw new Error('Vimeo video is not available for download. It may be geo-blocked, restricted, or require a subscription.');
+      }
+      if (res.status >= 500) {
+        throw new Error(`Vimeo server error (${res.status}). Please try again later.`);
+      }
+      return null;
+    }
 
     const html = await res.text();
     const meta = extractVimeoMetadataFromHtml(html);
     return meta?.mediaUrl || null;
-  } catch {
-    return null;
+  } catch (err) {
+    // Re-throw with context for the caller to provide helpful errors
+    throw err;
   }
 }
