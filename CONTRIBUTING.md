@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-npm install
+bun install
 ```
 
 ## Testing
@@ -11,13 +11,13 @@ npm install
 Run the full test suite (Node test runner):
 
 ```bash
-npm test
+bun test
 ```
 
 Linting:
 
 ```bash
-npm run lint
+bun run lint
 ```
 
 ## Project Structure
